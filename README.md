@@ -32,7 +32,7 @@ repo/
 │   ├── spring-logbook/    # Spring Boot service for stored logs and notes
 │   ├── spring-alerts/     # Spring Boot service for alerts/incident state
 │   └── py-intelligence/   # Python GenAI service
-├── client/                # client component
+├── client/                # Client component
 ├── infra/                 # Docker Compose, Kubernetes, database, monitoring
 └── .github/workflows/     # CI pipelines
 ```

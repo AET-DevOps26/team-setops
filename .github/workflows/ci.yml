@@ -6,7 +6,7 @@ on:
 
 jobs:
   spring-services:
-    name: Spring services (matrix)
+    name: Spring services
     runs-on: ubuntu-latest
     strategy:
       matrix:

@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: ["main"]
 
+jobs:
   spring-services:
     name: Spring services (matrix)
     runs-on: ubuntu-latest

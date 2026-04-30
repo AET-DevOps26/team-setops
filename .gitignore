@@ -39,6 +39,9 @@ target/
 .gradle/
 out/
 
+# Allow Gradle wrapper jars
+!**/gradle/wrapper/gradle-wrapper.jar
+
 # Python
 __pycache__/
 *.py[cod]

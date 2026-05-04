@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  spring-services:
+    name: Spring services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        serviceDir:
+          - services/spring-alerts
+          - services/spring-ingestion
+          - services/spring-logbook
+    defaults:
+      run:
+        working-directory: ${{ matrix.serviceDir }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java (Temurin 21) and Gradle cache
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: "gradle"
+
+      - name: Run Gradle clean, tests and build
+        run: ./gradlew :app:clean :app:test :app:build --no-daemon --console=plain --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.serviceDir }}
+          path: app/build/test-results/**
+
+  client:
+    name: Client (React + Vite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests (one-shot)
+        run: npm run test -- --run
+
+      - name: Build
+        run: npm run build

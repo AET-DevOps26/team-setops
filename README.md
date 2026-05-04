@@ -55,3 +55,54 @@ Examples:
 feat/12/add-log-ingestion
 fix/18/handle-empty-ai-response
 ```
+
+## Local Build and Test Commands
+
+Run all commands from the repository root unless noted otherwise.
+
+### Spring Alerts
+
+```bash
+cd services/spring-alerts
+./gradlew :app:clean :app:test :app:build
+./gradlew :app:bootRun
+```
+
+### Spring Ingestion
+
+```bash
+cd services/spring-ingestion
+./gradlew :app:clean :app:test :app:build
+./gradlew :app:bootRun
+```
+
+### Spring Logbook
+
+```bash
+cd services/spring-logbook
+./gradlew :app:clean :app:test :app:build
+./gradlew :app:bootRun
+```
+
+### Client
+
+```bash
+cd client
+npm ci
+npm run lint
+npm run test -- --run
+npm run build
+npm run dev
+```
+
+### CI-Oriented One-Shot Test Commands
+
+Use these for non-watch runs in CI:
+
+```bash
+# Spring services (run per service directory)
+./gradlew :app:test
+
+# Client
+npm run test -- --run
+```

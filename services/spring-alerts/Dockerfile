@@ -1,21 +1,23 @@
 # Stage 1: Build the application
-# CHANGED: Swapped from Alpine to Jammy for the Gradle builder
-FROM gradle:8.4-jdk17-jammy AS builder
-WORKDIR /app
+FROM gradle:jdk21-jammy AS builder
+WORKDIR /workspace
 
-# Copy Gradle files and source code
-COPY build.gradle settings.gradle.kts ./
-COPY app/src ./src
+# Copy the entire service directory (including the 'app' folder and any root settings.gradle.kts)
+COPY . .
+
+# Move into the app subdirectory to execute the build
+WORKDIR /workspace/app
 
 # Package the application
 RUN gradle build -x test
 
 # Stage 2: Run the application
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# Copy the built jar
-COPY --from=builder /app/build/libs/*.jar app.jar
+# Copy the built jar from the app's build directory
+# (Using wildcard in case the version number changes the jar name)
+COPY --from=builder /workspace/app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

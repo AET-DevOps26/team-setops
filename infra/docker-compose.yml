@@ -1,0 +1,125 @@
+services:
+  # -------------------------------------
+  # Shared Infrastructure
+  # -------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------
+  # Backend Services (Spring Boot)
+  # -------------------------------------
+  spring-ingestion:
+    build:
+      context: ../services/spring-ingestion
+      dockerfile: Dockerfile
+    container_name: spring-ingestion
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  spring-logbook:
+    build:
+      context: ../services/spring-logbook
+      dockerfile: Dockerfile
+    container_name: spring-logbook
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  spring-alerts:
+    build:
+      context: ../services/spring-alerts
+      dockerfile: Dockerfile
+    container_name: spring-alerts
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # -------------------------------------
+  # AI/Intelligence Service (Python)
+  # -------------------------------------
+  py-intelligence:
+    build:
+      context: ../services/py-intelligence
+      dockerfile: Dockerfile
+    container_name: py-intelligence
+    ports:
+      - "8000:8000" # Assuming FastAPI or Flask default
+    environment:
+      - INGESTION_API_URL=http://spring-ingestion:8080
+      - LOGBOOK_API_URL=http://spring-logbook:8080
+    networks:
+      - app-network
+
+  # -------------------------------------
+  # Client Component
+  # -------------------------------------
+  client:
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    container_name: client
+    ports:
+      - "3000:3000" # Assuming React/Vue/Next.js default
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8081 # Adjust based on frontend framework (VITE_, REACT_APP_, etc.)
+    depends_on:
+      - spring-ingestion
+      - spring-logbook
+      - spring-alerts
+      - py-intelligence
+    networks:
+      - app-network
+
+# -------------------------------------
+# Networks and Volumes
+# -------------------------------------
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -58,6 +58,22 @@ fix/18/handle-empty-ai-response
 
 ## Local Build and Test Commands
 
+### 🛠 Prerequisites
+
+To run this project locally, you must have the following installed:
+* [Docker](https://docs.docker.com/get-docker/) (Docker Desktop recommended for Mac/Windows)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+*(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application, as everything runs inside the containers!)*
+
+### Build
+```bash
+cd infra
+docker-compose up --build
+```
+
+## Local Build and Test Commands for individual components
+
 Run all commands from the repository root unless noted otherwise.
 
 ### Spring Alerts

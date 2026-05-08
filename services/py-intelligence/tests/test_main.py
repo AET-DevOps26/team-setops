@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
@@ -39,7 +38,11 @@ def test_removed_endpoints_return_404() -> None:
 def test_create_rag_document_endpoint_is_mapped() -> None:
     response = client.post(
         "/api/v1/rag/documents",
-        json={"title": "Database timeout fix", "content": "Restarted database connection pool", "tags": ["db", "timeout"]},
+        json={
+            "title": "Database timeout fix",
+            "content": "Restarted database connection pool",
+            "tags": ["db", "timeout"],
+        },
     )
 
     assert response.status_code == 501

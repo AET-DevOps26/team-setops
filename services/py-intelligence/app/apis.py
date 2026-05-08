@@ -1,11 +1,11 @@
 from fastapi import Body, FastAPI, HTTPException
 
-
 app = FastAPI(
     title="DevPulse Intelligence Service",
     description="GenAI/RAG service for log summarization and troubleshooting.",
     version="0.1.0",
 )
+
 
 @app.get("/health")
 def health() -> dict[str, str]:
@@ -45,6 +45,7 @@ def analyze(
     # Contract-only endpoint. Implement later.
     raise HTTPException(status_code=501, detail="Analyze endpoint not implemented yet")
 
+
 @app.post("/api/v1/rag/documents", status_code=201)
 def create_rag_document(
     title: str = Body(...),
@@ -67,6 +68,7 @@ def delete_rag_document(document_id: str) -> None:
     """Delete a previously indexed RAG document by id."""
     # Contract-only endpoint. Implement later.
     raise HTTPException(status_code=501, detail="RAG document deletion endpoint not implemented yet")
+
 
 @app.post("/api/v1/rag/search")
 def search_rag_documents(

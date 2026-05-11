@@ -30,6 +30,9 @@ coverage/
 .next/
 .nuxt/
 
+# OpenAPI rendered artifacts
+api/*.html
+
 # Java / Spring Boot
 target/
 *.class

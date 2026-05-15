@@ -3,6 +3,8 @@ import pymongo
 from fastapi import HTTPException
 from dotenv import load_dotenv
 import os
+import datetime
+
 
 load_dotenv()
 
@@ -41,17 +43,28 @@ class DB:
         Returns: 
             bool: True if successful, False otherwise
         """
-        return False
+        # Validation
+        required_fields = ["title", "content"]
+        for field in required_fields:
+            if field not in document or not str(document.get(field, "")).strip():
+                print(f"Validation error: Missing or empty field '{field}'")
+                return False
 
-    def create_vector_index(self):
-        """
-        Creates a vector index for the collection.
+        # Formatting
+        if "tags" not in document or not isinstance(document["tags"], list):
+            document["tags"] = []
+        
+        if "created_at" not in document:
+            document["created_at"] = datetime.datetime.now(datetime.UTC)
 
-        Returns: 
-            bool: True if successful, False otherwise
-        """
-        return False
+        try:
+            self.collection.insert_one(document)
+            return True
+        except Exception as e:
+            print(f"Error adding document: {e}")
+            return False
 
+    
     def delete_all_documents(self):
         """
         Deletes all documents from the collection.
@@ -59,7 +72,8 @@ class DB:
         Returns: 
             bool: True if successful, False otherwise
         """
-        return False
+        self.collection.delete_many({})
+        return True
 
 def similarity_search(
     query: str,
@@ -111,6 +125,20 @@ def similarity_search(
 def main():
     db = DB()
     db.connect()
+    # db.delete_all_documents()
+    # add mock document 
+    doc = {
+        "title": "NALUS",
+        "content": "Nalus war hier.",
+        "tags": ["nalus", "nali"]
+    }
+
+    if db.add_new_document(doc):
+        print("Mock document added successfully")
+    else:
+        print("Failed to add mock document")
+    
+
     
 if __name__ == "__main__":
     main()

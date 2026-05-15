@@ -16,7 +16,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the application.
-# -> IF USING FASTAPI: CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-# -> IF USING FLASK: CMD ["flask", "run", "--host=0.0.0.0", "--port=8000"]
-# Replace 'main:app' or the flask command with your actual entrypoint
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

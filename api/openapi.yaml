@@ -2,4 +2,288 @@ openapi: 3.0.3
 info:
   title: DevPulse API
   version: 0.1.0
-paths: {}
+  description: OpenAPI contract for DevPulse services. This file is the single source of truth.
+servers:
+  - url: http://localhost:8001
+    description: Local py-intelligence (docker-compose port binding)
+tags:
+  - name: Health
+  - name: Intelligence
+  - name: RAG
+paths:
+  /health:
+    get:
+      tags: [Health]
+      operationId: health
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/analyze:
+    post:
+      tags: [Intelligence]
+      operationId: analyze
+      summary: Run the full intelligence pipeline and return a structured result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeRequest"
+      responses:
+        "200":
+          description: Structured analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /api/v1/rag/documents:
+    post:
+      tags: [RAG]
+      operationId: createRagDocument
+      summary: Create/index a document for retrieval (RAG)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRagDocumentRequest"
+      responses:
+        "201":
+          description: Document accepted for indexing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RagDocument"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /api/v1/rag/documents/{document_id}:
+    delete:
+      tags: [RAG]
+      operationId: deleteRagDocument
+      summary: Delete a previously indexed RAG document
+      parameters:
+        - name: document_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /api/v1/rag/search:
+    post:
+      tags: [RAG]
+      operationId: searchRag
+      summary: Search the retrieval store for relevant documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RagSearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RagSearchResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+        "501":
+          description: Not implemented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, service]
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: py-intelligence
+    AnalyzeRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          description: Raw log/text content to analyze.
+        mode:
+          type: string
+          description: Which inference mode to use.
+          enum: [local, cloud]
+          default: local
+        use_rag:
+          type: boolean
+          default: false
+        context:
+          type: string
+          nullable: true
+          description: Optional additional context from the caller.
+    AnalyzeResponse:
+      type: object
+      required: [problem_type, summary, problem_summary, troubleshoot, solutions]
+      properties:
+        problem_type:
+          type: string
+          description: UI tag/category of the detected problem.
+          example: database_timeout
+        summary:
+          type: string
+          description: Short overall summary.
+        problem_summary:
+          type: string
+          description: What went wrong / main issue.
+        troubleshoot:
+          $ref: "#/components/schemas/TroubleshootBlock"
+        solutions:
+          type: array
+          items:
+            type: string
+          description: Suggested fixes / next steps.
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceRef"
+          description: Optional references used for RAG.
+    TroubleshootBlock:
+      type: object
+      required: [findings]
+      properties:
+        findings:
+          type: array
+          items:
+            type: string
+          description: Key findings/diagnostics extracted from the input.
+        notes:
+          type: array
+          items:
+            type: string
+          description: Optional extra notes.
+    SourceRef:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Source identifier (e.g., document id).
+        title:
+          type: string
+        url:
+          type: string
+    CreateRagDocumentRequest:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+    RagDocument:
+      type: object
+      required: [id, title, content, tags]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    RagSearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+    RagSearchResponse:
+      type: object
+      required: [results, count]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/RagSearchResult"
+        count:
+          type: integer
+          minimum: 0
+    RagSearchResult:
+      type: object
+      required: [document_id, title, score, snippet]
+      properties:
+        document_id:
+          type: string
+        title:
+          type: string
+        score:
+          type: number
+          format: float
+        snippet:
+          type: string
+    ErrorDetail:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string

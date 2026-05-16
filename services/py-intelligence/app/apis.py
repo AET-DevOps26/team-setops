@@ -1,8 +1,11 @@
+from app.utils.embedding_utils import create_all_embeddings
 from fastapi import Body, FastAPI, HTTPException
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
+import os
 
 db = DB()
+COLLECTION_NAME = os.getenv("COLLECTION_NAME", "injestions")
 
 
 app = FastAPI(
@@ -78,11 +81,10 @@ def create_rag_document(
         raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
     document = {"title": title, "content": content, "tags": tags}
 
-    success = db.add_new_document(document)
+    success = (db.add_new_document(document)) and create_all_embeddings(COLLECTION_NAME)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
-
-    return {"message": "Document added successfully"}
+    return {"message": "Document added and embeddings were updated successfully"}
 
 
 @app.delete("/api/v1/rag/documents/{document_id}", status_code=204)
@@ -93,6 +95,13 @@ def delete_rag_document(document_id: str) -> None:
     Args:
         document_id (str): The unique identifier of the document to delete.
     """
+    success = db.delete_document(document_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete document from the database.")
+    success = create_all_embeddings(COLLECTION_NAME)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update embeddings after deletion.")
+        return {"message": "Document deleted and embeddings were updated successfully"}
 
 
 @app.post("/api/v1/rag/search")

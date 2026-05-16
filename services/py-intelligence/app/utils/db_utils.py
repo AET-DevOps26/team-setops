@@ -3,6 +3,7 @@ import pymongo
 from dotenv import load_dotenv
 import os
 import datetime
+from bson.objectid import ObjectId
 
 load_dotenv()
 
@@ -33,6 +34,25 @@ class DB:
             print("Pinged your deployment. Connection successful!")
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
+
+    def delete_document(self, id: str):
+        """
+        Deletes a document from the MongoDB collection based on its ID.
+
+        Args:
+            id (str): The ID of the document to delete.
+
+        Returns:
+            bool: True if the deletion was successful, False if the document was not found or an error occurred.
+        """
+        try:
+            id = ObjectId(id)
+            self.collection.find_one({"_id": id})
+            self.collection.delete_one({"_id": id})
+            return True
+        except Exception as e:
+            print(f"Error deleting document: {e}")
+            return False
 
     def add_new_document(self, document: dict):
         """

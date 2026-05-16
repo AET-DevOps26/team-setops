@@ -48,7 +48,7 @@ def test_create_rag_document_success(mock_db) -> None:
     )
 
     assert response.status_code == 201
-    assert response.json() == {'message': 'Document added and embeddings were updated successfully'}
+    assert response.json() == {"message": "Document added and embeddings were updated successfully"}
     mock_db.add_new_document.assert_called_once()
 
 

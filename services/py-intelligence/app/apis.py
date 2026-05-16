@@ -96,5 +96,14 @@ def search_rag_documents(
     """
     if not query.strip():
         raise HTTPException(status_code=422, detail="'query' must not be empty.")
-    # Contract-only endpoint. Implement later.
-    raise HTTPException(status_code=501, detail="RAG search endpoint not implemented yet")
+    
+    from app.utils.embedding_utils import similarity_search
+    
+    try:
+        results = similarity_search(query, limit=limit)
+        # Convert ObjectId to string for JSON serialization
+        for doc in results:
+            doc["_id"] = str(doc["_id"])
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

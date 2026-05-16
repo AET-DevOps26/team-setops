@@ -35,9 +35,11 @@ def test_removed_endpoints_return_404() -> None:
     assert client.post("/api/v1/rag/answer", json={"question": "x"}).status_code == 404
 
 
+@patch("app.apis.create_all_embeddings")
 @patch("app.apis.db")
-def test_create_rag_document_success(mock_db) -> None:
+def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:
     mock_db.add_new_document.return_value = True
+    mock_create_embeddings.return_value = True
     response = client.post(
         "/api/v1/rag/documents",
         json={
@@ -50,12 +52,19 @@ def test_create_rag_document_success(mock_db) -> None:
     assert response.status_code == 201
     assert response.json() == {"message": "Document added and embeddings were updated successfully"}
     mock_db.add_new_document.assert_called_once()
+    mock_create_embeddings.assert_called_once()
 
 
-def test_delete_rag_document_endpoint_is_mapped() -> None:
+@patch("app.apis.create_all_embeddings")
+@patch("app.apis.db")
+def test_delete_rag_document_endpoint_is_mapped(mock_db, mock_create_embeddings) -> None:
+    mock_db.delete_document.return_value = True
+    mock_create_embeddings.return_value = True
     response = client.delete("/api/v1/rag/documents/675e3ed186e03e4169b4d354")
 
     assert response.status_code == 204
+    mock_db.delete_document.assert_called_once_with("675e3ed186e03e4169b4d354")
+    mock_create_embeddings.assert_called_once()
 
 
 @patch("app.apis.similarity_search")

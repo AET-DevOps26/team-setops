@@ -1,6 +1,6 @@
 import os
 import ollama
-from db_utils import DB
+from app.utils.db_utils import DB
 
 def get_embedding(text: str) -> list[float]:
     """
@@ -66,7 +66,7 @@ def similarity_search(
     
     query_vector = get_embedding(query)
 
-    results = collection.aggregate([
+    results = list(collection.aggregate([
         {
             '$vectorSearch': {
                 'index': "vector_index",
@@ -77,9 +77,14 @@ def similarity_search(
                 'similarity': 'cosine'
             }
         }
-    ])
+    ]))
 
-    return list(results)
+    # Remove the embedding field from results to keep them lightweight
+    for doc in results:
+        if "embedding" in doc:
+            del doc["embedding"]
+
+    return results
 
 if __name__ == "__main__":
     print("Creating embeddings...")

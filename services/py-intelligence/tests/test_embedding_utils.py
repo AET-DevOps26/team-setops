@@ -1,3 +1,4 @@
+import os
 import pytest
 from unittest.mock import MagicMock, patch
 from app.utils.embedding_utils import get_embedding, create_all_embeddings, similarity_search
@@ -39,7 +40,8 @@ def test_create_all_embeddings_success(mock_db, mock_ollama):
     """
     # Setup mock DB and collection
     mock_collection = MagicMock()
-    mock_db.return_value.db = {"injestions": mock_collection}
+    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock documents to be processed
     mock_collection.find.return_value = [{"_id": "1", "content": "text 1"}, {"_id": "2", "content": "text 2"}]
@@ -47,7 +49,7 @@ def test_create_all_embeddings_success(mock_db, mock_ollama):
     # Mock embedding generation
     mock_ollama.embed.return_value = {"embeddings": [[0.5, 0.6]]}
 
-    success = create_all_embeddings(collection_name="injestions")
+    success = create_all_embeddings(collection_name=collection_name)
 
     assert success is True
     assert mock_collection.update_one.call_count == 2
@@ -59,10 +61,11 @@ def test_create_all_embeddings_no_docs(mock_db):
     Test that create_all_embeddings handles empty collections gracefully.
     """
     mock_collection = MagicMock()
-    mock_db.return_value.db = {"injestions": mock_collection}
+    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    mock_db.return_value.db = {collection_name: mock_collection}
     mock_collection.find.return_value = []
 
-    success = create_all_embeddings(collection_name="injestions")
+    success = create_all_embeddings(collection_name=collection_name)
 
     assert success is True
     mock_collection.update_one.assert_not_called()
@@ -73,7 +76,8 @@ def test_similarity_search(mock_db, mock_ollama):
     Test that similarity_search performs vector search and cleans results.
     """
     mock_collection = MagicMock()
-    mock_db.return_value.db = {"injestions": mock_collection}
+    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock aggregation results
     mock_collection.aggregate.return_value = [{"title": "Result 1", "embedding": [0.1]}, {"title": "Result 2"}]

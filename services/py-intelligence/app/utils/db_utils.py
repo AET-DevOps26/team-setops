@@ -14,9 +14,13 @@ class DB:
     """
 
     def __init__(self):
-        self.client = pymongo.MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
-        self.db = self.client[os.getenv("DB_NAME")]
-        self.collection = self.db[os.getenv("COLLECTION_NAME")]
+        mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+        db_name = os.getenv("DB_NAME", "devpulse")
+        collection_name = os.getenv("COLLECTION_NAME", "rag_documents")
+
+        self.client = pymongo.MongoClient(mongodb_uri, tlsCAFile=certifi.where() if "mongodb+srv" in mongodb_uri else None)
+        self.db = self.client[db_name]
+        self.collection = self.db[collection_name]
 
     def connect(self):
         """

@@ -79,22 +79,38 @@ def main():
     mock_docs = [
         {
             "title": "Redis Connection Timeout in py-intelligence",
-            "content": "The service py-intelligence is experiencing intermittent connection timeouts when connecting to the Redis cache. This usually happens during peak traffic hours. Suggested fix: increase the max_connections in the redis pool configuration.",
+            "content": (
+                "The service py-intelligence is experiencing intermittent connection timeouts "
+                "when connecting to the Redis cache. This usually happens during peak traffic hours. "
+                "Suggested fix: increase the max_connections in the redis pool configuration."
+            ),
             "tags": ["redis", "timeout", "bug"],
         },
         {
             "title": "Kubernetes ImagePullBackOff on Production",
-            "content": "New deployments to the production cluster are failing with ImagePullBackOff. Investigation shows that the CI pipeline is pushing images to the dev registry but the production cluster doesn't have pull permissions for that registry.",
+            "content": (
+                "New deployments to the production cluster are failing with ImagePullBackOff. "
+                "Investigation shows that the CI pipeline is pushing images to the dev registry "
+                "but the production cluster doesn't have pull permissions for that registry."
+            ),
             "tags": ["kubernetes", "deployment", "critical"],
         },
         {
             "title": "Running Database Migrations with Alembic",
-            "content": "To run migrations in this repo, use 'alembic upgrade head'. Make sure your DB_URL environment variable is set correctly to your local or staging PostgreSQL instance before running the command.",
+            "content": (
+                "To run migrations in this repo, use 'alembic upgrade head'. Make sure your DB_URL "
+                "environment variable is set correctly to your local or staging PostgreSQL "
+                "instance before running the command."
+            ),
             "tags": ["database", "migration", "guide"],
         },
         {
             "title": "Optimizing Jenkins Pipelines for Node.js",
-            "content": "Jenkins pipelines for Node.js services can be sped up by using the node_modules cache plugin and running 'npm install' only when package-lock.json changes. Also, consider parallelizing the test and lint stages.",
+            "content": (
+                "Jenkins pipelines for Node.js services can be sped up by using the node_modules "
+                "cache plugin and running 'npm install' only when package-lock.json changes. "
+                "Also, consider parallelizing the test and lint stages."
+            ),
             "tags": ["jenkins", "pipeline", "optimization"],
         },
     ]

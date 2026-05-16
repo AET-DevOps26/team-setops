@@ -1,6 +1,6 @@
 import pytest
 import datetime
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import patch, ANY
 from app.utils.db_utils import DB
 
 

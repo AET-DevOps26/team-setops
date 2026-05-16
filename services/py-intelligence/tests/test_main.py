@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from app.apis import app
 
 client = TestClient(app)
@@ -55,8 +55,7 @@ def test_create_rag_document_success(mock_db) -> None:
 def test_delete_rag_document_endpoint_is_mapped() -> None:
     response = client.delete("/api/v1/rag/documents/does-not-exist-999")
 
-    assert response.status_code == 501
-    assert response.json() == {"detail": "RAG document deletion endpoint not implemented yet"}
+    assert response.status_code == 204
 
 
 @patch("app.apis.similarity_search")

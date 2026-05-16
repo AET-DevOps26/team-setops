@@ -5,9 +5,9 @@
 #   Version: 0.1.0
 #########################################
 
+import re
 from dotenv import load_dotenv
 from app.model import Model
-import os, datetime, re
 
 load_dotenv()
 

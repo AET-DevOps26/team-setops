@@ -1,6 +1,5 @@
 import certifi
 import pymongo
-from fastapi import HTTPException
 from dotenv import load_dotenv
 import os
 import datetime
@@ -23,15 +22,6 @@ class DB:
             print("Pinged your deployment. Connection successful!")
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
-
-    def create_all_embeddings(self):
-        """
-        Creates embeddings for all documents in the collection.
-
-        Returns: 
-            bool: True if successful, False otherwise
-        """
-        return False
 
     def add_new_document(self, document: dict):
         """
@@ -75,70 +65,43 @@ class DB:
         self.collection.delete_many({})
         return True
 
-def similarity_search(
-    query: str,
-    limit: int = 5,
-    collection_name: str="rag"
-) -> list[dict]:
-    """
-    Perform a similiarity search in the MongoDB collection given a query.
-
-    Args: 
-        query[str]: The search query
-        limit[int]: Default is 5. Number of documents to return
-        collection_name[str]: Default is "rag". The name of the collection to search
-
-    Returns: 
-        list[dict]: A list of similar documents
-        
-    """
-
-
-    try:
-        client = pymongo.MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
-        db = client[os.getenv("DB_NAME")]
-        collection = db[collection_name]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}") from e
-
-    query = {
-    'text': query
-}
-
-    results = collection.aggregate([
-    {
-        '$vectorSearch': {
-        'queryVector': query,
-        'path': 'embedding',
-        'numCandidates': limit * 2,  # or a fixed number > limit
-        'limit': limit,
-        'similarity': 'cosine'
-        }
-    }
-    ])
-
-    for doc in results:
-        print(doc)
-    return results
-
 
 def main():
     db = DB()
     db.connect()
     # db.delete_all_documents()
-    # add mock document 
-    doc = {
-        "title": "NALUS",
-        "content": "Nalus war hier.",
-        "tags": ["nalus", "nali"]
-    }
+    # Create four mock documents and add them all
+    mock_docs = [
+        {
+            "title": "Redis Connection Timeout in py-intelligence",
+            "content": "The service py-intelligence is experiencing intermittent connection timeouts when connecting to the Redis cache. This usually happens during peak traffic hours. Suggested fix: increase the max_connections in the redis pool configuration.",
+            "tags": ["redis", "timeout", "bug"]
+        },
+        {
+            "title": "Kubernetes ImagePullBackOff on Production",
+            "content": "New deployments to the production cluster are failing with ImagePullBackOff. Investigation shows that the CI pipeline is pushing images to the dev registry but the production cluster doesn't have pull permissions for that registry.",
+            "tags": ["kubernetes", "deployment", "critical"]
+        },
+        {
+            "title": "Running Database Migrations with Alembic",
+            "content": "To run migrations in this repo, use 'alembic upgrade head'. Make sure your DB_URL environment variable is set correctly to your local or staging PostgreSQL instance before running the command.",
+            "tags": ["database", "migration", "guide"]
+        },
+        {
+            "title": "Optimizing Jenkins Pipelines for Node.js",
+            "content": "Jenkins pipelines for Node.js services can be sped up by using the node_modules cache plugin and running 'npm install' only when package-lock.json changes. Also, consider parallelizing the test and lint stages.",
+            "tags": ["jenkins", "pipeline", "optimization"]
+        }
+    ]
 
-    if db.add_new_document(doc):
-        print("Mock document added successfully")
-    else:
-        print("Failed to add mock document")
+    for doc in mock_docs:
+        if db.add_new_document(doc):
+            print(f"Document '{doc['title']}' added successfully")
+        else:
+            print(f"Failed to add document '{doc['title']}'")
     
 
     
 if __name__ == "__main__":
     main()
+

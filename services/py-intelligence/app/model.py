@@ -1,6 +1,7 @@
 from google import genai
 from transformers import pipeline
 
+
 class Model:
     def __init__(self, model: dict[str, any]):
         self.model = model

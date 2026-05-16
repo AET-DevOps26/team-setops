@@ -61,13 +61,10 @@ def test_delete_rag_document_endpoint_is_mapped() -> None:
 
 @patch("app.apis.similarity_search")
 def test_rag_search_success(mock_search) -> None:
-    mock_search.return_value = [
-        {"_id": "mock_id", "title": "Mock Title", "content": "Mock Content", "tags": []}
-    ]
+    mock_search.return_value = [{"_id": "mock_id", "title": "Mock Title", "content": "Mock Content", "tags": []}]
     response = client.post("/api/v1/rag/search", json={"query": "crash loop", "limit": 3})
 
     assert response.status_code == 200
     assert "results" in response.json()
     assert response.json()["results"][0]["title"] == "Mock Title"
     mock_search.assert_called_once_with("crash loop", limit=3)
-

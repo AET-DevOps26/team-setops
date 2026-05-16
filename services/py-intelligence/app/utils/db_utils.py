@@ -9,7 +9,8 @@ load_dotenv()
 
 class DB: 
     """
-    Database wrapper class for MongoDB
+    Database wrapper class for MongoDB, providing methods for connection management
+    and CRUD operations on the RAG collection.
     """
     def __init__(self):
         self.client = pymongo.MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
@@ -17,6 +18,9 @@ class DB:
         self.collection = self.db[os.getenv("COLLECTION_NAME")]
           
     def connect(self):
+        """
+        Verify the database connection by pinging the MongoDB deployment.
+        """
         try:
             self.client.admin.command('ping')
             print("Pinged your deployment. Connection successful!")
@@ -25,13 +29,14 @@ class DB:
 
     def add_new_document(self, document: dict):
         """
-        Adds a new document to the collection.
+        Validate and insert a new document into the MongoDB collection.
 
-        Args: 
-            document[dict]: The document to add
+        Args:
+            document (dict): The document data containing 'title' and 'content'.
+                Tags and 'created_at' timestamp are added automatically if missing.
 
-        Returns: 
-            bool: True if successful, False otherwise
+        Returns:
+            bool: True if insertion was successful, False if validation failed or an error occurred.
         """
         # Validation
         required_fields = ["title", "content"]
@@ -57,10 +62,10 @@ class DB:
     
     def delete_all_documents(self):
         """
-        Deletes all documents from the collection.
+        Delete all documents currently stored in the RAG collection.
 
-        Returns: 
-            bool: True if successful, False otherwise
+        Returns:
+            bool: True if the operation completed (even if the collection was already empty).
         """
         self.collection.delete_many({})
         return True

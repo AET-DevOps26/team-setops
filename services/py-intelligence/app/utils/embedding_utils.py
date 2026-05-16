@@ -4,14 +4,30 @@ from app.utils.db_utils import DB
 
 def get_embedding(text: str) -> list[float]:
     """
-    Get the embedding for a given text using Ollama.
+    Generate a vector embedding for the given text using the Ollama API.
+
+    Args:
+        text (str): The input text to be embedded.
+
+    Returns:
+        list[float]: A list of floats representing the text embedding.
     """
     response = ollama.embed(model="nomic-embed-text", input=text)
     return response['embeddings'][0]
 
 def create_all_embeddings(collection_name: str = None):
     """
-    Creates embeddings for all documents in the collection that don't have one yet.
+    Batch process all documents in a collection to generate and store missing embeddings.
+
+    Iterates through all documents that do not yet have an 'embedding' field, 
+    generates one using the embedding engine, and updates the document in MongoDB.
+
+    Args:
+        collection_name (str, optional): The name of the collection to process. 
+            Defaults to COLLECTION_NAME from environment variables.
+
+    Returns:
+        bool: True if the process completed successfully, False otherwise.
     """
     if collection_name is None:
         collection_name = os.getenv("COLLECTION_NAME", "injestions")
@@ -56,7 +72,20 @@ def similarity_search(
     collection_name: str = None
 ) -> list[dict]:
     """
-    Perform a similarity search in the MongoDB collection given a query.
+    Perform a vector similarity search in MongoDB using a text query.
+
+    The function converts the input query into an embedding and uses MongoDB's 
+    $vectorSearch aggregation to find the most relevant documents based on 
+    cosine similarity.
+
+    Args:
+        query (str): The search query text.
+        limit (int, optional): The maximum number of documents to return. Defaults to 5.
+        collection_name (str, optional): The name of the collection to search.
+            Defaults to COLLECTION_NAME from environment variables.
+
+    Returns:
+        list[dict]: A list of similar documents, with the 'embedding' field removed.
     """
     if collection_name is None:
         collection_name = os.getenv("COLLECTION_NAME", "injestions")

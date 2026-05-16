@@ -48,12 +48,12 @@ def test_create_rag_document_success(mock_db) -> None:
     )
 
     assert response.status_code == 201
-    assert response.json() == {"message": "Document added successfully"}
+    assert response.json() == {'message': 'Document added and embeddings were updated successfully'}
     mock_db.add_new_document.assert_called_once()
 
 
 def test_delete_rag_document_endpoint_is_mapped() -> None:
-    response = client.delete("/api/v1/rag/documents/does-not-exist-999")
+    response = client.delete("/api/v1/rag/documents/675e3ed186e03e4169b4d354")
 
     assert response.status_code == 204
 

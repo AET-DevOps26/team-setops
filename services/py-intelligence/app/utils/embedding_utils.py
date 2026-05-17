@@ -1,11 +1,14 @@
 import os
-import ollama
+from sentence_transformers import SentenceTransformer
 from app.utils.db_utils import DB
+
+
+_model = None
 
 
 def get_embedding(text: str) -> list[float]:
     """
-    Generate a vector embedding for the given text using the Ollama API.
+    Generate a vector embedding for the given text using local SentenceTransformers.
 
     Args:
         text (str): The input text to be embedded.
@@ -13,8 +16,15 @@ def get_embedding(text: str) -> list[float]:
     Returns:
         list[float]: A list of floats representing the text embedding.
     """
-    response = ollama.embed(model="nomic-embed-text", input=text)
-    return response["embeddings"][0]
+    global _model
+    if _model is None:
+        # nomic-embed-text-v1.5 produces 768-dim vectors, matching the nomic-embed-text dimension.
+        _model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
+
+    # Generate the embedding
+    embedding = _model.encode(text, convert_to_numpy=True)
+    return embedding.tolist()
+
 
 
 def create_all_embeddings(collection_name: str = None):

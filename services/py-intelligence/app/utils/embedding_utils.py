@@ -2,7 +2,6 @@ import os
 from sentence_transformers import SentenceTransformer
 from app.utils.db_utils import DB
 
-
 _model = None
 
 
@@ -24,7 +23,6 @@ def get_embedding(text: str) -> list[float]:
     # Generate the embedding
     embedding = _model.encode(text, convert_to_numpy=True)
     return embedding.tolist()
-
 
 
 def create_all_embeddings(collection_name: str = None):

@@ -33,6 +33,7 @@ def test_get_embedding(mock_sentence_transformer):
 
     # Reset any cached model to trigger the mock
     import app.utils.embedding_utils
+
     app.utils.embedding_utils._model = None
 
     embedding = get_embedding("test text")
@@ -58,6 +59,7 @@ def test_create_all_embeddings_success(mock_db, mock_sentence_transformer):
 
     # Reset any cached model to trigger the mock
     import app.utils.embedding_utils
+
     app.utils.embedding_utils._model = None
 
     success = create_all_embeddings(collection_name=collection_name)
@@ -98,6 +100,7 @@ def test_similarity_search(mock_db, mock_sentence_transformer):
 
     # Reset any cached model to trigger the mock
     import app.utils.embedding_utils
+
     app.utils.embedding_utils._model = None
 
     results = similarity_search("query", limit=2)

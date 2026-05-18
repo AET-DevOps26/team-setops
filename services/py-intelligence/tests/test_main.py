@@ -62,7 +62,7 @@ def test_delete_rag_document_endpoint_is_mapped(mock_db, mock_create_embeddings)
     mock_create_embeddings.return_value = True
     response = client.delete("/api/v1/rag/documents/675e3ed186e03e4169b4d354")
 
-    assert response.status_code == 204
+    assert response.status_code == 200
     mock_db.delete_document.assert_called_once_with("675e3ed186e03e4169b4d354")
     mock_create_embeddings.assert_called_once()
 

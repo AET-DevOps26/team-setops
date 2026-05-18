@@ -3,6 +3,7 @@
 This document provides example `curl` requests for interacting with the `py-intelligence` service API.
 
 ## Starting the Service
+
 Run the following command from the `services/py-intelligence` directory to start the server:
 
 ```bash
@@ -10,11 +11,13 @@ uvicorn app.apis:app --reload
 ```
 
 ## Base URL
+
 The default local development URL is: `http://localhost:8000`
 
 ---
 
 ## 1. Health Check
+
 Verify if the service is up and running.
 
 ```bash
@@ -22,6 +25,7 @@ curl -X GET http://localhost:8000/health
 ```
 
 **Expected Response:**
+
 ```json
 {
   "status": "ok",
@@ -32,6 +36,7 @@ curl -X GET http://localhost:8000/health
 ---
 
 ## 2. Analyze Content
+
 The main endpoint for log analysis and troubleshooting.
 
 ```bash
@@ -51,6 +56,7 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 ---
 
 ## 3. Add RAG Document
+
 Add a new document to the retrieval-augmented generation store. This will also trigger an automatic embedding update.
 
 ```bash
@@ -64,6 +70,7 @@ curl -X POST http://localhost:8000/api/v1/rag/documents \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "message": "Document added and embeddings were updated successfully"
@@ -73,6 +80,7 @@ curl -X POST http://localhost:8000/api/v1/rag/documents \
 ---
 
 ## 4. RAG Semantic Search
+
 Search for documents that are semantically similar to your query.
 
 ```bash
@@ -85,6 +93,7 @@ curl -X POST http://localhost:8000/api/v1/rag/search \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "results": [
@@ -101,10 +110,24 @@ curl -X POST http://localhost:8000/api/v1/rag/search \
 ---
 
 ## 5. Delete RAG Document
+
 Remove a document from the store using its unique ID.
 
 ```bash
 curl -X DELETE http://localhost:8000/api/v1/rag/documents/66468a5c9e2b1f0001d8e123
+```
+
+> [!NOTE]
+> This endpoint is currently a placeholder for the contract definition.
+
+---
+
+## 6. Delete all RAG Documents
+
+Remove all documents from the RAG store. This will also trigger an automatic embedding update.
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/rag/delete_all
 ```
 
 > [!NOTE]

@@ -87,8 +87,8 @@ def create_rag_document(
     return {"message": "Document added and embeddings were updated successfully"}
 
 
-@app.delete("/api/v1/rag/documents/{document_id}", status_code=204)
-def delete_rag_document(document_id: str) -> None:
+@app.delete("/api/v1/rag/documents/{document_id}", status_code=200)
+def delete_rag_document(document_id: str) -> dict:
     """
     Remove a previously indexed RAG document from the database.
 
@@ -101,8 +101,17 @@ def delete_rag_document(document_id: str) -> None:
     success = create_all_embeddings(COLLECTION_NAME)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to update embeddings after deletion.")
-        return {"message": "Document deleted and embeddings were updated successfully"}
+    return {"message": "Document deleted and embeddings were updated successfully"}
 
+@app.delete("/api/v1/rag/delete_all", status_code = 200)
+def delete_all_rag_documents() -> dict:
+    """
+    Remove all documents from the RAG retrieval store.
+    """
+    success = db.delete_all_documents()
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete all documents from the database.")
+    return {"message": "All documents deleted successfully"}
 
 @app.post("/api/v1/rag/search")
 def search_rag_documents(

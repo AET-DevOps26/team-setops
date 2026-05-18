@@ -40,7 +40,7 @@ curl -X GET http://localhost:8000/health
 The main endpoint for log analysis and troubleshooting.
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/analyze \
+curl -X POST http://0.0.0.0:8000/api/v1/analyze \
      -H "Content-Type: application/json" \
      -d '{
            "content": "Deployment failed: database connection timeout",
@@ -60,7 +60,7 @@ curl -X POST http://localhost:8000/api/v1/analyze \
 Add a new document to the retrieval-augmented generation store. This will also trigger an automatic embedding update.
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/rag/documents \
+curl -X POST http://0.0.0.0:8000/api/v1/rag/documents \
      -H "Content-Type: application/json" \
      -d '{
            "title": "Redis Connection Pool Fix",
@@ -84,7 +84,7 @@ curl -X POST http://localhost:8000/api/v1/rag/documents \
 Search for documents that are semantically similar to your query.
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/rag/search \
+curl -X POST http://0.0.0.0:8000/api/v1/rag/search \
      -H "Content-Type: application/json" \
      -d '{
            "query": "how to fix redis timeouts?",
@@ -114,7 +114,7 @@ curl -X POST http://localhost:8000/api/v1/rag/search \
 Remove a document from the store using its unique ID.
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/rag/documents/66468a5c9e2b1f0001d8e123
+curl -X DELETE http://0.0.0.0:8000/api/v1/rag/documents/66468a5c9e2b1f0001d8e123
 ```
 
 > [!NOTE]
@@ -127,7 +127,7 @@ curl -X DELETE http://localhost:8000/api/v1/rag/documents/66468a5c9e2b1f0001d8e1
 Remove all documents from the RAG store. This will also trigger an automatic embedding update.
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/rag/delete_all
+curl -X DELETE http://0.0.0.0:8000/api/v1/rag/delete_all
 ```
 
 > [!NOTE]

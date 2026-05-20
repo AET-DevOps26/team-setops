@@ -4,21 +4,22 @@ from dotenv import load_dotenv
 import os
 import datetime
 
-
 load_dotenv()
 
-class DB: 
+
+class DB:
     """
     Database wrapper class for MongoDB
     """
+
     def __init__(self):
         self.client = pymongo.MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
         self.db = self.client[os.getenv("DB_NAME")]
         self.collection = self.db[os.getenv("COLLECTION_NAME")]
-          
+
     def connect(self):
         try:
-            self.client.admin.command('ping')
+            self.client.admin.command("ping")
             print("Pinged your deployment. Connection successful!")
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
@@ -27,10 +28,10 @@ class DB:
         """
         Adds a new document to the collection.
 
-        Args: 
+        Args:
             document[dict]: The document to add
 
-        Returns: 
+        Returns:
             bool: True if successful, False otherwise
         """
         # Validation
@@ -43,7 +44,7 @@ class DB:
         # Formatting
         if "tags" not in document or not isinstance(document["tags"], list):
             document["tags"] = []
-        
+
         if "created_at" not in document:
             document["created_at"] = datetime.datetime.now(datetime.UTC)
 
@@ -54,12 +55,11 @@ class DB:
             print(f"Error adding document: {e}")
             return False
 
-    
     def delete_all_documents(self):
         """
         Deletes all documents from the collection.
 
-        Returns: 
+        Returns:
             bool: True if successful, False otherwise
         """
         self.collection.delete_many({})
@@ -74,24 +74,40 @@ def main():
     mock_docs = [
         {
             "title": "Redis Connection Timeout in py-intelligence",
-            "content": "The service py-intelligence is experiencing intermittent connection timeouts when connecting to the Redis cache. This usually happens during peak traffic hours. Suggested fix: increase the max_connections in the redis pool configuration.",
-            "tags": ["redis", "timeout", "bug"]
+            "content": (
+                "The service py-intelligence is experiencing intermittent connection timeouts when connecting "
+                "to the Redis cache. This usually happens during peak traffic hours. Suggested fix: "
+                "increase the max_connections in the redis pool configuration."
+            ),
+            "tags": ["redis", "timeout", "bug"],
         },
         {
             "title": "Kubernetes ImagePullBackOff on Production",
-            "content": "New deployments to the production cluster are failing with ImagePullBackOff. Investigation shows that the CI pipeline is pushing images to the dev registry but the production cluster doesn't have pull permissions for that registry.",
-            "tags": ["kubernetes", "deployment", "critical"]
+            "content": (
+                "New deployments to the production cluster are failing with ImagePullBackOff. Investigation "
+                "shows that the CI pipeline is pushing images to the dev registry but the production "
+                "cluster doesn't have pull permissions for that registry."
+            ),
+            "tags": ["kubernetes", "deployment", "critical"],
         },
         {
             "title": "Running Database Migrations with Alembic",
-            "content": "To run migrations in this repo, use 'alembic upgrade head'. Make sure your DB_URL environment variable is set correctly to your local or staging PostgreSQL instance before running the command.",
-            "tags": ["database", "migration", "guide"]
+            "content": (
+                "To run migrations in this repo, use 'alembic upgrade head'. Make sure your DB_URL "
+                "environment variable is set correctly to your local or staging PostgreSQL instance "
+                "before running the command."
+            ),
+            "tags": ["database", "migration", "guide"],
         },
         {
             "title": "Optimizing Jenkins Pipelines for Node.js",
-            "content": "Jenkins pipelines for Node.js services can be sped up by using the node_modules cache plugin and running 'npm install' only when package-lock.json changes. Also, consider parallelizing the test and lint stages.",
-            "tags": ["jenkins", "pipeline", "optimization"]
-        }
+            "content": (
+                "Jenkins pipelines for Node.js services can be sped up by using the node_modules "
+                "cache plugin and running 'npm install' only when package-lock.json changes. "
+                "Also, consider parallelizing the test and lint stages."
+            ),
+            "tags": ["jenkins", "pipeline", "optimization"],
+        },
     ]
 
     for doc in mock_docs:
@@ -99,9 +115,7 @@ def main():
             print(f"Document '{doc['title']}' added successfully")
         else:
             print(f"Failed to add document '{doc['title']}'")
-    
 
-    
+
 if __name__ == "__main__":
     main()
-

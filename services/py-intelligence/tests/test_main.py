@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.apis import app
 
-
 client = TestClient(app)
 
 
@@ -46,8 +45,8 @@ def test_create_rag_document_endpoint_is_mapped() -> None:
         },
     )
 
-    assert response.status_code == 501
-    assert response.json() == {"detail": "RAG document endpoint not implemented yet"}
+    assert response.status_code == 201
+    assert response.json() == {"message": "Document added successfully"}
 
 
 def test_delete_rag_document_endpoint_is_mapped() -> None:

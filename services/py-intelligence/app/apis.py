@@ -63,18 +63,13 @@ def create_rag_document(
     """
     if not title.strip() or not content.strip():
         raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
-    document = {
-        "title": title,
-        "content": content,
-        "tags": tags
-    }
-    
+    document = {"title": title, "content": content, "tags": tags}
+
     success = db.add_new_document(document)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
-    
-    return {"message": "Document added successfully"}
 
+    return {"message": "Document added successfully"}
 
 
 @app.delete("/api/v1/rag/documents/{document_id}", status_code=204)

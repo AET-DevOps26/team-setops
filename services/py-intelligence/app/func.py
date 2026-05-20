@@ -7,7 +7,7 @@
 
 from dotenv import load_dotenv
 from app.model import Model
-import os, datetime, re
+import re
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ AVAILABLE_MODELS = [
     },
 ]
 
+
 def _word_count(text: str) -> int:
     return len(text.split())
 
@@ -40,11 +41,11 @@ class Intelligence:
         self.load_model()
 
     def load_model(self):
-        for model in AVAILABLE_MODELS: 
+        for model in AVAILABLE_MODELS:
             self.models.append(Model(model))
-    
+
     def health(self):
         return {"status": "ok", "service": "py-intelligence"}
-    
+
     def list_models(self):
         return [str(model) for model in self.models]

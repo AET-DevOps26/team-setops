@@ -7,7 +7,7 @@ describe("App", () => {
 	it("should render without crashing", () => {
 		render(React.createElement(App));
 		expect(
-			screen.getByRole("heading", { name: /get started/i }),
+			screen.getByRole("heading", { name: /devpulse/i }),
 		).toBeInTheDocument();
 	});
 });

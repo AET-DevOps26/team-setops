@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from unittest.mock import patch
 
 from app.apis import app
 
@@ -35,7 +36,9 @@ def test_removed_endpoints_return_404() -> None:
     assert client.post("/api/v1/rag/answer", json={"question": "x"}).status_code == 404
 
 
-def test_create_rag_document_endpoint_is_mapped() -> None:
+@patch("app.apis.db")
+def test_create_rag_document_endpoint_is_mapped(mock_db) -> None:
+    mock_db.add_new_document.return_value = True
     response = client.post(
         "/api/v1/rag/documents",
         json={

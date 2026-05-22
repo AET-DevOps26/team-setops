@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: ["**"]
   pull_request:
     branches: ["main"]
 
@@ -70,6 +72,10 @@ jobs:
 
       - name: Pytest
         run: pytest
+        env:
+          MONGODB_URI: mongodb://localhost:27017
+          DB_NAME: test_db
+          COLLECTION_NAME: test_collection
 
   client:
     name: Client (React + Vite)

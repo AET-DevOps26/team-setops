@@ -1,7 +1,11 @@
+from app.utils.embedding_utils import create_all_embeddings
 from fastapi import Body, FastAPI, HTTPException
 from app.utils.db_utils import DB
+from app.utils.embedding_utils import similarity_search
+import os
 
 db = DB()
+COLLECTION_NAME = os.getenv("COLLECTION_NAME", "injestions")
 
 
 app = FastAPI(
@@ -13,10 +17,11 @@ app = FastAPI(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    """Liveness/health endpoint.
+    """
+    Liveness/health endpoint to verify the service status.
 
-    Returns a small JSON payload so orchestration/monitoring can verify the
-    service is reachable.
+    Returns:
+        dict[str, str]: A status message and service identifier.
     """
     return {"status": "ok", "service": "py-intelligence"}
 
@@ -28,21 +33,26 @@ def analyze(
     use_rag: bool = Body(False),
     context: str | None = Body(None),
 ) -> dict:
-    """Single entry-point for the full intelligence pipeline.
+    """
+    The main intelligence endpoint for analyzing log content.
 
-    Frontend/backend can call this endpoint with:
-    - content: the log/text to analyze
-    - mode: "local" or "cloud" (chosen by frontend, forwarded by backend)
-    - use_rag: whether to retrieve additional context
-    - context: optional extra context from the caller
+    Coordinates the full pipeline: optional RAG retrieval, problem analysis,
+    troubleshooting steps, and solution suggestions.
 
-    Response is a single structured JSON produced by one end-to-end process:
-    - problem_type: a short tag for the UI (top-level field)
-    - summary: short overall summary
-    - problem_summary: what went wrong / main issue
-    - troubleshoot: key findings/diagnostics
-    - solutions: suggested fixes / next steps
-    - sources: optional RAG/source references
+    Args:
+        content (str): The raw log or text content to analyze.
+        mode (str, optional): The analysis mode ("local" or "cloud"). Defaults to "local".
+        use_rag (bool, optional): Whether to use Retrieval-Augmented Generation for context. Defaults to False.
+        context (str, optional): Additional context to include in the analysis. Defaults to None.
+
+    Returns:
+        dict: A structured JSON response containing:
+            - problem_type (str): Categorization of the issue.
+            - summary (str): High-level summary of the analysis.
+            - problem_summary (str): Detailed explanation of the detected problem.
+            - troubleshoot (str): Diagnostic steps taken or found.
+            - solutions (list): Recommended fixes or next steps.
+            - sources (list, optional): Reference documents found via RAG.
     """
     if not content.strip():
         raise HTTPException(status_code=422, detail="'content' must not be empty.")
@@ -56,27 +66,53 @@ def create_rag_document(
     content: str = Body(...),
     tags: list[str] = Body([]),
 ) -> dict:
-    """Create/index a document for later retrieval (RAG).
+    """
+    Create and index a new document in the RAG retrieval store.
 
-    Input comes from the backend (not the UI) when new knowledge should be added
-    to the retrieval store (e.g., past incidents, runbooks, resolved fixes).
+    Args:
+        title (str): The title of the document.
+        content (str): The content of the document to be indexed.
+        tags (list[str], optional): A list of category tags. Defaults to [].
+
+    Returns:
+        dict: A confirmation message.
     """
     if not title.strip() or not content.strip():
         raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
     document = {"title": title, "content": content, "tags": tags}
 
-    success = db.add_new_document(document)
+    success = (db.add_new_document(document)) and create_all_embeddings(COLLECTION_NAME)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
+    return {"message": "Document added and embeddings were updated successfully"}
 
-    return {"message": "Document added successfully"}
+
+@app.delete("/api/v1/rag/documents/{document_id}", status_code=200)
+def delete_rag_document(document_id: str) -> dict:
+    """
+    Remove a previously indexed RAG document from the database.
+
+    Args:
+        document_id (str): The unique identifier of the document to delete.
+    """
+    success = db.delete_document(document_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete document from the database.")
+    success = create_all_embeddings(COLLECTION_NAME)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update embeddings after deletion.")
+    return {"message": "Document deleted and embeddings were updated successfully"}
 
 
-@app.delete("/api/v1/rag/documents/{document_id}", status_code=204)
-def delete_rag_document(document_id: str) -> None:
-    """Delete a previously indexed RAG document by id."""
-    # Contract-only endpoint. Implement later.
-    raise HTTPException(status_code=501, detail="RAG document deletion endpoint not implemented yet")
+@app.delete("/api/v1/rag/delete_all", status_code=200)
+def delete_all_rag_documents() -> dict:
+    """
+    Remove all documents from the RAG retrieval store.
+    """
+    success = db.delete_all_documents()
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete all documents from the database.")
+    return {"message": "All documents deleted successfully"}
 
 
 @app.post("/api/v1/rag/search")
@@ -84,12 +120,24 @@ def search_rag_documents(
     query: str = Body(...),
     limit: int = Body(5),
 ) -> dict:
-    """Search the retrieval store for documents relevant to a query.
+    """
+    Search for documents in the RAG store that are semantically similar to the query.
 
-    This is useful for debugging retrieval quality and for building RAG flows
-    where the backend wants explicit sources/snippets.
+    Args:
+        query (str): The search query text.
+        limit (int, optional): Maximum number of results to return. Defaults to 5.
+
+    Returns:
+        dict: A list of relevant documents found in the retrieval store.
     """
     if not query.strip():
         raise HTTPException(status_code=422, detail="'query' must not be empty.")
-    # Contract-only endpoint. Implement later.
-    raise HTTPException(status_code=501, detail="RAG search endpoint not implemented yet")
+
+    try:
+        results = similarity_search(query, limit=limit)
+        # Convert ObjectId to string for JSON serialization
+        for doc in results:
+            doc["_id"] = str(doc["_id"])
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

@@ -28,7 +28,7 @@ services:
     image: rabbitmq:4.3-management-alpine
     container_name: rabbitmq
     ports:
-      - "5672:5672"   # AMQP port
+      - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: guest
@@ -131,6 +131,10 @@ services:
     environment:
       - INGESTION_API_URL=http://spring-ingestion:8080
       - LOGBOOK_API_URL=http://spring-logbook:8080
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
     networks:
       - app-network
 

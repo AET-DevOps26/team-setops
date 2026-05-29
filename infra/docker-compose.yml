@@ -22,6 +22,28 @@ services:
       retries: 5
 
   # -------------------------------------
+  # Message Broker
+  # -------------------------------------
+  rabbitmq:
+    image: rabbitmq:4.3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------
   # Backend Services (Spring Boot)
   # -------------------------------------
   spring-ingestion:
@@ -36,8 +58,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - app-network
@@ -54,8 +82,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - app-network
@@ -72,8 +106,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - app-network
@@ -91,6 +131,10 @@ services:
     environment:
       - INGESTION_API_URL=http://spring-ingestion:8080
       - LOGBOOK_API_URL=http://spring-logbook:8080
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
     networks:
       - app-network
 
@@ -123,3 +167,4 @@ networks:
 
 volumes:
   postgres_data:
+  rabbitmq_data:

@@ -11,7 +11,7 @@ load_dotenv()
 
 AVAILABLE_MODELS = [
     {
-        "name": "gemini-2.0-flash-lite",
+        "name": "gemini-3.5-flash",
         "provider": "google",
         "shortened": "Gemini",
         "cloud": True,
@@ -193,7 +193,10 @@ class Intelligence:
         )
         contract = self.prompts.get(
             "json_response_contract",
-            "Return one valid JSON object with keys: problem_type, severity, summary, problem_summary, evidence, troubleshoot, solutions, sources, confidence.",
+            (
+                "Return one valid JSON object with keys: problem_type, severity, summary, problem_summary",
+                ", evidence, troubleshoot, solutions, sources, confidence.",
+            ),
         )
         rag_policy = self.prompts.get("rag_context_policy", "")
         incident_summary = self.prompts.get("log_analysis", "")

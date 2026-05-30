@@ -8,3 +8,7 @@ pytest==9.0.3
 httpx==0.28.1
 certifi
 python-dotenv
+google-genai
+cryptography==42.0.5
+
+

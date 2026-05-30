@@ -99,7 +99,6 @@ def test_removed_endpoints_return_404() -> None:
     assert client.post("/api/v1/rag/answer", json={"question": "x"}).status_code == 404
 
 
-
 @patch("app.apis.create_all_embeddings")
 @patch("app.apis.db")
 def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:

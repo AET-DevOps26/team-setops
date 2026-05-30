@@ -77,4 +77,3 @@ class Model:
     def __str__(self) -> str:
         location = "cloud" if self.cloud else "local"
         return f"{self.provider} - {self.model_name} ({location})"
-

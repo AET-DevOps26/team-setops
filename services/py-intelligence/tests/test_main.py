@@ -129,6 +129,7 @@ def test_get_model_for_mode_behavior() -> None:
     normalizes strings, and handles errors.
     """
     from app.func import Intelligence
+
     intel = Intelligence()
 
     # Valid modes with different casing and spaces
@@ -146,6 +147,7 @@ def test_parse_model_response_handling() -> None:
     parsing nested blocks) and errors are handled.
     """
     from app.func import Intelligence
+
     intel = Intelligence()
 
     # Standard clean JSON
@@ -172,6 +174,7 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
     and RAG references are populated as sources.
     """
     from app.func import Intelligence
+
     intel = Intelligence()
 
     # Incomplete response, should get filled with defaults
@@ -193,9 +196,7 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
     assert normalized["confidence"] == "low"
 
     # RAG enabled, empty sources: should populate sources from retrieved docs
-    retrieved = [
-        {"_id": "1a", "title": "Doc 1", "tags": ["tag1"], "content": "This is a detailed snippet of Doc 1."}
-    ]
+    retrieved = [{"_id": "1a", "title": "Doc 1", "tags": ["tag1"], "content": "This is a detailed snippet of Doc 1."}]
     normalized_rag = intel._normalize_response({"problem_type": "x"}, retrieved_docs=retrieved, use_rag=True)
 
     assert len(normalized_rag["sources"]) == 1
@@ -291,6 +292,7 @@ def test_model_initialization_and_string_representation() -> None:
 def test_model_load_raises_runtime_error_on_import_error_google() -> None:
     """Verifies that Model._load raises an explicit RuntimeError if the google-genai library is missing."""
     from app.model import Model
+
     google_cfg = {
         "name": "gemini-3.5-flash",
         "provider": "google",
@@ -307,6 +309,7 @@ def test_model_load_raises_runtime_error_on_import_error_google() -> None:
 def test_model_load_raises_runtime_error_on_import_error_qwen() -> None:
     """Verifies that Model._load raises an explicit RuntimeError if llama-cpp-python is missing."""
     from app.model import Model
+
     qwen_cfg = {
         "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
         "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
@@ -324,6 +327,7 @@ def test_model_load_raises_runtime_error_on_import_error_qwen() -> None:
 def test_model_load_raises_runtime_error_if_qwen_path_missing() -> None:
     """Verifies that Model._load raises a RuntimeError if the local GGUF model path configuration is missing."""
     from app.model import Model
+
     qwen_cfg = {
         "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
         "provider": "Qwen",
@@ -340,6 +344,7 @@ def test_model_load_raises_runtime_error_if_qwen_path_missing() -> None:
 def test_model_load_raises_value_error_for_unknown_provider() -> None:
     """Verifies that Model._load raises a ValueError if initialized with an unknown provider configuration."""
     from app.model import Model
+
     unknown_cfg = {
         "name": "custom-model",
         "provider": "unknown_provider",

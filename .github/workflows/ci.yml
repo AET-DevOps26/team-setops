@@ -105,3 +105,47 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker-checks:
+    name: Docker build checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: client
+            context: client
+            dockerfile: client/Dockerfile
+            image: client
+          - name: py-intelligence
+            context: services/py-intelligence
+            dockerfile: services/py-intelligence/Dockerfile
+            image: py-intelligence
+          - name: spring-alerts
+            context: services/spring-alerts
+            dockerfile: services/spring-alerts/Dockerfile
+            image: spring-alerts
+          - name: spring-ingestion
+            context: services/spring-ingestion
+            dockerfile: services/spring-ingestion/Dockerfile
+            image: spring-ingestion
+          - name: spring-logbook
+            context: services/spring-logbook
+            dockerfile: services/spring-logbook/Dockerfile
+            image: spring-logbook
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose config
+        run: docker compose -f infra/docker-compose.yml config
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (${{ matrix.name }})
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: local/${{ matrix.image }}:ci

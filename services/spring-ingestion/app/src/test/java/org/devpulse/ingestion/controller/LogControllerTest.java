@@ -18,8 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(DeploymentLogController.class)
-public class DeploymentLogControllerTest {
+@WebMvcTest(LogController.class)
+public class LogControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,12 +40,12 @@ public class DeploymentLogControllerTest {
                 Map.of("region", "eu-central-1")
         );
 
-        mockMvc.perform(post("/api/v1/logs/deployment")
+        mockMvc.perform(post("/api/v1/logs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validPayload)))
                 .andExpect(status().isAccepted());
 
-        verify(eventPublisherService).publishDeploymentLog(any(IncomingLogEventDto.class));
+        verify(eventPublisherService).publishLog(any(IncomingLogEventDto.class));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class DeploymentLogControllerTest {
                 null
         );
 
-        mockMvc.perform(post("/api/v1/logs/deployment")
+        mockMvc.perform(post("/api/v1/logs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidPayload)))
                 .andExpect(status().isUnprocessableEntity()); // Note: Adjust to isBadRequest() if you change to 400
@@ -76,7 +76,7 @@ public class DeploymentLogControllerTest {
                 null
         );
 
-        mockMvc.perform(post("/api/v1/logs/deployment")
+        mockMvc.perform(post("/api/v1/logs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidPayload)))
                 .andExpect(status().isUnprocessableEntity());

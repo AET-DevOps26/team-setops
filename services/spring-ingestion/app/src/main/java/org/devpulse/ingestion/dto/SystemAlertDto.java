@@ -2,6 +2,8 @@ package org.devpulse.ingestion.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.devpulse.ingestion.type.Severity;
+
 import java.time.Instant;
 import java.util.Map;
 
@@ -13,7 +15,7 @@ public record SystemAlertDto(
         String source,
 
         @NotBlank(message = "Severity is required")
-        String severity,
+        Severity severity,
 
         @NotBlank(message = "Description is required")
         String description,

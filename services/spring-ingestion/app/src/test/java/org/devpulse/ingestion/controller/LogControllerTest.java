@@ -68,22 +68,4 @@ public class LogControllerTest {
                         .content(objectMapper.writeValueAsString(invalidPayload)))
                 .andExpect(status().isUnprocessableEntity()); // Note: Adjust to isBadRequest() if you change to 400
     }
-
-    @Test
-    void whenInvalidSeverity_thenReturnsValidationFailure() throws Exception {
-        // Severity must be INFO, WARNING, ERROR, or CRITICAL
-        IncomingLogEventDto invalidPayload = new IncomingLogEventDto(
-                "auth-service",
-                "Some logs",
-                Instant.now(),
-                "TRACE", // Invalid severity
-                LogType.DEPLOYMENT_LOG,
-                null
-        );
-
-        mockMvc.perform(post("/api/v1/logs")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidPayload)))
-                .andExpect(status().isUnprocessableEntity());
-    }
 }

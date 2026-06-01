@@ -3,6 +3,7 @@ package org.devpulse.ingestion.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.devpulse.ingestion.dto.SystemAlertDto;
 import org.devpulse.ingestion.service.EventPublisherService;
+import org.devpulse.ingestion.type.Severity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,7 +36,7 @@ public class SystemAlertControllerTest {
         SystemAlertDto validAlert = new SystemAlertDto(
                 "alert-123",
                 "Prometheus",
-                "CRITICAL",
+                Severity.CRITICAL,
                 "High CPU Usage",
                 Instant.now(),
                 Map.of("cpu", 95.5)
@@ -55,7 +56,7 @@ public class SystemAlertControllerTest {
         SystemAlertDto invalidAlert = new SystemAlertDto(
                 "alert-123",
                 "",
-                "CRITICAL",
+                Severity.CRITICAL,
                 "High CPU Usage",
                 Instant.now(),
                 null

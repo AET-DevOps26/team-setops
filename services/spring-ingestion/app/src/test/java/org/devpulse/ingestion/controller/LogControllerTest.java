@@ -3,6 +3,8 @@ package org.devpulse.ingestion.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.devpulse.ingestion.dto.IncomingLogEventDto;
 import org.devpulse.ingestion.service.EventPublisherService;
+import org.devpulse.ingestion.type.LogType;
+import org.devpulse.ingestion.type.Severity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,7 +38,8 @@ public class LogControllerTest {
                 "auth-service",
                 "Successfully deployed to production",
                 Instant.now(),
-                "INFO",
+                Severity.INFO,
+                LogType.DEPLOYMENT_LOG,
                 Map.of("region", "eu-central-1")
         );
 
@@ -55,7 +58,8 @@ public class LogControllerTest {
                 "",
                 "Some logs",
                 Instant.now(),
-                "INFO",
+                Severity.INFO,
+                LogType.DEPLOYMENT_LOG,
                 null
         );
 
@@ -73,6 +77,7 @@ public class LogControllerTest {
                 "Some logs",
                 Instant.now(),
                 "TRACE", // Invalid severity
+                LogType.DEPLOYMENT_LOG,
                 null
         );
 

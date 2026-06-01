@@ -14,7 +14,7 @@ public record SystemAlertDto(
         @NotBlank(message = "Source (e.g., Prometheus, Datadog) cannot be blank")
         String source,
 
-        @NotBlank(message = "Severity is required")
+        @NotNull(message = "Severity is required")
         Severity severity,
 
         @NotBlank(message = "Description is required")

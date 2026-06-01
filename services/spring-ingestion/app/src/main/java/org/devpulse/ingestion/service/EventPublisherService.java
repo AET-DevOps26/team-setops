@@ -27,7 +27,7 @@ public class EventPublisherService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void publishDeploymentLog(IncomingLogEventDto payload) {
+    public void publishLog(IncomingLogEventDto payload) {
         log.debug("Publishing log for {} to exchange {}", payload.serviceName(), exchangeName);
         rabbitTemplate.convertAndSend(exchangeName, deploymentLogRoutingKey, payload);
         log.info("Successfully published deployment log for service: {}", payload.serviceName());

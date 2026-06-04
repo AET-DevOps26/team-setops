@@ -2,10 +2,19 @@ from app.utils.embedding_utils import create_all_embeddings
 from fastapi import Body, FastAPI, HTTPException
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
+from app.func import Intelligence
 import os
 
-db = DB()
+db: DB | None = None
+intelligence = Intelligence()
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "injestions")
+
+
+def get_db() -> DB:
+    global db
+    if db is None:
+        db = DB()
+    return db
 
 
 app = FastAPI(
@@ -56,8 +65,24 @@ def analyze(
     """
     if not content.strip():
         raise HTTPException(status_code=422, detail="'content' must not be empty.")
-    # Contract-only endpoint. Implement later.
-    raise HTTPException(status_code=501, detail="Analyze endpoint not implemented yet")
+
+    retrieved_docs = []
+    if use_rag:
+        try:
+            retrieved_docs = similarity_search(content, limit=3)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {str(e)}")
+
+    try:
+        return intelligence.analyze(
+            content=content,
+            mode=mode,
+            use_rag=use_rag,
+            context=context,
+            retrieved_docs=retrieved_docs,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @app.post("/api/v1/rag/documents", status_code=201)
@@ -81,7 +106,7 @@ def create_rag_document(
         raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
     document = {"title": title, "content": content, "tags": tags}
 
-    success = (db.add_new_document(document)) and create_all_embeddings(COLLECTION_NAME)
+    success = (get_db().add_new_document(document)) and create_all_embeddings(COLLECTION_NAME)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
     return {"message": "Document added and embeddings were updated successfully"}
@@ -95,7 +120,7 @@ def delete_rag_document(document_id: str) -> dict:
     Args:
         document_id (str): The unique identifier of the document to delete.
     """
-    success = db.delete_document(document_id)
+    success = get_db().delete_document(document_id)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete document from the database.")
     success = create_all_embeddings(COLLECTION_NAME)
@@ -109,7 +134,7 @@ def delete_all_rag_documents() -> dict:
     """
     Remove all documents from the RAG retrieval store.
     """
-    success = db.delete_all_documents()
+    success = get_db().delete_all_documents()
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete all documents from the database.")
     return {"message": "All documents deleted successfully"}

@@ -10,6 +10,7 @@ tags:
   - name: Health
   - name: Intelligence
   - name: RAG
+  - name: Ingestion
 paths:
   /health:
     get:
@@ -133,6 +134,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+
+  /api/v1/logs/deployment:
+    post:
+      tags: [Ingestion]
+      operationId: ingestDeploymentLog
+      summary: Ingest a deployment log event
+      description: Accepts a deployment log event and publishes it asynchronously via RabbitMQ for processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncomingLogEventDto"
+      responses:
+        "202":
+          description: Log event accepted for asynchronous processing
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+
+  /api/v1/alerts/system:
+    post:
+      tags: [ Ingestion ]
+      operationId: ingestSystemAlert
+      summary: Ingest a system alert event
+      description: Accepts a system alert from external monitors (e.g., Prometheus, Datadog) and publishes it asynchronously via RabbitMQ for downstream processing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemAlertDto"
+      responses:
+        "202":
+          description: System alert accepted for asynchronous processing
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+
 components:
   schemas:
     HealthResponse:
@@ -287,3 +345,68 @@ components:
       properties:
         detail:
           type: string
+    IncomingLogEventDto:
+      type: object
+      required: [serviceName, logContent]
+      properties:
+        serviceName:
+          type: string
+          minLength: 1
+          description: Name of the service that generated the deployment log
+          example: auth-service
+        logContent:
+          type: string
+          minLength: 1
+          description: Raw deployment log content to be ingested
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: Optional timestamp of when the log was generated
+        severity:
+          type: string
+          enum: [INFO, WARNING, ERROR, CRITICAL]
+          default: INFO
+          description: Log severity level
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Optional key-value metadata associated with the deployment
+    SystemAlertDto:
+      type: object
+      required: [ alertId, source, severity, description, timestamp ]
+      properties:
+        alertId:
+          type: string
+          minLength: 1
+          description: Unique identifier for the alert
+          example: "alert-9912"
+        source:
+          type: string
+          minLength: 1
+          description: Source of the alert (e.g., Prometheus, Datadog)
+          example: "Prometheus"
+        severity:
+          type: string
+          minLength: 1
+          description: Severity level of the alert
+          example: "CRITICAL"
+        description:
+          type: string
+          minLength: 1
+          description: Detailed description of the alert
+          example: "CPU usage on node-1 exceeded 90% for 5 minutes"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of when the alert was fired
+        metrics:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Optional key-value metrics associated with the alert
+          example:
+            cpu_load: 92.5
+            memory_usage: "8GB"
+

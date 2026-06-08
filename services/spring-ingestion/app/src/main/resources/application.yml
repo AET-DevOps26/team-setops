@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-ingestion
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+devpulse:
+  rabbitmq:
+    exchange: "devpulse.exchange"
+    routing:
+      deployment-log: "log.deployment.received"
+      system-alert: "alert.system.received"

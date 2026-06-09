@@ -41,14 +41,6 @@ All client requests should be directed to the gateway at **`http://localhost:808
 
 ---
 
-## ⚡ Key Benefits
-
-1. **No CORS Issues:** Since both the client UI and API routes are accessed under the same host and port (`localhost:8080`), browser CORS preflight restrictions are avoided completely.
-2. **Simplified Client Config:** The React frontend only needs to configure a single API base URL (`http://localhost:8080`).
-3. **Internal Topology Hiding:** Microservice port bindings and internal names do not need to be exposed to the public network.
-
----
-
 ## 🧪 Local Testing
 
 Start the complete stack via Docker Compose:

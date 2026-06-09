@@ -8,6 +8,11 @@ ENV HF_HOME=/app/hf_cache
 
 WORKDIR /app
 
+# Build tools needed for llama-cpp-python when no prebuilt wheel is available.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential cmake \
+    && rm -rf /var/lib/apt/lists/*
+
 # 1. Install pytorch without CUDA deps
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 

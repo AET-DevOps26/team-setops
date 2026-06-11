@@ -149,7 +149,7 @@ services:
     ports:
       - "3000:3000" # Assuming React/Vue/Next.js default
     environment:
-      - VITE_API_BASE_URL=http://localhost:8081 # Adjust based on frontend framework (VITE_, REACT_APP_, etc.)
+      - VITE_API_BASE_URL=http://localhost:8081 # Adjust based on client framework (VITE_, REACT_APP_, etc.)
     depends_on:
       - spring-ingestion
       - spring-logbook

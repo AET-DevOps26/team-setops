@@ -1,0 +1,130 @@
+/* ─── Privacy Toggle ─────────────────────────────────── */
+
+.privacy-toggle-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+
+.privacy-toggle {
+	position: relative;
+	display: inline-flex;
+	align-items: stretch;
+	border: 1px solid #2a3a6a;
+	background: rgba(10, 14, 39, 0.85);
+	overflow: hidden;
+}
+
+/* Sliding background indicator */
+.toggle-indicator {
+	position: absolute;
+	top: 2px;
+	bottom: 2px;
+	width: calc(50% - 2px);
+	background: rgba(77, 208, 225, 0.12);
+	border: 1px solid rgba(77, 208, 225, 0.35);
+	transition:
+		transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		box-shadow 0.3s ease;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.indicator-local {
+	transform: translateX(2px);
+	box-shadow:
+		0 0 12px rgba(77, 208, 225, 0.2),
+		inset 0 0 8px rgba(77, 208, 225, 0.08);
+}
+
+.indicator-cloud {
+	transform: translateX(calc(100% + 2px));
+	box-shadow:
+		0 0 12px rgba(77, 208, 225, 0.2),
+		inset 0 0 8px rgba(77, 208, 225, 0.08);
+}
+
+/* Individual toggle buttons */
+.toggle-option {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 14px;
+	border: none;
+	background: transparent;
+	color: #5a7aa3;
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition:
+		color 0.25s ease,
+		text-shadow 0.25s ease;
+	white-space: nowrap;
+}
+
+.toggle-option:hover:not(.active) {
+	color: #8bb4d9;
+}
+
+.toggle-option.active {
+	color: #b8f2ff;
+	text-shadow: 0 0 8px rgba(77, 208, 225, 0.5);
+}
+
+.toggle-icon {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	transition: color 0.25s ease;
+}
+
+.toggle-option.active .toggle-icon {
+	color: #4dd0e1;
+	filter: drop-shadow(0 0 4px rgba(77, 208, 225, 0.6));
+}
+
+/* Hint text below toggle */
+.toggle-hint {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 10px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #5a7aa3;
+	transition: color 0.25s ease;
+	min-height: 14px;
+}
+
+.hint-dot {
+	width: 5px;
+	height: 5px;
+	display: inline-block;
+	transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hint-dot--local {
+	background: #4dd0e1;
+	box-shadow: 0 0 6px rgba(77, 208, 225, 0.6);
+}
+
+.hint-dot--cloud {
+	background: #ffd93d;
+	box-shadow: 0 0 6px rgba(255, 217, 61, 0.5);
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 600px) {
+	.toggle-label {
+		display: none;
+	}
+
+	.toggle-option {
+		padding: 7px 10px;
+	}
+}

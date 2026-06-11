@@ -1,12 +1,12 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import PrivacyToggle from "../components/PrivacyToggle";
 import {
 	PrivacyModeProvider,
 	usePrivacyMode,
-	STORAGE_KEY,
 } from "../context/PrivacyModeContext";
+import { STORAGE_KEY } from "../context/privacyModeConstants";
 
 // Helper: render toggle wrapped in its required provider
 function renderToggle() {

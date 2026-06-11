@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo } from "react";
-
-const STORAGE_KEY = "devpulse-privacy-mode";
-const MODES = { LOCAL: "local", CLOUD: "cloud" };
+import { STORAGE_KEY, MODES } from "./privacyModeConstants";
 
 function getInitialMode() {
 	try {
@@ -52,4 +50,3 @@ export function usePrivacyMode() {
 	return context;
 }
 
-export { MODES, STORAGE_KEY };

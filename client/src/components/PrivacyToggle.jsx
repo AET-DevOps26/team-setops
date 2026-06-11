@@ -2,7 +2,7 @@ import { usePrivacyMode } from "@/context/PrivacyModeContext";
 import "./PrivacyToggle.css";
 
 export default function PrivacyToggle() {
-	const { mode, setMode, isLocal } = usePrivacyMode();
+	const { setMode, isLocal } = usePrivacyMode();
 
 	return (
 		<div className="privacy-toggle-wrapper">

@@ -38,24 +38,24 @@ public class SystemAlertListener {
         switch (result.action()) {
 case ESCALATE -> {
                 log.warn("🚨 ESCALATE alert [{}] — triggered by: {} | details: {}",
-                        alert.alertId(), result.triggeredBy(), result.details());
+                        dto.alertId(), result.triggeredBy(), result.details());
                 // TODO: Persist alert to database with ESCALATED status
                 // TODO: Send urgent notification (e.g. PagerDuty, Slack #incidents channel)
                 // TODO: Trigger incident creation in external incident management system
             }
             case NOTIFY -> {
                 log.info("🔔 NOTIFY for alert [{}] — triggered by: {} | details: {}",
-                        alert.alertId(), result.triggeredBy(), result.details());
+                        dto.alertId(), result.triggeredBy(), result.details());
                 // TODO: Persist alert to database with NOTIFIED status
                 // TODO: Send team notification (e.g. Slack, email, Microsoft Teams webhook)
             }
             case LOG -> {
                 log.info("📝 LOG alert [{}] — triggered by: {} | details: {}",
-                        alert.alertId(), result.triggeredBy(), result.details());
+                        dto.alertId(), result.triggeredBy(), result.details());
                 // TODO: Persist alert to database with LOGGED status for auditing
             }
             case IGNORE -> {
-                log.debug("⏭️ IGNORE alert [{}] — no strategies matched", alert.alertId());
+                log.debug("⏭️ IGNORE alert [{}] — no strategies matched", dto.alertId());
                 // TODO: Optionally persist to database with IGNORED status for traceability
             }
         }

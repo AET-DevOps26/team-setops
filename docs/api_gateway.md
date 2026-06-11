@@ -56,8 +56,9 @@ curl -X POST http://localhost:8080/api/v1/logs \
      -H "Content-Type: application/json" \
      -d '{
            "serviceName": "payment-service",
-           "logLevel": "ERROR",
-           "message": "Out of memory error in payment processor",
+           "type": "DEPLOYMENT_LOG",
+           "severity": "ERROR",
+           "logContent": "Out of memory error in payment processor",
            "timestamp": "2026-06-09T16:00:00Z"
          }'
 ```

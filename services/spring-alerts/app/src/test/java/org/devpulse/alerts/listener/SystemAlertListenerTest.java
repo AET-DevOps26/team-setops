@@ -4,6 +4,8 @@ import org.devpulse.alerts.dto.SystemAlertDto;
 import org.devpulse.alerts.engine.AlertAction;
 import org.devpulse.alerts.engine.EvaluationResult;
 import org.devpulse.alerts.engine.RulesEngineService;
+import org.devpulse.alerts.entity.SystemAlert;
+import org.devpulse.alerts.repository.SystemAlertRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,8 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +26,10 @@ class SystemAlertListenerTest {
 
     @Mock
     private RulesEngineService rulesEngine;
+
+    // 1. Mock the new database repository dependency
+    @Mock
+    private SystemAlertRepository alertRepository;
 
     @InjectMocks
     private SystemAlertListener listener;
@@ -38,13 +46,17 @@ class SystemAlertListenerTest {
         );
         
         when(rulesEngine.evaluate(any(SystemAlertDto.class))).thenReturn(mockResult);
+        
+        // 2. Mock the repository to simulate that this alert doesn't exist in the DB yet
+        when(alertRepository.findByAlertId(anyString())).thenReturn(Optional.empty());
 
         // Act
         listener.handleSystemAlert(alert);
 
         // Assert
         verify(rulesEngine).evaluate(alert);
-        // Since the current listener implementation only logs, we just verify it runs 
-        // without throwing exceptions and properly delegates to the engine.
+        
+        // 3. Verify that the listener successfully tried to save the entity to the database
+        verify(alertRepository).save(any(SystemAlert.class));
     }
 }

@@ -270,65 +270,21 @@ class Intelligence:
             cleaned = re.sub(r"\s*```$", "", cleaned)
 
         try:
-            return json.loads(cleaned)
+            return json.loads(cleaned, strict=False)
         except json.JSONDecodeError:
             match = re.search(r"\{.*\}", cleaned, re.DOTALL)
             if match:
                 json_str = match.group(0)
                 try:
-                    return json.loads(json_str)
+                    return json.loads(json_str, strict=False)
                 except json.JSONDecodeError:
-                    repaired = self._repair_json_string(json_str)
+                    # Escape unescaped double quotes inside single quotes (common in TS compiler output)
+                    repaired = json_str.replace("'\"", "'\\\"").replace("\"'", "\\\"'")
                     try:
-                        return json.loads(repaired)
+                        return json.loads(repaired, strict=False)
                     except json.JSONDecodeError as e:
                         raise ValueError(str(e))
             raise ValueError("Model response was not valid JSON.")
-
-    def _repair_json_string(self, s: str) -> str:
-        """Repairs unescaped double quotes inside JSON string values.
-
-        Iterates through the string character by character, tracking whether it is
-        currently inside a JSON string value, and escapes any double quotes that are
-        not followed by valid JSON punctuation (comma, colon, bracket, or brace).
-        """
-        result = []
-        in_string = False
-        escape = False
-        i = 0
-        n = len(s)
-        while i < n:
-            char = s[i]
-            if not in_string:
-                if char == '"':
-                    in_string = True
-                result.append(char)
-                i += 1
-            else:
-                if escape:
-                    escape = False
-                    result.append(char)
-                    i += 1
-                elif char == "\\":
-                    escape = True
-                    result.append(char)
-                    i += 1
-                elif char == '"':
-                    # Look ahead to see if this closing quote is followed by valid JSON structure
-                    j = i + 1
-                    while j < n and s[j].isspace():
-                        j += 1
-                    next_char = s[j] if j < n else ""
-                    if next_char in (",", "]", "}", ":"):
-                        in_string = False
-                        result.append(char)
-                    else:
-                        result.append('\\"')
-                    i += 1
-                else:
-                    result.append(char)
-                    i += 1
-        return "".join(result)
 
     def _normalize_response(
         self, response: dict[str, Any], retrieved_docs: list[dict[str, Any]], use_rag: bool

@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DeploymentLogRepository extends JpaRepository<DeploymentLog, Long> {
 
-    List<DeploymentLog> findByStatus(String status);
-    
-} 
+    List<DeploymentLog> findAllByOrderByTimestampDesc();
+
+}

@@ -274,8 +274,61 @@ class Intelligence:
         except json.JSONDecodeError:
             match = re.search(r"\{.*\}", cleaned, re.DOTALL)
             if match:
-                return json.loads(match.group(0))
+                json_str = match.group(0)
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                    repaired = self._repair_json_string(json_str)
+                    try:
+                        return json.loads(repaired)
+                    except json.JSONDecodeError as e:
+                        raise ValueError(str(e))
             raise ValueError("Model response was not valid JSON.")
+
+    def _repair_json_string(self, s: str) -> str:
+        """Repairs unescaped double quotes inside JSON string values.
+
+        Iterates through the string character by character, tracking whether it is
+        currently inside a JSON string value, and escapes any double quotes that are
+        not followed by valid JSON punctuation (comma, colon, bracket, or brace).
+        """
+        result = []
+        in_string = False
+        escape = False
+        i = 0
+        n = len(s)
+        while i < n:
+            char = s[i]
+            if not in_string:
+                if char == '"':
+                    in_string = True
+                result.append(char)
+                i += 1
+            else:
+                if escape:
+                    escape = False
+                    result.append(char)
+                    i += 1
+                elif char == '\\':
+                    escape = True
+                    result.append(char)
+                    i += 1
+                elif char == '"':
+                    # Look ahead to see if this closing quote is followed by valid JSON structure
+                    j = i + 1
+                    while j < n and s[j].isspace():
+                        j += 1
+                    next_char = s[j] if j < n else ''
+                    if next_char in (',', ']', '}', ':'):
+                        in_string = False
+                        result.append(char)
+                    else:
+                        result.append('\\"')
+                    i += 1
+                else:
+                    result.append(char)
+                    i += 1
+        return "".join(result)
 
     def _normalize_response(
         self, response: dict[str, Any], retrieved_docs: list[dict[str, Any]], use_rag: bool
@@ -297,8 +350,39 @@ class Intelligence:
             dict[str, Any]: A standardized dictionary containing all required analysis fields.
         """
         normalized = {key: response.get(key) for key in REQUIRED_RESPONSE_KEYS}
-        if use_rag and not normalized["sources"]:
-            normalized["sources"] = self._build_sources(retrieved_docs)
+
+        # Conform and structure sources to match SourceRef schema
+        sources = normalized["sources"]
+        if not isinstance(sources, list):
+            sources = []
+
+        conformed_sources = []
+        for item in sources:
+            if isinstance(item, str):
+                title = ""
+                for doc in retrieved_docs:
+                    if str(doc.get("_id", "")) == item:
+                        title = doc.get("title", "")
+                        break
+                conformed_sources.append({
+                    "id": item,
+                    "title": title
+                })
+            elif isinstance(item, dict):
+                item_id = str(item.get("id", item.get("_id", "")))
+                title = item.get("title", "")
+                if not title:
+                    for doc in retrieved_docs:
+                        if str(doc.get("_id", "")) == item_id:
+                            title = doc.get("title", "")
+                            break
+                conformed_sources.append({
+                    "id": item_id,
+                    "title": title
+                })
+
+        if not conformed_sources and use_rag:
+            conformed_sources = self._build_sources(retrieved_docs)
 
         normalized["problem_type"] = normalized["problem_type"] or "unknown"
         normalized["severity"] = normalized["severity"] or "unknown"
@@ -307,7 +391,7 @@ class Intelligence:
         normalized["evidence"] = normalized["evidence"] or []
         normalized["troubleshoot"] = normalized["troubleshoot"] or []
         normalized["solutions"] = normalized["solutions"] or []
-        normalized["sources"] = normalized["sources"] or []
+        normalized["sources"] = conformed_sources
         normalized["confidence"] = normalized["confidence"] or "low"
         return normalized
 

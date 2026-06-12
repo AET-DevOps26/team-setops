@@ -73,7 +73,14 @@ curl -X POST http://0.0.0.0:8000/api/v1/rag/documents \
 
 ```json
 {
-  "message": "Document added and embeddings were updated successfully"
+  "id": "66468a5c9e2b1f0001d8e123",
+  "title": "Redis Connection Pool Fix",
+  "content": "To resolve Redis timeouts, increase the max_connections in the configuration file to 100.",
+  "tags": [
+    "redis",
+    "timeout",
+    "guide"
+  ]
 }
 ```
 
@@ -98,12 +105,13 @@ curl -X POST http://0.0.0.0:8000/api/v1/rag/search \
 {
   "results": [
     {
-      "_id": "6646...",
+      "document_id": "66468a5c9e2b1f0001d8e123",
       "title": "Redis Connection Pool Fix",
-      "content": "...",
-      "tags": ["redis", "timeout", "guide"]
+      "score": 1.0,
+      "snippet": "To resolve Redis timeouts, increase the max_connections in the configuration file to 100."
     }
-  ]
+  ],
+  "count": 1
 }
 ```
 
@@ -117,8 +125,8 @@ Remove a document from the store using its unique ID.
 curl -X DELETE http://0.0.0.0:8000/api/v1/rag/documents/66468a5c9e2b1f0001d8e123
 ```
 
-> [!NOTE]
-> This endpoint is currently a placeholder for the contract definition.
+**Expected Response:**
+*Status Code:* `204 No Content` (Empty response body)
 
 ---
 
@@ -130,5 +138,10 @@ Remove all documents from the RAG store. This will also trigger an automatic emb
 curl -X DELETE http://0.0.0.0:8000/api/v1/rag/delete_all
 ```
 
-> [!NOTE]
-> This endpoint is currently a placeholder for the contract definition.
+**Expected Response:**
+
+```json
+{
+  "message": "All documents deleted successfully"
+}
+```

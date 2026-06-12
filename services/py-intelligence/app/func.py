@@ -309,7 +309,7 @@ class Intelligence:
                     escape = False
                     result.append(char)
                     i += 1
-                elif char == '\\':
+                elif char == "\\":
                     escape = True
                     result.append(char)
                     i += 1
@@ -318,8 +318,8 @@ class Intelligence:
                     j = i + 1
                     while j < n and s[j].isspace():
                         j += 1
-                    next_char = s[j] if j < n else ''
-                    if next_char in (',', ']', '}', ':'):
+                    next_char = s[j] if j < n else ""
+                    if next_char in (",", "]", "}", ":"):
                         in_string = False
                         result.append(char)
                     else:
@@ -364,10 +364,7 @@ class Intelligence:
                     if str(doc.get("_id", "")) == item:
                         title = doc.get("title", "")
                         break
-                conformed_sources.append({
-                    "id": item,
-                    "title": title
-                })
+                conformed_sources.append({"id": item, "title": title})
             elif isinstance(item, dict):
                 item_id = str(item.get("id", item.get("_id", "")))
                 title = item.get("title", "")
@@ -376,10 +373,7 @@ class Intelligence:
                         if str(doc.get("_id", "")) == item_id:
                             title = doc.get("title", "")
                             break
-                conformed_sources.append({
-                    "id": item_id,
-                    "title": title
-                })
+                conformed_sources.append({"id": item_id, "title": title})
 
         if not conformed_sources and use_rag:
             conformed_sources = self._build_sources(retrieved_docs)

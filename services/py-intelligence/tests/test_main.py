@@ -168,9 +168,9 @@ def test_parse_model_response_handling() -> None:
         intel._parse_model_response("not a json string")
 
     # Unescaped double quotes in JSON string
-    assert intel._parse_model_response(
-        '{"evidence": ["Module \'"./App.css"\' has no default export."]}'
-    ) == {"evidence": ["Module \'\"./App.css\"\' has no default export."]}
+    assert intel._parse_model_response('{"evidence": ["Module \'"./App.css"\' has no default export."]}') == {
+        "evidence": ["Module '\"./App.css\"' has no default export."]
+    }
 
 
 def test_normalize_response_defaults_and_rag_sources() -> None:
@@ -220,9 +220,11 @@ def test_removed_endpoints_return_404() -> None:
 @patch("app.apis.db")
 def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:
     """Verifies that adding a new document via /api/v1/rag/documents successfully indexes and updates embeddings."""
+
     def mock_add(doc):
         doc["_id"] = "mock_id_123"
         return True
+
     mock_db.add_new_document.side_effect = mock_add
     mock_create_embeddings.return_value = True
     response = client.post(

@@ -109,10 +109,10 @@ def create_rag_document(
     db_instance = get_db()
     if not db_instance.add_new_document(document):
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
-    
+
     if not create_all_embeddings(COLLECTION_NAME):
         raise HTTPException(status_code=500, detail="Failed to update embeddings after adding document.")
-        
+
     return {
         "id": str(document.get("_id", "")),
         "title": document["title"],
@@ -171,15 +171,14 @@ def search_rag_documents(
         results = similarity_search(query, limit=limit)
         formatted_results = []
         for doc in results:
-            formatted_results.append({
-                "document_id": str(doc.get("_id", "")),
-                "title": doc.get("title", ""),
-                "score": float(doc.get("score", 1.0)),
-                "snippet": doc.get("content", "")
-            })
-        return {
-            "results": formatted_results,
-            "count": len(formatted_results)
-        }
+            formatted_results.append(
+                {
+                    "document_id": str(doc.get("_id", "")),
+                    "title": doc.get("title", ""),
+                    "score": float(doc.get("score", 1.0)),
+                    "snippet": doc.get("content", ""),
+                }
+            )
+        return {"results": formatted_results, "count": len(formatted_results)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

@@ -14,7 +14,7 @@ LOCAL_ANALYSIS_RESPONSE = {
     "problem_summary": "The model points to a failing database path.",
     "evidence": ["Deployment failed: database connection timeout"],
     "troubleshoot": ["Check database connectivity."],
-    "solutions": [{"title": "Restore connectivity", "steps": "Fix the connection settings.", "risk": "medium"}],
+    "solutions": ["Restore connectivity by fixing the connection settings."],
     "sources": [],
     "confidence": "high",
 }
@@ -167,6 +167,11 @@ def test_parse_model_response_handling() -> None:
     with pytest.raises(ValueError, match="Model response was not valid JSON."):
         intel._parse_model_response("not a json string")
 
+    # Unescaped double quotes in JSON string
+    assert intel._parse_model_response('{"evidence": ["Module \'"./App.css"\' has no default export."]}') == {
+        "evidence": ["Module '\"./App.css\"' has no default export."]
+    }
+
 
 def test_normalize_response_defaults_and_rag_sources() -> None:
     """Verifies that incomplete model responses are completed with defaults,
@@ -215,7 +220,12 @@ def test_removed_endpoints_return_404() -> None:
 @patch("app.apis.db")
 def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:
     """Verifies that adding a new document via /api/v1/rag/documents successfully indexes and updates embeddings."""
-    mock_db.add_new_document.return_value = True
+
+    def mock_add(doc):
+        doc["_id"] = "mock_id_123"
+        return True
+
+    mock_db.add_new_document.side_effect = mock_add
     mock_create_embeddings.return_value = True
     response = client.post(
         "/api/v1/rag/documents",
@@ -227,7 +237,12 @@ def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:
     )
 
     assert response.status_code == 201
-    assert response.json() == {"message": "Document added and embeddings were updated successfully"}
+    assert response.json() == {
+        "id": "mock_id_123",
+        "title": "Database timeout fix",
+        "content": "Restarted database connection pool",
+        "tags": ["db", "timeout"],
+    }
     mock_db.add_new_document.assert_called_once()
     mock_create_embeddings.assert_called_once()
 
@@ -240,7 +255,7 @@ def test_delete_rag_document_endpoint_is_mapped(mock_db, mock_create_embeddings)
     mock_create_embeddings.return_value = True
     response = client.delete("/api/v1/rag/documents/675e3ed186e03e4169b4d354")
 
-    assert response.status_code == 200
+    assert response.status_code == 204
     mock_db.delete_document.assert_called_once_with("675e3ed186e03e4169b4d354")
     mock_create_embeddings.assert_called_once()
 
@@ -252,8 +267,13 @@ def test_rag_search_success(mock_search) -> None:
     response = client.post("/api/v1/rag/search", json={"query": "crash loop", "limit": 3})
 
     assert response.status_code == 200
-    assert "results" in response.json()
-    assert response.json()["results"][0]["title"] == "Mock Title"
+    res_data = response.json()
+    assert "results" in res_data
+    assert res_data["count"] == 1
+    assert res_data["results"][0]["title"] == "Mock Title"
+    assert res_data["results"][0]["document_id"] == "mock_id"
+    assert res_data["results"][0]["score"] == 1.0
+    assert res_data["results"][0]["snippet"] == "Mock Content"
     mock_search.assert_called_once_with("crash loop", limit=3)
 
 

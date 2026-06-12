@@ -21,6 +21,7 @@ dependencies {
     // Spring Boot Core
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     
     // Database Persistence
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

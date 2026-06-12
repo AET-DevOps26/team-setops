@@ -50,8 +50,6 @@ curl -X POST http://0.0.0.0:8000/api/v1/analyze \
          }'
 ```
 
-> [!NOTE]
-> This endpoint is currently a contract-only placeholder and will return a `501 Not Implemented` status.
 
 ---
 

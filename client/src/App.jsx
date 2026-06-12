@@ -1,7 +1,65 @@
+import { useState, useEffect, useCallback } from "react";
 import "./App.css";
 import PrivacyToggle from "@/components/PrivacyToggle";
+import IngestModal from "@/components/IngestModal";
+import LogList from "@/components/LogList";
+import InsightsPanel from "@/components/InsightsPanel";
+import { usePrivacyMode } from "@/context/PrivacyModeContext";
+import { ingestLog, analyzeLog } from "@/lib/api";
+
+let nextLogId = 1;
 
 function App() {
+	/* ── State ──────────────────────────────────────────── */
+	const { mode } = usePrivacyMode();
+
+	const [logs, setLogs] = useState([]);
+	const [selectedLogId, setSelectedLogId] = useState(null);
+	const [showIngestModal, setShowIngestModal] = useState(false);
+
+	const [analysisResult, setAnalysisResult] = useState(null);
+	const [analyzing, setAnalyzing] = useState(false);
+	const [analysisError, setAnalysisError] = useState(null);
+
+	const [clock, setClock] = useState(new Date());
+
+	/* ── Live clock ─────────────────────────────────────── */
+	useEffect(() => {
+		const timer = setInterval(() => setClock(new Date()), 1000);
+		return () => clearInterval(timer);
+	}, []);
+
+	/* ── Handlers ───────────────────────────────────────── */
+	const handleIngest = useCallback(async (payload) => {
+		await ingestLog(payload);
+		setLogs((prev) => [{ ...payload, id: nextLogId++ }, ...prev]);
+	}, []);
+
+	const handleAnalyze = useCallback(
+		async (log) => {
+			setAnalyzing(true);
+			setAnalysisError(null);
+			setAnalysisResult(null);
+
+			try {
+				const result = await analyzeLog(log.logContent, mode);
+				setAnalysisResult(result);
+			} catch (err) {
+				setAnalysisError(err.message || "Analysis failed");
+			} finally {
+				setAnalyzing(false);
+			}
+		},
+		[mode],
+	);
+
+	const handleSelectLog = useCallback((id) => {
+		setSelectedLogId((prev) => (prev === id ? null : id));
+	}, []);
+
+	/* ── Render ─────────────────────────────────────────── */
+	const hasLogs = logs.length > 0;
+
 	return (
 		<div className="page">
 			<div className="scanlines" aria-hidden="true"></div>
@@ -15,7 +73,12 @@ function App() {
 						</div>
 					</div>
 					<div className="actions">
-						<button type="button" className="ghost-btn">
+						<button
+							type="button"
+							className="ghost-btn"
+							id="btn-ingest"
+							onClick={() => setShowIngestModal(true)}
+						>
 							<svg
 								className="ghost-icon"
 								viewBox="0 0 24 24"
@@ -51,79 +114,111 @@ function App() {
 				</header>
 
 				<main className="content">
+					{/* ── System Logs Panel ─────────────────────── */}
 					<section className="panel">
 						<div className="panel-tag">System Logs</div>
-						<div className="panel-body empty">
-							<svg
-								className="empty-icon"
-								viewBox="0 0 64 64"
-								aria-hidden="true"
-							>
-								<path
-									d="M18 8h20l10 10v30a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
+						{hasLogs ? (
+							<div className="panel-body">
+								<LogList
+									logs={logs}
+									selectedId={selectedLogId}
+									onSelect={handleSelectLog}
+									onAnalyze={handleAnalyze}
+									analyzing={analyzing}
 								/>
-								<path
-									d="M38 8v12h12"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
-								/>
-								<path
-									d="M20 34h24M20 42h18"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
-								/>
-							</svg>
-							<p className="empty-title">No Logs Ingested</p>
-							<button type="button" className="ghost-btn compact">
-								Ingest Your First Logs
-							</button>
-						</div>
+							</div>
+						) : (
+							<div className="panel-body empty">
+								<svg
+									className="empty-icon"
+									viewBox="0 0 64 64"
+									aria-hidden="true"
+								>
+									<path
+										d="M18 8h20l10 10v30a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+									<path
+										d="M38 8v12h12"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+									<path
+										d="M20 34h24M20 42h18"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+								</svg>
+								<p className="empty-title">No Logs Ingested</p>
+								<button
+									type="button"
+									className="ghost-btn compact"
+									onClick={() => setShowIngestModal(true)}
+								>
+									Ingest Your First Logs
+								</button>
+							</div>
+						)}
 					</section>
 
+					{/* ── AI Insights Panel ─────────────────────── */}
 					<section className="panel">
 						<div className="panel-tag">AI Insights</div>
-						<div className="panel-body empty">
-							<svg
-								className="empty-icon"
-								viewBox="0 0 64 64"
-								aria-hidden="true"
-							>
-								<path
-									d="M22 26a10 10 0 0 1 20 0c0 7-6 8-6 14H28c0-6-6-7-6-14z"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
-								/>
-								<path
-									d="M26 44h12M24 50h16"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
-								/>
-								<path
-									d="M14 28h6M44 28h6M32 12v6"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="3"
-								/>
-							</svg>
-							<p className="empty-title">
-								Select a log entry and click
-								<br />
-								<span className="accent">Analyze</span> to view insights
-							</p>
-							<div className="empty-dots" aria-hidden="true">
-								<span className="dot"></span>
-								<span className="dot"></span>
-								<span className="dot"></span>
-								<span className="dot"></span>
+						{analyzing ? (
+							<div className="panel-body">
+								<InsightsPanel loading={true} result={null} />
 							</div>
-						</div>
+						) : analysisResult ? (
+							<div className="panel-body">
+								<InsightsPanel loading={false} result={analysisResult} />
+							</div>
+						) : (
+							<div className="panel-body empty">
+								<svg
+									className="empty-icon"
+									viewBox="0 0 64 64"
+									aria-hidden="true"
+								>
+									<path
+										d="M22 26a10 10 0 0 1 20 0c0 7-6 8-6 14H28c0-6-6-7-6-14z"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+									<path
+										d="M26 44h12M24 50h16"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+									<path
+										d="M14 28h6M44 28h6M32 12v6"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="3"
+									/>
+								</svg>
+								{analysisError ? (
+									<p className="empty-title error-text">{analysisError}</p>
+								) : (
+									<p className="empty-title">
+										Select a log entry and click
+										<br />
+										<span className="accent">Analyze</span> to view insights
+									</p>
+								)}
+								<div className="empty-dots" aria-hidden="true">
+									<span className="dot"></span>
+									<span className="dot"></span>
+									<span className="dot"></span>
+									<span className="dot"></span>
+								</div>
+							</div>
+						)}
 					</section>
 				</main>
 
@@ -131,11 +226,24 @@ function App() {
 					<div className="status-left">
 						<span className="status-dot"></span>
 						System Online
-						<span className="divider"></span>0 Logs Ingested
+						<span className="divider"></span>
+						{logs.length} Log{logs.length !== 1 ? "s" : ""} Ingested
+						<span className="divider"></span>
+						<span className="mode-indicator">
+							Mode: {mode === "local" ? "🔒 Local" : "☁️ Cloud"}
+						</span>
 					</div>
-					<div className="status-right">05/20/2026, 19:04:18</div>
+					<div className="status-right">{clock.toLocaleString()}</div>
 				</footer>
 			</div>
+
+			{/* ── Ingest Modal ──────────────────────────────── */}
+			{showIngestModal && (
+				<IngestModal
+					onSubmit={handleIngest}
+					onClose={() => setShowIngestModal(false)}
+				/>
+			)}
 		</div>
 	);
 }

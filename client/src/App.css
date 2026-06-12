@@ -270,6 +270,18 @@
 	color: #5a7aa3;
 }
 
+.mode-indicator {
+	color: #4dd0e1;
+}
+
+.error-text {
+	color: #ff6b9d !important;
+}
+
+.panel-body:not(.empty) {
+	overflow-y: auto;
+}
+
 @media (max-width: 900px) {
 	.content {
 		grid-template-columns: 1fr;

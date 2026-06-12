@@ -14,7 +14,7 @@ LOCAL_ANALYSIS_RESPONSE = {
     "problem_summary": "The model points to a failing database path.",
     "evidence": ["Deployment failed: database connection timeout"],
     "troubleshoot": ["Check database connectivity."],
-    "solutions": [{"title": "Restore connectivity", "steps": "Fix the connection settings.", "risk": "medium"}],
+    "solutions": ["Restore connectivity by fixing the connection settings."],
     "sources": [],
     "confidence": "high",
 }

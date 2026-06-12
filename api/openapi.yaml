@@ -225,20 +225,32 @@ components:
           description: Optional additional context from the caller.
     AnalyzeResponse:
       type: object
-      required: [problem_type, summary, problem_summary, troubleshoot, solutions]
+      required: [problem_type, severity, summary, problem_summary, evidence, troubleshoot, solutions, confidence]
       properties:
         problem_type:
           type: string
           description: UI tag/category of the detected problem.
           example: database_timeout
+        severity:
+          type: string
+          description: Detected severity of the problem.
+          example: Medium
         summary:
           type: string
           description: Short overall summary.
         problem_summary:
           type: string
           description: What went wrong / main issue.
+        evidence:
+          type: array
+          items:
+            type: string
+          description: Evidence / hints parsed from logs.
         troubleshoot:
-          $ref: "#/components/schemas/TroubleshootBlock"
+          type: array
+          items:
+            type: string
+          description: Recommended troubleshooting/diagnostic steps.
         solutions:
           type: array
           items:
@@ -249,20 +261,10 @@ components:
           items:
             $ref: "#/components/schemas/SourceRef"
           description: Optional references used for RAG.
-    TroubleshootBlock:
-      type: object
-      required: [findings]
-      properties:
-        findings:
-          type: array
-          items:
-            type: string
-          description: Key findings/diagnostics extracted from the input.
-        notes:
-          type: array
-          items:
-            type: string
-          description: Optional extra notes.
+        confidence:
+          type: string
+          description: Confidence level of the analysis.
+          example: Medium
     SourceRef:
       type: object
       required: [id]

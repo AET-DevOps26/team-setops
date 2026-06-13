@@ -1,5 +1,5 @@
 from app.utils.embedding_utils import create_all_embeddings
-from fastapi import Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Response
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
 from app.func import Intelligence
@@ -100,20 +100,29 @@ def create_rag_document(
         tags (list[str], optional): A list of category tags. Defaults to [].
 
     Returns:
-        dict: A confirmation message.
+        dict: The created RAG document.
     """
     if not title.strip() or not content.strip():
         raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
     document = {"title": title, "content": content, "tags": tags}
 
-    success = (get_db().add_new_document(document)) and create_all_embeddings(COLLECTION_NAME)
-    if not success:
+    db_instance = get_db()
+    if not db_instance.add_new_document(document):
         raise HTTPException(status_code=500, detail="Failed to add document to the database.")
-    return {"message": "Document added and embeddings were updated successfully"}
+
+    if not create_all_embeddings(COLLECTION_NAME):
+        raise HTTPException(status_code=500, detail="Failed to update embeddings after adding document.")
+
+    return {
+        "id": str(document.get("_id", "")),
+        "title": document["title"],
+        "content": document["content"],
+        "tags": document["tags"],
+    }
 
 
-@app.delete("/api/v1/rag/documents/{document_id}", status_code=200)
-def delete_rag_document(document_id: str) -> dict:
+@app.delete("/api/v1/rag/documents/{document_id}", status_code=204)
+def delete_rag_document(document_id: str) -> Response:
     """
     Remove a previously indexed RAG document from the database.
 
@@ -126,7 +135,7 @@ def delete_rag_document(document_id: str) -> dict:
     success = create_all_embeddings(COLLECTION_NAME)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to update embeddings after deletion.")
-    return {"message": "Document deleted and embeddings were updated successfully"}
+    return Response(status_code=204)
 
 
 @app.delete("/api/v1/rag/delete_all", status_code=200)
@@ -160,9 +169,16 @@ def search_rag_documents(
 
     try:
         results = similarity_search(query, limit=limit)
-        # Convert ObjectId to string for JSON serialization
+        formatted_results = []
         for doc in results:
-            doc["_id"] = str(doc["_id"])
-        return {"results": results}
+            formatted_results.append(
+                {
+                    "document_id": str(doc.get("_id", "")),
+                    "title": doc.get("title", ""),
+                    "score": float(doc.get("score", 1.0)),
+                    "snippet": doc.get("content", ""),
+                }
+            )
+        return {"results": formatted_results, "count": len(formatted_results)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

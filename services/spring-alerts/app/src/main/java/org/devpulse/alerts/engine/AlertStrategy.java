@@ -1,12 +1,12 @@
 package org.devpulse.alerts.engine;
 
-import org.devpulse.alerts.dto.SystemAlertDto;
-
 import java.util.Optional;
 
+import org.devpulse.alerts.dto.LogPayloadDto;
+
 /**
- * A single evaluation strategy. Implementations inspect the incoming alert
- * and optionally return a {@link StrategyMatch} if the strategy fires.
+ * A single evaluation strategy. Implementations inspect the incoming alert and
+ * optionally return a {@link StrategyMatch} if the strategy fires.
  */
 public interface AlertStrategy {
 
@@ -20,13 +20,15 @@ public interface AlertStrategy {
      *
      * @return a match if the strategy fires, or empty if it does not apply
      */
-    Optional<StrategyMatch> evaluate(SystemAlertDto alert);
+    Optional<StrategyMatch> evaluate(LogPayloadDto log);
 
     /**
      * A match produced when a strategy fires.
      *
-     * @param action  the action this strategy recommends
-     * @param detail  human-readable explanation
+     * @param action the action this strategy recommends
+     * @param detail human-readable explanation
      */
-    record StrategyMatch(AlertAction action, String detail) {}
+    record StrategyMatch(AlertAction action, String detail) {
+
+    }
 }

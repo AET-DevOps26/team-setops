@@ -1,10 +1,15 @@
 package org.devpulse.alerts.listener;
 
-import org.devpulse.alerts.dto.SystemAlertDto;
+import java.util.UUID;
+
+import org.devpulse.alerts.dto.IncomingLogMessageDto;
+import org.devpulse.alerts.dto.LogPayloadDto;
+import org.devpulse.alerts.engine.AlertAction;
 import org.devpulse.alerts.engine.EvaluationResult;
 import org.devpulse.alerts.engine.RulesEngineService;
-import org.devpulse.alerts.entity.SystemAlert;
-import org.devpulse.alerts.repository.SystemAlertRepository;
+import org.devpulse.alerts.entity.AlertStatus;
+import org.devpulse.alerts.entity.IncidentStatus;
+import org.devpulse.alerts.repository.IncidentStatusRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -14,67 +19,50 @@ import org.springframework.stereotype.Component;
 public class SystemAlertListener {
 
     private static final Logger log = LoggerFactory.getLogger(SystemAlertListener.class);
-
     private final RulesEngineService rulesEngine;
-    
-    // 1. Add the database repository
-    private final SystemAlertRepository alertRepository;
+    private final IncidentStatusRepository statusRepository;
 
-    public SystemAlertListener(RulesEngineService rulesEngine, SystemAlertRepository alertRepository) {
+    public SystemAlertListener(RulesEngineService rulesEngine, IncidentStatusRepository statusRepository) {
         this.rulesEngine = rulesEngine;
-        this.alertRepository = alertRepository;
+        this.statusRepository = statusRepository;
     }
 
     @RabbitListener(queues = "${devpulse.rabbitmq.queue.system-alert}")
-    public void handleSystemAlert(SystemAlertDto dto) {
-        log.info("Received system alert [{}] from {} with severity: {}",
-                dto.alertId(), dto.source(), dto.severity());
+    public void handleLogEvent(IncomingLogMessageDto message) {
+        LogPayloadDto payload = message.payload();
 
-        EvaluationResult result = rulesEngine.evaluate(dto);
+        // 1. Evaluate EVERY incoming log using the rules engine
+        EvaluationResult result = rulesEngine.evaluate(payload);
 
-        // 2. Save the alert to the database
-        saveAlertToDatabase(dto);
+        // 2. Determine the initial status based on the engine's action
+        AlertStatus initialStatus = (result.action() == AlertAction.ESCALATE || result.action() == AlertAction.NOTIFY)
+                ? AlertStatus.ACTIVE
+                : AlertStatus.IGNORED;
 
+        // 3. Save EVERYTHING to the database
+        saveStatusToDatabase(message.logId(), initialStatus);
+
+        // 4. Act on the evaluation (logging exactly what happened)
         switch (result.action()) {
-case ESCALATE -> {
-                log.warn("🚨 ESCALATE alert [{}] — triggered by: {} | details: {}",
-                        dto.alertId(), result.triggeredBy(), result.details());
-                // TODO: Persist alert to database with ESCALATED status
-                // TODO: Send urgent notification (e.g. PagerDuty, Slack #incidents channel)
-                // TODO: Trigger incident creation in external incident management system
-            }
-            case NOTIFY -> {
-                log.info("🔔 NOTIFY for alert [{}] — triggered by: {} | details: {}",
-                        dto.alertId(), result.triggeredBy(), result.details());
-                // TODO: Persist alert to database with NOTIFIED status
-                // TODO: Send team notification (e.g. Slack, email, Microsoft Teams webhook)
-            }
-            case LOG -> {
-                log.info("📝 LOG alert [{}] — triggered by: {} | details: {}",
-                        dto.alertId(), result.triggeredBy(), result.details());
-                // TODO: Persist alert to database with LOGGED status for auditing
-            }
-            case IGNORE -> {
-                log.debug("⏭️ IGNORE alert [{}] — no strategies matched", dto.alertId());
-                // TODO: Optionally persist to database with IGNORED status for traceability
-            }
+            case ESCALATE ->
+                log.warn("🚨 ESCALATE incident [{}] — triggered by: {}", message.logId(), result.triggeredBy());
+            case NOTIFY ->
+                log.info("🔔 NOTIFY for incident [{}] — triggered by: {}", message.logId(), result.triggeredBy());
+            case LOG ->
+                log.debug("📝 LOG routine event [{}] — status saved as IGNORED", message.logId());
+            case IGNORE ->
+                log.debug("⏭️ IGNORE routine event [{}] — status saved as IGNORED", message.logId());
         }
     }
 
-    // 3. Helper method to map the DTO to the Entity and save it
-    private void saveAlertToDatabase(SystemAlertDto dto) {
-        // Prevent saving duplicates if the same alert fires twice
-        if (alertRepository.findByAlertId(dto.alertId()).isEmpty()) {
-            SystemAlert alert = new SystemAlert(
-                    dto.alertId(),
-                    dto.source(),
-                    dto.severity(),
-                    dto.description(),
-                    dto.timestamp()
-            );
-            // Remember: The SystemAlert constructor defaults the status to "ACTIVE"
-            alertRepository.save(alert);
-            log.info("Successfully saved alert [{}] to PostgreSQL.", dto.alertId());
+    // Updated to accept the target status
+    private void saveStatusToDatabase(UUID logId, AlertStatus status) {
+        if (!statusRepository.existsById(logId)) {
+            IncidentStatus trackingState = new IncidentStatus(logId);
+            trackingState.setStatus(status); // Override the "ACTIVE" default
+
+            statusRepository.save(trackingState);
+            log.info("Successfully persisted tracking status for incident [{}] as [{}]", logId, status);
         }
     }
 }

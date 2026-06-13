@@ -1,5 +1,7 @@
 package org.devpulse.alerts.dto;
 
-public record StatusUpdateDto(
-        String status
-) {}
+import org.devpulse.alerts.entity.AlertStatus;
+
+public record StatusUpdateDto(AlertStatus status) {
+
+}

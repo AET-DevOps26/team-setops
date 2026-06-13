@@ -1,30 +1,21 @@
 package org.devpulse.alerts.engine.strategies;
 
-import org.devpulse.alerts.dto.SystemAlertDto;
-import org.devpulse.alerts.engine.AlertAction;
-import org.devpulse.alerts.engine.AlertStrategy;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Evaluates numeric values in the alert's {@code metrics} map against
- * configurable thresholds. If any metric exceeds its threshold, the strategy fires.
- *
- * <p>Thresholds are defined in {@code application.yml} under
- * {@code devpulse.alerts.thresholds} as a map of metric-name → threshold-value.
- */
+import org.devpulse.alerts.dto.LogPayloadDto;
+import org.devpulse.alerts.engine.AlertAction;
+import org.devpulse.alerts.engine.AlertStrategy;
+import org.springframework.stereotype.Component;
+
 @Component
 public class MetricThresholdStrategy implements AlertStrategy {
 
-    private final Map<String, Double> thresholds;
-
-    public MetricThresholdStrategy(
-            @Value("#{${devpulse.alerts.thresholds:{cpu_load: 90.0, memory_usage_percent: 85.0}}}") Map<String, Double> thresholds) {
-        this.thresholds = thresholds;
-    }
+    // Define thresholds (e.g., CPU > 90%, Memory > 85%)
+    private final Map<String, Double> thresholds = Map.of(
+            "cpu_load", 90.0,
+            "memory_usage", 85.0
+    );
 
     @Override
     public String name() {
@@ -32,27 +23,24 @@ public class MetricThresholdStrategy implements AlertStrategy {
     }
 
     @Override
-    public Optional<StrategyMatch> evaluate(SystemAlertDto alert) {
-        if (alert.metrics() == null || alert.metrics().isEmpty()) {
+    public Optional<StrategyMatch> evaluate(LogPayloadDto log) {
+        // Change to evaluate log.metadata()
+        if (log.metadata() == null || log.metadata().isEmpty()) {
             return Optional.empty();
         }
 
         for (Map.Entry<String, Double> threshold : thresholds.entrySet()) {
-            String metricName = threshold.getKey();
-            double limit = threshold.getValue();
+            String metricKey = threshold.getKey();
+            Double limit = threshold.getValue();
 
-            Object rawValue = alert.metrics().get(metricName);
-            if (rawValue == null) {
-                continue;
-            }
-
-            double actualValue = toDouble(rawValue);
-            if (actualValue > limit) {
-                String detail = String.format(
-                        "Metric '%s' = %.2f exceeds threshold %.2f",
-                        metricName, actualValue, limit
-                );
-                return Optional.of(new StrategyMatch(AlertAction.ESCALATE, detail));
+            if (log.metadata().containsKey(metricKey)) {
+                double actualValue = toDouble(log.metadata().get(metricKey));
+                if (actualValue >= limit) {
+                    return Optional.of(new StrategyMatch(
+                            AlertAction.ESCALATE,
+                            String.format("Metric '%s' value %.2f exceeds threshold %.2f", metricKey, actualValue, limit)
+                    ));
+                }
             }
         }
 
@@ -60,13 +48,14 @@ public class MetricThresholdStrategy implements AlertStrategy {
     }
 
     private double toDouble(Object value) {
-        if (value instanceof Number number) {
-            return number.doubleValue();
+        if (value instanceof Number n) {
+            return n.doubleValue();
+        } else if (value instanceof String s) {
+            try {
+                return Double.parseDouble(s.replaceAll("[^0-9.]", "")); // Strip out things like '%' or 'MB'
+            } catch (NumberFormatException ignored) {
+            }
         }
-        try {
-            return Double.parseDouble(value.toString().replaceAll("[^\\d.]", ""));
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
+        return 0.0;
     }
 }

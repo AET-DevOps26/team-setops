@@ -1,4 +1,5 @@
 import "./App.css";
+import PrivacyToggle from "@/components/PrivacyToggle";
 
 function App() {
 	return (
@@ -45,31 +46,7 @@ function App() {
 							</svg>
 							Ingest Logs
 						</button>
-						<button type="button" className="ghost-btn cloud-btn">
-							<svg
-								className="ghost-icon cloud-icon"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<rect
-									x="6"
-									y="11"
-									width="12"
-									height="9"
-									rx="1"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="1.5"
-								/>
-								<path
-									d="M8 11V8a4 4 0 0 1 8 0v3"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="1.5"
-								/>
-							</svg>
-							Cloud Expert
-						</button>
+						<PrivacyToggle />
 					</div>
 				</header>
 

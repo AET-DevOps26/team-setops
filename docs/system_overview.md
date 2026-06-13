@@ -17,7 +17,7 @@ Describe how you plan to divide the system technically.
   - Handles business logic and communication with other services
 
 - **Client**
-  - React / Angular / Vue.js frontend
+  - React / Angular / Vue.js client
   - Provides user interface and interacts with backend via REST
 
 - **GenAI Service**
@@ -64,7 +64,7 @@ Prepare an initial backlog as a Markdown table or GitHub Project.
 | 1   | User Authentication | Implement login & registration  | High     |          |
 | 2   | API Setup           | Create base Spring Boot project | High     |          |
 | 3   | GenAI Endpoint      | Add summarization endpoint      | Medium   |          |
-| 4   | UI Layout           | Create main frontend layout     | Medium   |          |
+| 4   | UI Layout           | Create main client layout     | Medium   |          |
 
 - Each item should represent a **feature or task**
 - Keep descriptions **clear and concise**

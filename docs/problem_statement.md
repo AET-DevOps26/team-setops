@@ -43,7 +43,7 @@ Modern DevOps teams deal with a constant stream of information during deployment
 - **Usage Scenarios**
   - Scenario A: Manual troubleshooting after a failed deployment
     1. A developer opens the DevPulse dashboard and sees a new failed deployment entry in the timeline.
-    2. The developer ingests the log in frontend
+    2. The developer ingests the log in client
     3. The backend stores the log/metadata
     4. The user requests AI analysis.
     5. The backend fetches the stored log/metadata and sends it to the **Intelligence Service** with the requested task.

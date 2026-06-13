@@ -3,7 +3,6 @@ package org.devpulse.ingestion.dto;
 import java.time.Instant;
 import java.util.Map;
 
-import org.devpulse.ingestion.type.LogEventDto;
 import org.devpulse.ingestion.type.LogType;
 import org.devpulse.ingestion.type.Severity;
 
@@ -22,6 +21,6 @@ public record IncomingLogEventDto(
         @NotNull(message = "Log Type must be DEPLOYMENT_LOG, BUILD_ERROR or TROUBLESHOOTING_NOTE")
         LogType type,
         Map<String, Object> metadata
-        ) implements LogEventDto {
+        ) {
 
 }

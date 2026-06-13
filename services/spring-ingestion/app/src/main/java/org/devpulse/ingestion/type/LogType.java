@@ -1,4 +1,4 @@
-package org.devpulse.ingestion.enum;
+package org.devpulse.ingestion.type;
 
 public enum LogType {
     DEPLOYMENT_LOG,

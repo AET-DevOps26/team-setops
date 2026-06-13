@@ -1,7 +1,9 @@
 package org.devpulse.ingestion.service;
 
+import java.util.UUID;
+
 import org.devpulse.ingestion.dto.IncomingLogEventDto;
-import org.devpulse.ingestion.dto.SystemAlertDto;
+import org.devpulse.ingestion.dto.OutgoingLogEventDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -27,15 +29,24 @@ public class EventPublisherService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    public void publishLog(IncomingLogEventDto payload) {
-        log.debug("Publishing log for {} to exchange {}", payload.serviceName(), exchangeName);
-        rabbitTemplate.convertAndSend(exchangeName, deploymentLogRoutingKey, payload);
-        log.info("Successfully published deployment log for service: {}", payload.serviceName());
+    public void publishLog(IncomingLogEventDto incomingPayload) {
+        OutgoingLogEventDto outgoingLogEventDto = new OutgoingLogEventDto(
+                UUID.randomUUID(),
+                incomingPayload);
+
+        publishLogToLogbook(outgoingLogEventDto);
+        publishLogToAlerts(outgoingLogEventDto);
     }
 
-    public void publishSystemAlert(SystemAlertDto payload) {
-        log.debug("Publishing alert {} from {} to exchange {}", payload.alertId(), payload.source(), exchangeName);
-        rabbitTemplate.convertAndSend(exchangeName, systemAlertRoutingKey, payload);
-        log.info("Successfully published system alert: {}", payload.alertId());
+    private void publishLogToLogbook(OutgoingLogEventDto outgoingPayload) {
+        log.debug("Publishing log for {} to exchange {} to logbook", outgoingPayload.payload().serviceName(), exchangeName);
+        rabbitTemplate.convertAndSend(exchangeName, deploymentLogRoutingKey, outgoingPayload);
+        log.info("Successfully published log for service to logbook: {}", outgoingPayload.payload().serviceName());
+    }
+
+    private void publishLogToAlerts(OutgoingLogEventDto outgoingPayload) {
+        log.debug("Publishing log {} from {} to exchange {} to alerts", outgoingPayload.payload().serviceName(), exchangeName);
+        rabbitTemplate.convertAndSend(exchangeName, systemAlertRoutingKey, outgoingPayload);
+        log.info("Successfully published log for service to alerts: {}", outgoingPayload.payload().serviceName());
     }
 }

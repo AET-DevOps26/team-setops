@@ -1,4 +1,4 @@
-package org.devpulse.alerts.entity;
+package org.devpulse.alerts.type;
 
 public enum AlertStatus {
     ACTIVE,

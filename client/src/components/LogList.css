@@ -1,0 +1,114 @@
+/* ─── Log List ───────────────────────────────────────── */
+
+.log-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 20px 16px 16px;
+	overflow-y: auto;
+	max-height: 100%;
+}
+
+.log-entry {
+	border: 1px solid #2a3a6a;
+	background: rgba(10, 14, 39, 0.6);
+	padding: 10px 12px;
+	cursor: pointer;
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s,
+		background 0.2s;
+}
+
+.log-entry:hover {
+	border-color: #3b5d7c;
+	background: rgba(18, 24, 58, 0.8);
+}
+
+.log-entry.selected {
+	border-color: rgba(77, 208, 225, 0.5);
+	box-shadow:
+		0 0 0 1px rgba(77, 208, 225, 0.15),
+		0 0 16px rgba(77, 208, 225, 0.08);
+	background: rgba(18, 24, 58, 0.95);
+}
+
+/* ─── Entry Header ───────────────────────────────────── */
+
+.log-entry-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.severity-badge {
+	font-size: 9px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	padding: 2px 6px;
+	border: 1px solid;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.log-service {
+	font-size: 12px;
+	color: #b8f2ff;
+	letter-spacing: 0.08em;
+	font-weight: 500;
+}
+
+.log-type {
+	font-size: 9px;
+	color: #5a7aa3;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	margin-left: auto;
+}
+
+/* ─── Content Preview ────────────────────────────────── */
+
+.log-preview {
+	font-size: 11px;
+	color: #6b8fb5;
+	line-height: 1.4;
+	max-height: 48px;
+	overflow: hidden;
+	white-space: pre-wrap;
+	word-break: break-all;
+	margin: 0;
+	opacity: 0.8;
+}
+
+.log-entry.selected .log-preview {
+	max-height: 120px;
+	opacity: 1;
+}
+
+/* ─── Entry Footer ───────────────────────────────────── */
+
+.log-entry-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 8px;
+}
+
+.log-time {
+	font-size: 10px;
+	color: #5a7aa3;
+	letter-spacing: 0.1em;
+}
+
+.analyze-btn {
+	border-color: #4dd0e1 !important;
+	color: #b8f2ff !important;
+	animation: fadeIn 0.2s ease;
+}
+
+.analyze-btn:hover:not(:disabled) {
+	box-shadow: 0 0 12px rgba(77, 208, 225, 0.3);
+}
+
+/* Reuse spinner from IngestModal */

@@ -1,6 +1,9 @@
 package org.devpulse.logbook.listener;
 
-import org.devpulse.logbook.dto.DeploymentLogDto;
+import java.util.UUID;
+
+import org.devpulse.logbook.dto.IncomingLogMessageDto;
+import org.devpulse.logbook.dto.LogPayloadDto;
 import org.devpulse.logbook.entity.DeploymentLog;
 import org.devpulse.logbook.repository.DeploymentLogRepository;
 import org.slf4j.Logger;
@@ -12,8 +15,6 @@ import org.springframework.stereotype.Component;
 public class DeploymentLogListener {
 
     private static final Logger log = LoggerFactory.getLogger(DeploymentLogListener.class);
-
-    // 1. Inject the database repository
     private final DeploymentLogRepository logRepository;
 
     public DeploymentLogListener(DeploymentLogRepository logRepository) {
@@ -21,25 +22,26 @@ public class DeploymentLogListener {
     }
 
     @RabbitListener(queues = "${devpulse.rabbitmq.queue.deployment-logs}")
-    public void handleDeploymentLog(DeploymentLogDto dto) {
-        log.info("Received deployment log from service '{}' [severity={}, type={}]",
-                dto.serviceName(), dto.severity(), dto.type());
+    public void handleDeploymentLog(IncomingLogMessageDto message) {
+        // Unwrap the envelope!
+        LogPayloadDto payload = message.payload();
 
-        // 2. Save the log to the database
-        saveLogToDatabase(dto);
+        log.info("Received deployment log [{}] from service '{}' [severity={}, type={}]",
+                message.logId(), payload.serviceName(), payload.severity(), payload.type());
+
+        saveLogToDatabase(message.logId(), message.payload());
     }
 
-    // 3. Helper method to map the DTO to the Entity and save it
-    private void saveLogToDatabase(DeploymentLogDto dto) {
+    private void saveLogToDatabase(UUID logId, LogPayloadDto payload) {
         DeploymentLog logEntity = new DeploymentLog(
-                dto.serviceName(),
-                dto.logContent(),
-                dto.severity().name(),
-                dto.type().name(),
-                dto.timestamp(),
-                "ACTIVE"
+                logId, // Pass the UUID here!
+                payload.serviceName(),
+                payload.type() != null ? payload.type().name() : "UNKNOWN",
+                payload.severity() != null ? payload.severity().name() : "UNKNOWN",
+                payload.logContent(),
+                payload.timestamp()
         );
         logRepository.save(logEntity);
-        log.info("Successfully persisted log for '{}' to PostgreSQL.", dto.serviceName());
+        log.info("Successfully persisted log [{}] for '{}' to PostgreSQL.", logId, payload.serviceName());
     }
 }

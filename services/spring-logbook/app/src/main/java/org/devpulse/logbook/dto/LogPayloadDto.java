@@ -6,7 +6,7 @@ import java.util.Map;
 import org.devpulse.logbook.type.LogType;
 import org.devpulse.logbook.type.Severity;
 
-public record DeploymentLogDto(
+public record LogPayloadDto(
         String serviceName,
         String logContent,
         Severity severity,

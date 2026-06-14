@@ -5,9 +5,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.devpulse.alerts.dto.StatusUpdateDto;
-import org.devpulse.alerts.entity.AlertStatus;
 import org.devpulse.alerts.entity.IncidentStatus;
 import org.devpulse.alerts.repository.IncidentStatusRepository;
+import org.devpulse.alerts.type.AlertStatus;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.verify;

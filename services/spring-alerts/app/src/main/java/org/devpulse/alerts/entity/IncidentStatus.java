@@ -2,6 +2,8 @@ package org.devpulse.alerts.entity;
 
 import java.util.UUID;
 
+import org.devpulse.alerts.type.AlertStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

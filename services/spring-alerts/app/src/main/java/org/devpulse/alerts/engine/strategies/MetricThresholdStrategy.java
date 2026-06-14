@@ -48,14 +48,16 @@ public class MetricThresholdStrategy implements AlertStrategy {
     }
 
     private double toDouble(Object value) {
-        if (value instanceof Number n) {
-            return n.doubleValue();
-        } else if (value instanceof String s) {
-            try {
-                return Double.parseDouble(s.replaceAll("[^0-9.]", "")); // Strip out things like '%' or 'MB'
-            } catch (NumberFormatException ignored) {
+        return switch (value) {
+            case Number n -> n.doubleValue();
+            case String s -> {
+                try {
+                    yield Double.parseDouble(s.replaceAll("[^0-9.]", "")); // Strip out things like '%' or 'MB'
+                } catch (NumberFormatException ignored) {
+                    yield 0.0;
+                }
             }
-        }
-        return 0.0;
+            default -> 0.0;
+        };
     }
 }

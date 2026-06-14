@@ -1,6 +1,6 @@
 package org.devpulse.alerts.engine;
 
-import org.devpulse.alerts.dto.SystemAlertDto;
+import org.devpulse.alerts.dto.LogPayloadDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -37,10 +37,10 @@ class RulesEngineServiceTest {
         ));
 
         RulesEngineService engine = new RulesEngineService(List.of(strategy1, strategy2));
-        SystemAlertDto dummyAlert = new SystemAlertDto("1", "src", "INFO", "desc", Instant.now(), null);
+        LogPayloadDto dummyLog = new LogPayloadDto("test-service", "INFO", "test content", Instant.now(), null, null);
 
         // Act
-        EvaluationResult result = engine.evaluate(dummyAlert);
+        EvaluationResult result = engine.evaluate(dummyLog);
 
         // Assert: ESCALATE is higher priority than LOG
         assertEquals(AlertAction.ESCALATE, result.action());
@@ -56,10 +56,10 @@ class RulesEngineServiceTest {
         when(strategy2.evaluate(any())).thenReturn(Optional.empty());
 
         RulesEngineService engine = new RulesEngineService(List.of(strategy1, strategy2));
-        SystemAlertDto dummyAlert = new SystemAlertDto("1", "src", "INFO", "desc", Instant.now(), null);
+        LogPayloadDto dummyLog = new LogPayloadDto("test-service", "INFO", "test content", Instant.now(), null, null);
 
         // Act
-        EvaluationResult result = engine.evaluate(dummyAlert);
+        EvaluationResult result = engine.evaluate(dummyLog);
 
         // Assert
         assertEquals(AlertAction.IGNORE, result.action());

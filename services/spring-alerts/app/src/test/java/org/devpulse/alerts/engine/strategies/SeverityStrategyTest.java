@@ -1,6 +1,6 @@
 package org.devpulse.alerts.engine.strategies;
 
-import org.devpulse.alerts.dto.SystemAlertDto;
+import org.devpulse.alerts.dto.LogPayloadDto;
 import org.devpulse.alerts.engine.AlertAction;
 import org.devpulse.alerts.engine.AlertStrategy;
 import org.junit.jupiter.api.Test;
@@ -24,10 +24,10 @@ class SeverityStrategyTest {
     })
     void whenKnownSeverity_thenReturnsExpectedAction(String inputSeverity, AlertAction expectedAction) {
         // Arrange
-        SystemAlertDto alert = createAlertWithSeverity(inputSeverity);
+        LogPayloadDto log = createLogWithSeverity(inputSeverity);
 
         // Act
-        Optional<AlertStrategy.StrategyMatch> matchOpt = strategy.evaluate(alert);
+        Optional<AlertStrategy.StrategyMatch> matchOpt = strategy.evaluate(log);
 
         // Assert
         assertTrue(matchOpt.isPresent());
@@ -36,21 +36,21 @@ class SeverityStrategyTest {
 
     @Test
     void whenInfoOrUnknownSeverity_thenReturnsEmpty() {
-        SystemAlertDto alert = createAlertWithSeverity("INFO");
-        assertTrue(strategy.evaluate(alert).isEmpty());
+        LogPayloadDto log = createLogWithSeverity("INFO");
+        assertTrue(strategy.evaluate(log).isEmpty());
 
-        SystemAlertDto unknownAlert = createAlertWithSeverity("WEIRD_STATUS");
-        assertTrue(strategy.evaluate(unknownAlert).isEmpty());
+        LogPayloadDto unknownLog = createLogWithSeverity("WEIRD_STATUS");
+        assertTrue(strategy.evaluate(unknownLog).isEmpty());
     }
 
     @Test
     void whenSeverityIsNull_thenReturnsEmpty() {
-        SystemAlertDto alert = createAlertWithSeverity(null);
-        assertTrue(strategy.evaluate(alert).isEmpty());
+        LogPayloadDto log = createLogWithSeverity(null);
+        assertTrue(strategy.evaluate(log).isEmpty());
     }
 
     // Helper to keep tests clean
-    private SystemAlertDto createAlertWithSeverity(String severity) {
-        return new SystemAlertDto("alert-1", "Datadog", severity, "Test desc", Instant.now(), null);
+    private LogPayloadDto createLogWithSeverity(String severity) {
+        return new LogPayloadDto("test-service", severity, "Test log content", Instant.now(), null, null);
     }
 }

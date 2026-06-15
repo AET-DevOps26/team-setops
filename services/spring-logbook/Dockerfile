@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM gradle:jdk21-jammy AS builder
+FROM gradle:jdk25-jammy AS builder
 WORKDIR /workspace
 
 # Copy the entire service directory (including the 'app' folder and any root settings.gradle.kts)
@@ -12,7 +12,7 @@ WORKDIR /workspace/app
 RUN gradle build -x test
 
 # Stage 2: Run the application
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 # Copy the built jar from the app's build directory

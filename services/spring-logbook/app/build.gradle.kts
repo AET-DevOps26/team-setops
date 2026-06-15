@@ -8,7 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -37,7 +37,7 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 

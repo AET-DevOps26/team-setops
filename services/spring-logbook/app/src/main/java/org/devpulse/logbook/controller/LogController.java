@@ -1,13 +1,16 @@
 package org.devpulse.logbook.controller;
 
+import java.util.List;
+
 import org.devpulse.logbook.entity.DeploymentLog;
-import org.devpulse.logbook.repository.DeploymentLogRepository;
+import org.devpulse.logbook.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/logs")
@@ -15,10 +18,10 @@ import java.util.List;
 public class LogController {
 
     private static final Logger log = LoggerFactory.getLogger(LogController.class);
-    private final DeploymentLogRepository logRepository;
+    private final LogService deploymentLogService;
 
-    public LogController(DeploymentLogRepository logRepository) {
-        this.logRepository = logRepository;
+    public LogController(LogService deploymentLogService) {
+        this.deploymentLogService = deploymentLogService;
     }
 
     /**
@@ -29,8 +32,7 @@ public class LogController {
     public ResponseEntity<List<DeploymentLog>> getDeploymentHistory() {
         log.info("Client requested deployment history timeline.");
 
-        // Fetch all logs, newest first
-        List<DeploymentLog> logs = logRepository.findAllByOrderByTimestampDesc();
+        List<DeploymentLog> logs = deploymentLogService.getDeploymentHistory();
 
         return ResponseEntity.ok(logs);
     }

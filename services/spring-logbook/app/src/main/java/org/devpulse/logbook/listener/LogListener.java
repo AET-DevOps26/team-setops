@@ -9,13 +9,13 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DeploymentLogListener {
+public class LogListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DeploymentLogListener.class);
-    private final LogService deploymentLogService;
+    private static final Logger logger = LoggerFactory.getLogger(LogListener.class);
+    private final LogService logService;
 
-    public DeploymentLogListener(LogService deploymentLogService) {
-        this.deploymentLogService = deploymentLogService;
+    public LogListener(LogService logService) {
+        this.logService = logService;
     }
 
     @RabbitListener(queues = "${devpulse.rabbitmq.queue.deployment-logs}")
@@ -23,9 +23,9 @@ public class DeploymentLogListener {
         // Unwrap the envelope!
         LogPayloadDto payload = message.payload();
 
-        log.info("Received deployment log [{}] from service '{}' [severity={}, type={}]",
+        logger.info("Received deployment log [{}] from service '{}' [severity={}, type={}]",
                 message.logId(), payload.serviceName(), payload.severity(), payload.type());
 
-        deploymentLogService.saveLog(message.logId(), message.payload());
+        logService.saveLog(message.logId(), message.payload());
     }
 }

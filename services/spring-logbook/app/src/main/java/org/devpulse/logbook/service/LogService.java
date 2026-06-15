@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LogService {
 
-    private static final Logger log = LoggerFactory.getLogger(LogService.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogService.class);
     private final LogRepository logRepository;
 
     public LogService(LogRepository logRepository) {
@@ -41,7 +41,7 @@ public class LogService {
                 payload.timestamp()
         );
         DeploymentLog saved = logRepository.save(logEntity);
-        log.info("Successfully persisted log [{}] for '{}' to PostgreSQL.", logId, payload.serviceName());
+        logger.info("Successfully persisted log [{}] for '{}' to PostgreSQL.", logId, payload.serviceName());
         return saved;
     }
 }

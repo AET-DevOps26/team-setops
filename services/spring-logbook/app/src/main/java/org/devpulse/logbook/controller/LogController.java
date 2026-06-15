@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "*") // Allows the React frontend to call this without CORS issues
 public class LogController {
 
-    private static final Logger log = LoggerFactory.getLogger(LogController.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogController.class);
     private final LogService deploymentLogService;
 
     public LogController(LogService deploymentLogService) {
@@ -30,7 +30,7 @@ public class LogController {
      */
     @GetMapping
     public ResponseEntity<List<DeploymentLog>> getDeploymentHistory() {
-        log.info("Client requested deployment history timeline.");
+        logger.info("Client requested deployment history timeline.");
 
         List<DeploymentLog> logs = deploymentLogService.getDeploymentHistory();
 

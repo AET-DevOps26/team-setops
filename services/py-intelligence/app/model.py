@@ -27,7 +27,9 @@ class Model:
             try:
                 from google import genai
             except ImportError as exc:
-                raise RuntimeError("Google GenAI dependencies are not installed.") from exc
+                raise RuntimeError(
+                    "Google GenAI dependencies are not installed."
+                ) from exc
 
             self._client = genai.Client()
             return self._client
@@ -36,7 +38,9 @@ class Model:
             try:
                 from llama_cpp import Llama
             except ImportError as exc:
-                raise RuntimeError("llama-cpp-python is required for local GGUF inference.") from exc
+                raise RuntimeError(
+                    "llama-cpp-python is required for local GGUF inference."
+                ) from exc
 
             if not self.model_path:
                 raise RuntimeError("Local Qwen GGUF model_path is not configured.")
@@ -60,7 +64,9 @@ class Model:
         client = self._load()
 
         if self.provider == "google":
-            response = client.models.generate_content(model=self.model_name, contents=prompt)
+            response = client.models.generate_content(
+                model=self.model_name, contents=prompt
+            )
             return getattr(response, "text", "") or ""
 
         if self.provider == "qwen":
@@ -80,6 +86,7 @@ class Model:
         if self.provider == "openai":
             import os
             import httpx
+
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise RuntimeError("OPENAI_API_KEY environment variable is not set.")

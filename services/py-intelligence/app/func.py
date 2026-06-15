@@ -164,14 +164,18 @@ class Intelligence:
                 the response cannot be parsed into a valid JSON structure.
         """
         model = self.get_model_for_mode(mode)
-        prompt = self._build_analysis_prompt(content, mode, use_rag, context, retrieved_docs or [])
+        prompt = self._build_analysis_prompt(
+            content, mode, use_rag, context, retrieved_docs or []
+        )
         try:
             raw_response = model.generate(prompt)
         except Exception as e:
             # Fallback to OpenAI GPT model if Gemini cloud provider fails
             if mode == "cloud":
                 try:
-                    fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
+                    fallback_model = next(
+                        m for m in self.models if m.cloud and m.provider == "openai"
+                    )
                     raw_response = fallback_model.generate(prompt)
                 except StopIteration:
                     raise e
@@ -215,7 +219,11 @@ class Intelligence:
         )
         rag_policy = self.prompts.get("rag_context_policy", "")
         incident_summary = self.prompts.get("log_analysis", "")
-        rag_block = self._format_rag_block(retrieved_docs) if use_rag and retrieved_docs else "[]"
+        rag_block = (
+            self._format_rag_block(retrieved_docs)
+            if use_rag and retrieved_docs
+            else "[]"
+        )
 
         return "\n".join(
             [
@@ -304,7 +312,10 @@ class Intelligence:
             raise ValueError("Model response was not valid JSON.")
 
     def _normalize_response(
-        self, response: dict[str, Any], retrieved_docs: list[dict[str, Any]], use_rag: bool
+        self,
+        response: dict[str, Any],
+        retrieved_docs: list[dict[str, Any]],
+        use_rag: bool,
     ) -> dict[str, Any]:
         """Ensures that the model's parsed JSON response is fully compliant and structurally sound.
 
@@ -369,7 +380,9 @@ class Intelligence:
         normalized["confidence"] = normalized["confidence"] or "low"
         return normalized
 
-    def _build_sources(self, retrieved_docs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _build_sources(
+        self, retrieved_docs: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Constructs a clean, safe, and truncated list of reference sources from retrieved docs.
 
         For each document, it extracts the ID, title, and tags, and clips the first 240

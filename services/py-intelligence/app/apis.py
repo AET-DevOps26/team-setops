@@ -71,7 +71,9 @@ def analyze(
         try:
             retrieved_docs = similarity_search(content, limit=3)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"RAG retrieval failed: {str(e)}"
+            )
 
     try:
         return intelligence.analyze(
@@ -103,15 +105,21 @@ def create_rag_document(
         dict: The created RAG document.
     """
     if not title.strip() or not content.strip():
-        raise HTTPException(status_code=422, detail="'title' and 'content' must not be empty.")
+        raise HTTPException(
+            status_code=422, detail="'title' and 'content' must not be empty."
+        )
     document = {"title": title, "content": content, "tags": tags}
 
     db_instance = get_db()
     if not db_instance.add_new_document(document):
-        raise HTTPException(status_code=500, detail="Failed to add document to the database.")
+        raise HTTPException(
+            status_code=500, detail="Failed to add document to the database."
+        )
 
     if not create_all_embeddings(COLLECTION_NAME):
-        raise HTTPException(status_code=500, detail="Failed to update embeddings after adding document.")
+        raise HTTPException(
+            status_code=500, detail="Failed to update embeddings after adding document."
+        )
 
     return {
         "id": str(document.get("_id", "")),
@@ -131,10 +139,14 @@ def delete_rag_document(document_id: str) -> Response:
     """
     success = get_db().delete_document(document_id)
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to delete document from the database.")
+        raise HTTPException(
+            status_code=500, detail="Failed to delete document from the database."
+        )
     success = create_all_embeddings(COLLECTION_NAME)
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to update embeddings after deletion.")
+        raise HTTPException(
+            status_code=500, detail="Failed to update embeddings after deletion."
+        )
     return Response(status_code=204)
 
 
@@ -145,7 +157,9 @@ def delete_all_rag_documents() -> dict:
     """
     success = get_db().delete_all_documents()
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to delete all documents from the database.")
+        raise HTTPException(
+            status_code=500, detail="Failed to delete all documents from the database."
+        )
     return {"message": "All documents deleted successfully"}
 
 

@@ -375,3 +375,57 @@ def test_model_load_raises_value_error_for_unknown_provider() -> None:
 
     with pytest.raises(ValueError, match="Unknown provider: unknown_provider"):
         model._load()
+
+
+def test_openai_model_load_and_generate() -> None:
+    """Verifies that the Model class successfully handles the OpenAI provider."""
+    from app.model import Model
+
+    openai_cfg = {
+        "name": "gpt-4o-mini",
+        "provider": "openai",
+        "shortened": "GPT",
+        "cloud": True,
+    }
+    model = Model(openai_cfg)
+
+    # Test load
+    assert model._load() is True
+
+    # Test generate
+    with patch("httpx.post") as mock_post, patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": '{"problem_type": "none"}'}}]
+        }
+        mock_post.return_value = mock_response
+
+        res = model.generate("test prompt")
+        assert res == '{"problem_type": "none"}'
+        mock_post.assert_called_once()
+
+
+@patch("app.apis.intelligence.models")
+def test_analyze_fallback_to_openai(mock_models) -> None:
+    """Verifies that analyze falls back to OpenAI if Gemini fails in cloud mode."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    # Find the models in the instances
+    gemini_model = next(m for m in intel.models if m.provider == "google")
+    openai_model = next(m for m in intel.models if m.provider == "openai")
+
+    # Mock Gemini model generate to raise an exception, and OpenAI model generate to return JSON
+    with patch.object(gemini_model, "generate", side_effect=Exception("Gemini Offline")), \
+         patch.object(openai_model, "generate", return_value=json.dumps(LOCAL_ANALYSIS_RESPONSE)) as mock_openai_gen:
+
+        res = intel.analyze(
+            content="test logs",
+            mode="cloud",
+            use_rag=False
+        )
+
+        assert res["problem_type"] == LOCAL_ANALYSIS_RESPONSE["problem_type"]
+        mock_openai_gen.assert_called_once()
+

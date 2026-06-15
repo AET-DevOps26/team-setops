@@ -49,6 +49,11 @@ class Model:
             )
             return self._client
 
+        if self.provider == "openai":
+            # Direct HTTP-based API calls; no heavy SDK setup required
+            self._client = True
+            return self._client
+
         raise ValueError(f"Unknown provider: {self.provider}")
 
     def generate(self, prompt: str) -> str:
@@ -70,6 +75,35 @@ class Model:
                 max_tokens=768,
                 temperature=0.1,
             )
+            return result["choices"][0]["message"]["content"]
+
+        if self.provider == "openai":
+            import os
+            import httpx
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": self.model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are DevPulse AI Insighter. Return valid JSON only.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.1,
+            }
+            api_base = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+            url = f"{api_base.rstrip('/')}/chat/completions"
+            response = httpx.post(url, json=payload, headers=headers, timeout=30.0)
+            response.raise_for_status()
+            result = response.json()
             return result["choices"][0]["message"]["content"]
 
         raise ValueError(f"Unknown provider: {self.provider}")

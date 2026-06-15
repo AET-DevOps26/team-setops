@@ -24,10 +24,10 @@ spring:
 
 devpulse:
   rabbitmq:
-    exchange: "devpulse.exchange"
+    exchange: devpulse.exchange
     queue:
-      system-alert: "alerts.system.queue"
+      system-alert: devpulse.alerts.system.queue
     routing:
-      system-alert: "alert.system.received"
+      system-alert: alert.system.received
   alerts:
     thresholds: "{cpu_load: 90.0, memory_usage_percent: 85.0}"

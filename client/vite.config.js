@@ -18,6 +18,30 @@ export default defineConfig({
 		jsx: "automatic",
 		jsxImportSource: "react",
 	},
+	server: {
+		proxy: {
+			"/api/v1/logs": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+			"/api/v1/alerts": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+			"/api/v1/analyze": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+			"/api/v1/rag": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+			"/health": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+		},
+	},
 	test: {
 		globals: true,
 		environment: "jsdom",

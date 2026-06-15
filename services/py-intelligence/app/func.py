@@ -270,11 +270,20 @@ class Intelligence:
             cleaned = re.sub(r"\s*```$", "", cleaned)
 
         try:
-            return json.loads(cleaned)
+            return json.loads(cleaned, strict=False)
         except json.JSONDecodeError:
             match = re.search(r"\{.*\}", cleaned, re.DOTALL)
             if match:
-                return json.loads(match.group(0))
+                json_str = match.group(0)
+                try:
+                    return json.loads(json_str, strict=False)
+                except json.JSONDecodeError:
+                    # Escape unescaped double quotes inside single quotes (common in TS compiler output)
+                    repaired = json_str.replace("'\"", "'\\\"").replace("\"'", "\\\"'")
+                    try:
+                        return json.loads(repaired, strict=False)
+                    except json.JSONDecodeError as e:
+                        raise ValueError(str(e))
             raise ValueError("Model response was not valid JSON.")
 
     def _normalize_response(
@@ -297,8 +306,40 @@ class Intelligence:
             dict[str, Any]: A standardized dictionary containing all required analysis fields.
         """
         normalized = {key: response.get(key) for key in REQUIRED_RESPONSE_KEYS}
-        if use_rag and not normalized["sources"]:
-            normalized["sources"] = self._build_sources(retrieved_docs)
+
+        # Conform and structure sources to match the expected SourceRef schema: [{"id": str, "title": str}]
+        raw_sources = normalized["sources"]
+        if not isinstance(raw_sources, list):
+            raw_sources = []
+
+        standardized_sources = []
+        for source_item in raw_sources:
+            # Case A: Model returned source as a plain string ID (e.g., ["doc_id_1"])
+            if isinstance(source_item, str):
+                doc_title = ""
+                # Look up the document title from the RAG context documents using the ID
+                for rag_doc in retrieved_docs:
+                    if str(rag_doc.get("_id", "")) == source_item:
+                        doc_title = rag_doc.get("title", "")
+                        break
+                standardized_sources.append({"id": source_item, "title": doc_title})
+
+            # Case B: Model returned source as an object/dict (e.g., [{"id": "doc_id_1", "title": "Doc Title"}])
+            elif isinstance(source_item, dict):
+                source_id = str(source_item.get("id", source_item.get("_id", "")))
+                doc_title = source_item.get("title", "")
+                # If title is missing in the object, resolve it from the RAG context documents
+                if not doc_title:
+                    for rag_doc in retrieved_docs:
+                        if str(rag_doc.get("_id", "")) == source_id:
+                            doc_title = rag_doc.get("title", "")
+                            break
+                standardized_sources.append({"id": source_id, "title": doc_title})
+
+        # Fallback: If no sources were explicitly extracted by the model, but RAG was enabled,
+        # register all retrieved RAG documents as the sources.
+        if not standardized_sources and use_rag:
+            standardized_sources = self._build_sources(retrieved_docs)
 
         normalized["problem_type"] = normalized["problem_type"] or "unknown"
         normalized["severity"] = normalized["severity"] or "unknown"
@@ -307,7 +348,7 @@ class Intelligence:
         normalized["evidence"] = normalized["evidence"] or []
         normalized["troubleshoot"] = normalized["troubleshoot"] or []
         normalized["solutions"] = normalized["solutions"] or []
-        normalized["sources"] = normalized["sources"] or []
+        normalized["sources"] = standardized_sources
         normalized["confidence"] = normalized["confidence"] or "low"
         return normalized
 

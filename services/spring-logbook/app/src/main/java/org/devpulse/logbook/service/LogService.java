@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.devpulse.logbook.dto.LogPayloadDto;
-import org.devpulse.logbook.entity.DeploymentLog;
+import org.devpulse.logbook.entity.Log;
 import org.devpulse.logbook.repository.LogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,22 +24,22 @@ public class LogService {
      * Returns all deployment logs ordered by timestamp descending (newest
      * first).
      */
-    public List<DeploymentLog> getDeploymentHistory() {
+    public List<Log> getDeploymentHistory() {
         return logRepository.findAllByOrderByTimestampDesc();
     }
 
     /**
      * Returns all deployment logs matching the given list of IDs.
      */
-    public List<DeploymentLog> getLogsByIds(List<UUID> ids) {
+    public List<Log> getLogsByIds(List<UUID> ids) {
         return logRepository.findAllById(ids);
     }
 
     /**
      * Persists an incoming log message to the database.
      */
-    public DeploymentLog saveLog(UUID logId, LogPayloadDto payload) {
-        DeploymentLog logEntity = new DeploymentLog(
+    public Log saveLog(UUID logId, LogPayloadDto payload) {
+        Log logEntity = new Log(
                 logId,
                 payload.serviceName(),
                 payload.type() != null ? payload.type().name() : "UNKNOWN",
@@ -47,7 +47,7 @@ public class LogService {
                 payload.logContent(),
                 payload.timestamp()
         );
-        DeploymentLog saved = logRepository.save(logEntity);
+        Log saved = logRepository.save(logEntity);
         logger.info("Successfully persisted log [{}] for '{}' to PostgreSQL.", logId, payload.serviceName());
         return saved;
     }

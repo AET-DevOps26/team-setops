@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.devpulse.logbook.dto.LogPayloadDto;
-import org.devpulse.logbook.entity.DeploymentLog;
+import org.devpulse.logbook.entity.Log;
 import org.devpulse.logbook.repository.LogRepository;
 import org.devpulse.logbook.type.LogType;
 import org.devpulse.logbook.type.Severity;
@@ -32,14 +32,14 @@ class LogServiceTest {
     @Test
     void whenGetDeploymentHistory_thenDelegatesToRepository() {
         // Arrange
-        DeploymentLog log1 = new DeploymentLog(
+        Log log1 = new Log(
                 UUID.randomUUID(), "auth-service", "DEPLOYMENT_LOG", "INFO",
                 "Deployed successfully", Instant.now()
         );
         when(logRepository.findAllByOrderByTimestampDesc()).thenReturn(List.of(log1));
 
         // Act
-        List<DeploymentLog> result = logService.getDeploymentHistory();
+        List<Log> result = logService.getDeploymentHistory();
 
         // Assert
         assertEquals(1, result.size());
@@ -54,12 +54,12 @@ class LogServiceTest {
         UUID logId2 = UUID.randomUUID();
         List<UUID> ids = List.of(logId1, logId2);
 
-        DeploymentLog log1 = new DeploymentLog(logId1, "auth-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
-        DeploymentLog log2 = new DeploymentLog(logId2, "payment-service", "DEPLOYMENT_LOG", "WARNING", "Timeout", Instant.now());
+        Log log1 = new Log(logId1, "auth-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
+        Log log2 = new Log(logId2, "payment-service", "DEPLOYMENT_LOG", "WARNING", "Timeout", Instant.now());
         when(logRepository.findAllById(ids)).thenReturn(List.of(log1, log2));
 
         // Act
-        List<DeploymentLog> result = logService.getLogsByIds(ids);
+        List<Log> result = logService.getLogsByIds(ids);
 
         // Assert
         assertEquals(2, result.size());
@@ -77,15 +77,15 @@ class LogServiceTest {
         );
 
         // Capture the entity passed to repository.save()
-        ArgumentCaptor<DeploymentLog> captor = ArgumentCaptor.forClass(DeploymentLog.class);
+        ArgumentCaptor<Log> captor = ArgumentCaptor.forClass(Log.class);
         when(logRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        DeploymentLog result = logService.saveLog(logId, payload);
+        Log result = logService.saveLog(logId, payload);
 
         // Assert: Verify the entity was constructed correctly
         assertNotNull(result);
-        DeploymentLog savedEntity = captor.getValue();
+        Log savedEntity = captor.getValue();
         assertEquals(logId, savedEntity.getLogId());
         assertEquals("payment-service", savedEntity.getServiceName());
         assertEquals("DEPLOYMENT_LOG", savedEntity.getEnvironment());
@@ -102,14 +102,14 @@ class LogServiceTest {
                 "api-gateway", "Some event", null, Instant.now(), null, null
         );
 
-        ArgumentCaptor<DeploymentLog> captor = ArgumentCaptor.forClass(DeploymentLog.class);
+        ArgumentCaptor<Log> captor = ArgumentCaptor.forClass(Log.class);
         when(logRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         logService.saveLog(logId, payload);
 
         // Assert: Null type and severity should fall back to "UNKNOWN"
-        DeploymentLog savedEntity = captor.getValue();
+        Log savedEntity = captor.getValue();
         assertEquals("UNKNOWN", savedEntity.getEnvironment());
         assertEquals("UNKNOWN", savedEntity.getSeverity());
     }

@@ -3,7 +3,7 @@ package org.devpulse.logbook.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.devpulse.logbook.entity.DeploymentLog;
+import org.devpulse.logbook.entity.Log;
 import org.devpulse.logbook.service.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +31,10 @@ public class LogController {
      * Example: GET /api/v1/logs
      */
     @GetMapping
-    public ResponseEntity<List<DeploymentLog>> getDeploymentHistory() {
+    public ResponseEntity<List<Log>> getDeploymentHistory() {
         logger.info("Client requested deployment history timeline.");
 
-        List<DeploymentLog> logs = logService.getDeploymentHistory();
+        List<Log> logs = logService.getDeploymentHistory();
 
         return ResponseEntity.ok(logs);
     }
@@ -44,10 +44,10 @@ public class LogController {
      * /api/v1/logs/search?ids=uuid-1,uuid-2&...
      */
     @GetMapping("/search")
-    public ResponseEntity<List<DeploymentLog>> getLogsByIds(@RequestParam List<UUID> ids) {
+    public ResponseEntity<List<Log>> getLogsByIds(@RequestParam List<UUID> ids) {
         logger.info("Client requested {} log(s) by ID.", ids.size());
 
-        List<DeploymentLog> logs = logService.getLogsByIds(ids);
+        List<Log> logs = logService.getLogsByIds(ids);
 
         return ResponseEntity.ok(logs);
     }

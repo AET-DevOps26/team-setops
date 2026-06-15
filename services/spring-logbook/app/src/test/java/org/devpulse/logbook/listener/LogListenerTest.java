@@ -6,20 +6,19 @@ import java.util.UUID;
 
 import org.devpulse.logbook.dto.IncomingLogMessageDto;
 import org.devpulse.logbook.dto.LogPayloadDto;
-import org.devpulse.logbook.entity.DeploymentLog;
+import org.devpulse.logbook.entity.Log;
 import org.devpulse.logbook.service.LogService;
 import org.devpulse.logbook.type.LogType;
 import org.devpulse.logbook.type.Severity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class LogListenerTest {
@@ -41,7 +40,7 @@ class LogListenerTest {
         IncomingLogMessageDto message = new IncomingLogMessageDto(logId, payload);
 
         when(logService.saveLog(any(UUID.class), any(LogPayloadDto.class)))
-                .thenReturn(new DeploymentLog());
+                .thenReturn(new Log());
 
         // Act
         listener.handleDeploymentLog(message);
@@ -60,7 +59,7 @@ class LogListenerTest {
         IncomingLogMessageDto message = new IncomingLogMessageDto(logId, payload);
 
         when(logService.saveLog(any(UUID.class), any(LogPayloadDto.class)))
-                .thenReturn(new DeploymentLog());
+                .thenReturn(new Log());
 
         // Act
         listener.handleDeploymentLog(message);

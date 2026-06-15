@@ -29,6 +29,13 @@ public class LogService {
     }
 
     /**
+     * Returns all deployment logs matching the given list of IDs.
+     */
+    public List<DeploymentLog> getLogsByIds(List<UUID> ids) {
+        return logRepository.findAllById(ids);
+    }
+
+    /**
      * Persists an incoming log message to the database.
      */
     public DeploymentLog saveLog(UUID logId, LogPayloadDto payload) {

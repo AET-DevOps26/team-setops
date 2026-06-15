@@ -64,4 +64,49 @@ public class LogControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
     }
+
+    @Test
+    void whenSearchByIds_thenReturnsMatchingLogs() throws Exception {
+        // Arrange
+        UUID logId1 = UUID.randomUUID();
+        UUID logId2 = UUID.randomUUID();
+        List<UUID> ids = List.of(logId1, logId2);
+
+        DeploymentLog log1 = new DeploymentLog(logId1, "auth-service", "DEPLOYMENT_LOG", "CRITICAL", "High CPU", Instant.now());
+        DeploymentLog log2 = new DeploymentLog(logId2, "payment-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
+
+        when(logService.getLogsByIds(ids)).thenReturn(List.of(log1, log2));
+
+        // Act & Assert: GET /api/v1/logs/search?ids=uuid-1&ids=uuid-2
+        mockMvc.perform(get("/api/v1/logs/search")
+                .param("ids", logId1.toString(), logId2.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].logId").value(logId1.toString()))
+                .andExpect(jsonPath("$[1].logId").value(logId2.toString()));
+
+        verify(logService).getLogsByIds(ids);
+    }
+
+    @Test
+    void whenSearchByIds_andNoLogsMatch_thenReturnsEmptyList() throws Exception {
+        // Arrange: IDs that don't exist in the database
+        UUID unknownId = UUID.randomUUID();
+        List<UUID> ids = List.of(unknownId);
+
+        when(logService.getLogsByIds(ids)).thenReturn(List.of());
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/logs/search")
+                .param("ids", unknownId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void whenSearchByIds_withoutIdsParam_thenReturnsBadRequest() throws Exception {
+        // Act & Assert: Missing required query parameter should return 400
+        mockMvc.perform(get("/api/v1/logs/search"))
+                .andExpect(status().isBadRequest());
+    }
 }

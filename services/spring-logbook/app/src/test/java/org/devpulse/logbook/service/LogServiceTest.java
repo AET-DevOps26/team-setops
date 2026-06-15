@@ -48,6 +48,25 @@ class LogServiceTest {
     }
 
     @Test
+    void whenGetLogsByIds_thenDelegatesToRepository() {
+        // Arrange
+        UUID logId1 = UUID.randomUUID();
+        UUID logId2 = UUID.randomUUID();
+        List<UUID> ids = List.of(logId1, logId2);
+
+        DeploymentLog log1 = new DeploymentLog(logId1, "auth-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
+        DeploymentLog log2 = new DeploymentLog(logId2, "payment-service", "DEPLOYMENT_LOG", "WARNING", "Timeout", Instant.now());
+        when(logRepository.findAllById(ids)).thenReturn(List.of(log1, log2));
+
+        // Act
+        List<DeploymentLog> result = logService.getLogsByIds(ids);
+
+        // Assert
+        assertEquals(2, result.size());
+        verify(logRepository).findAllById(ids);
+    }
+
+    @Test
     void whenSaveLog_thenCreatesEntityAndPersists() {
         // Arrange
         UUID logId = UUID.randomUUID();

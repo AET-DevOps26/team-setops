@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.devpulse.logbook.entity.DeploymentLog;
+import org.devpulse.logbook.entity.Log;
 import org.devpulse.logbook.service.LogService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +35,8 @@ public class LogControllerTest {
         UUID logId2 = UUID.randomUUID();
         Instant now = Instant.now();
 
-        DeploymentLog log1 = new DeploymentLog(logId1, "auth-service", "DEPLOYMENT_LOG", "CRITICAL", "High CPU detected", now);
-        DeploymentLog log2 = new DeploymentLog(logId2, "payment-service", "DEPLOYMENT_LOG", "INFO", "Deployed successfully", now.minusSeconds(60));
+        Log log1 = new Log(logId1, "auth-service", "DEPLOYMENT_LOG", "CRITICAL", "High CPU detected", now);
+        Log log2 = new Log(logId2, "payment-service", "DEPLOYMENT_LOG", "INFO", "Deployed successfully", now.minusSeconds(60));
 
         when(logService.getDeploymentHistory()).thenReturn(List.of(log1, log2));
 
@@ -72,8 +72,8 @@ public class LogControllerTest {
         UUID logId2 = UUID.randomUUID();
         List<UUID> ids = List.of(logId1, logId2);
 
-        DeploymentLog log1 = new DeploymentLog(logId1, "auth-service", "DEPLOYMENT_LOG", "CRITICAL", "High CPU", Instant.now());
-        DeploymentLog log2 = new DeploymentLog(logId2, "payment-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
+        Log log1 = new Log(logId1, "auth-service", "DEPLOYMENT_LOG", "CRITICAL", "High CPU", Instant.now());
+        Log log2 = new Log(logId2, "payment-service", "DEPLOYMENT_LOG", "INFO", "Deployed", Instant.now());
 
         when(logService.getLogsByIds(ids)).thenReturn(List.of(log1, log2));
 

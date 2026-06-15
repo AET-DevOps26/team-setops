@@ -88,7 +88,7 @@ class LogServiceTest {
         Log savedEntity = captor.getValue();
         assertEquals(logId, savedEntity.getLogId());
         assertEquals("payment-service", savedEntity.getServiceName());
-        assertEquals("DEPLOYMENT_LOG", savedEntity.getEnvironment());
+        assertEquals("DEPLOYMENT_LOG", savedEntity.getType());
         assertEquals("WARNING", savedEntity.getSeverity());
         assertEquals("Payment processed", savedEntity.getLogContent());
         assertEquals(timestamp, savedEntity.getTimestamp());
@@ -110,7 +110,7 @@ class LogServiceTest {
 
         // Assert: Null type and severity should fall back to "UNKNOWN"
         Log savedEntity = captor.getValue();
-        assertEquals("UNKNOWN", savedEntity.getEnvironment());
+        assertEquals("UNKNOWN", savedEntity.getType());
         assertEquals("UNKNOWN", savedEntity.getSeverity());
     }
 }

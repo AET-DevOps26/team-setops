@@ -6,7 +6,12 @@ const CONFIDENCE_COLORS = {
 	high: "#4dd0e1",
 };
 
-export default function InsightsPanel({ result, loading }) {
+export default function InsightsPanel({
+	result,
+	loading,
+	resolved,
+	onMarkResolved,
+}) {
 	if (loading) {
 		return (
 			<div className="insights-loading">
@@ -117,6 +122,59 @@ export default function InsightsPanel({ result, loading }) {
 					</ul>
 				</div>
 			)}
+
+			{/* ── Resolution Action ────────────────────────── */}
+			<div className="insights-section insights-resolve-section">
+				{resolved ? (
+					<div className="resolved-badge" aria-label="Issue resolved">
+						<svg
+							className="resolved-icon"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+						>
+							<path
+								d="M20 6L9 17l-5-5"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+						Resolved
+					</div>
+				) : (
+					<button
+						type="button"
+						className="ghost-btn resolve-btn"
+						id="btn-mark-resolved"
+						onClick={onMarkResolved}
+					>
+						<svg
+							className="ghost-icon"
+							viewBox="0 0 24 24"
+							fill="none"
+							aria-hidden="true"
+						>
+							<path
+								d="M22 11.08V12a10 10 0 1 1-5.93-9.14"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+							<path
+								d="M22 4L12 14.01l-3-3"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+						Mark as Resolved
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }

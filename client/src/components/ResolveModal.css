@@ -1,0 +1,101 @@
+/* ─── Resolve Modal ──────────────────────────────────── */
+
+.resolve-modal {
+	max-width: 520px;
+}
+
+.resolve-body {
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* ─── Issue Context ──────────────────────────────────── */
+
+.resolve-context {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid #1e2d5f;
+	background: rgba(10, 14, 39, 0.6);
+}
+
+.resolve-context-label {
+	font-size: 10px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #5a7aa3;
+}
+
+.resolve-context-value {
+	font-size: 11px;
+	color: #b8f2ff;
+	letter-spacing: 0.06em;
+}
+
+/* ─── Sections ───────────────────────────────────────── */
+
+.resolve-section {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.resolve-section-label {
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: #4dd0e1;
+	text-shadow: 0 0 6px rgba(77, 208, 225, 0.3);
+}
+
+.resolve-section-desc {
+	font-size: 11px;
+	color: #6b8fb5;
+	line-height: 1.5;
+	margin: 0;
+}
+
+/* ─── Simple Resolve Button ──────────────────────────── */
+
+.resolve-simple-btn {
+	align-self: flex-start;
+	border-color: #36526e !important;
+}
+
+.resolve-simple-btn:hover:not(:disabled) {
+	border-color: #4dd0e1 !important;
+	color: #b8f2ff !important;
+	box-shadow: 0 0 10px rgba(77, 208, 225, 0.15);
+}
+
+/* ─── RAG Submit Button ──────────────────────────────── */
+
+.resolve-rag-btn {
+	align-self: flex-start;
+}
+
+/* ─── Divider ────────────────────────────────────────── */
+
+.resolve-divider {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.resolve-divider::before,
+.resolve-divider::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: #1e2d5f;
+}
+
+.resolve-divider-text {
+	font-size: 10px;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: #3b5d7c;
+}

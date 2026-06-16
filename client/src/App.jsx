@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import "./App.css";
 import PrivacyToggle from "@/components/PrivacyToggle";
 import IngestModal from "@/components/IngestModal";
+import ResolveModal from "@/components/ResolveModal";
 import LogList from "@/components/LogList";
 import InsightsPanel from "@/components/InsightsPanel";
 import { IngestIcon, EmptyLogsIcon, EmptyInsightsIcon } from "@/components/icons";
 import { usePrivacyMode } from "@/context/PrivacyModeContext";
-import { ingestLog, analyzeLog } from "@/lib/api";
+import { ingestLog, analyzeLog, submitRagDocument } from "@/lib/api";
 
 let nextLogId = 1;
 
@@ -22,6 +23,10 @@ function App() {
 	const [analyzing, setAnalyzing] = useState(false);
 	const [analysisError, setAnalysisError] = useState(null);
 
+	const [showResolveModal, setShowResolveModal] = useState(false);
+	const [resolved, setResolved] = useState(false);
+	const [notification, setNotification] = useState(null);
+
 	const [clock, setClock] = useState(new Date());
 
 	/* ── Live clock ─────────────────────────────────────── */
@@ -29,6 +34,13 @@ function App() {
 		const timer = setInterval(() => setClock(new Date()), 1000);
 		return () => clearInterval(timer);
 	}, []);
+
+	/* ── Auto-dismiss notification ──────────────────────── */
+	useEffect(() => {
+		if (!notification) return;
+		const timer = setTimeout(() => setNotification(null), 3000);
+		return () => clearTimeout(timer);
+	}, [notification]);
 
 	/* ── Handlers ───────────────────────────────────────── */
 	const handleIngest = useCallback(async (payload) => {
@@ -41,6 +53,7 @@ function App() {
 			setAnalyzing(true);
 			setAnalysisError(null);
 			setAnalysisResult(null);
+			setResolved(false);
 
 			try {
 				const result = await analyzeLog(log.logContent, mode);
@@ -57,6 +70,25 @@ function App() {
 	const handleSelectLog = useCallback((id) => {
 		setSelectedLogId((prev) => (prev === id ? null : id));
 	}, []);
+
+	const handleResolve = useCallback(
+		async (type, solutionText) => {
+			if (type === "rag" && solutionText) {
+				const title = analysisResult?.problem_type || "Resolved Issue";
+				await submitRagDocument(title, solutionText, [
+					analysisResult?.severity || "unknown",
+					"user-solution",
+				]);
+			}
+			setResolved(true);
+			setNotification(
+				type === "rag"
+					? "Issue resolved — solution submitted to knowledge base"
+					: "Issue marked as resolved",
+			);
+		},
+		[analysisResult],
+	);
 
 	/* ── Render ─────────────────────────────────────────── */
 	const hasLogs = logs.length > 0;
@@ -125,7 +157,12 @@ function App() {
 							</div>
 						) : analysisResult ? (
 							<div className="panel-body">
-								<InsightsPanel loading={false} result={analysisResult} />
+								<InsightsPanel
+									loading={false}
+									result={analysisResult}
+									resolved={resolved}
+									onMarkResolved={() => setShowResolveModal(true)}
+								/>
 							</div>
 						) : (
 							<div className="panel-body empty">
@@ -171,6 +208,36 @@ function App() {
 					onSubmit={handleIngest}
 					onClose={() => setShowIngestModal(false)}
 				/>
+			)}
+
+			{/* ── Resolve Modal ─────────────────────────────── */}
+			{showResolveModal && (
+				<ResolveModal
+					result={analysisResult}
+					onResolve={handleResolve}
+					onClose={() => setShowResolveModal(false)}
+				/>
+			)}
+
+			{/* ── Success Notification Toast ────────────────── */}
+			{notification && (
+				<div className="toast" role="status" aria-live="polite">
+					<svg
+						className="toast-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						aria-hidden="true"
+					>
+						<path
+							d="M20 6L9 17l-5-5"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						/>
+					</svg>
+					{notification}
+				</div>
 			)}
 		</div>
 	);

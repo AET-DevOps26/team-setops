@@ -168,3 +168,51 @@
 	letter-spacing: 0.12em;
 	margin: 0;
 }
+
+/* ─── Resolution Action ─────────────────────────────── */
+
+.insights-resolve-section {
+	margin-top: 4px;
+	padding-top: 14px;
+}
+
+.resolve-btn {
+	border-color: #4dd0e1 !important;
+	color: #b8f2ff !important;
+	background: rgba(77, 208, 225, 0.06) !important;
+	padding: 10px 20px !important;
+	font-size: 12px !important;
+	letter-spacing: 0.14em;
+	transition:
+		background 0.2s,
+		box-shadow 0.2s,
+		border-color 0.2s;
+}
+
+.resolve-btn:hover {
+	background: rgba(77, 208, 225, 0.15) !important;
+	box-shadow:
+		0 0 16px rgba(77, 208, 225, 0.25),
+		0 0 0 1px rgba(77, 208, 225, 0.3);
+}
+
+.resolved-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border: 1px solid rgba(46, 213, 115, 0.4);
+	background: rgba(46, 213, 115, 0.08);
+	color: #2ed573;
+	font-size: 12px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	font-weight: 600;
+	animation: fadeIn 0.3s ease;
+}
+
+.resolved-icon {
+	width: 16px;
+	height: 16px;
+}
+

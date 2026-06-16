@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import InsightsPanel from "../components/InsightsPanel";
 
 const mockResult = {
@@ -94,4 +94,44 @@ describe("InsightsPanel", () => {
 		expect(screen.queryByText("Proposed Solutions")).not.toBeInTheDocument();
 		expect(screen.queryByText("Sources")).not.toBeInTheDocument();
 	});
+
+	it("should show 'Mark as Resolved' button when not resolved", () => {
+		const onMarkResolved = vi.fn();
+		render(React.createElement(InsightsPanel, {
+			loading: false,
+			result: mockResult,
+			resolved: false,
+			onMarkResolved,
+		}));
+
+		const resolveBtn = screen.getByRole("button", { name: /mark as resolved/i });
+		expect(resolveBtn).toBeInTheDocument();
+		expect(screen.queryByText("Resolved")).not.toBeInTheDocument();
+	});
+
+	it("should call onMarkResolved when button is clicked", () => {
+		const onMarkResolved = vi.fn();
+		render(React.createElement(InsightsPanel, {
+			loading: false,
+			result: mockResult,
+			resolved: false,
+			onMarkResolved,
+		}));
+
+		fireEvent.click(screen.getByRole("button", { name: /mark as resolved/i }));
+		expect(onMarkResolved).toHaveBeenCalledTimes(1);
+	});
+
+	it("should show 'Resolved' badge instead of button when resolved is true", () => {
+		render(React.createElement(InsightsPanel, {
+			loading: false,
+			result: mockResult,
+			resolved: true,
+			onMarkResolved: vi.fn(),
+		}));
+
+		expect(screen.getByText("Resolved")).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /mark as resolved/i })).not.toBeInTheDocument();
+	});
 });
+

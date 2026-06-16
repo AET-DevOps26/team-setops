@@ -4,6 +4,7 @@ import PrivacyToggle from "@/components/PrivacyToggle";
 import IngestModal from "@/components/IngestModal";
 import LogList from "@/components/LogList";
 import InsightsPanel from "@/components/InsightsPanel";
+import { IngestIcon, EmptyLogsIcon, EmptyInsightsIcon } from "@/components/icons";
 import { usePrivacyMode } from "@/context/PrivacyModeContext";
 import { ingestLog, analyzeLog } from "@/lib/api";
 
@@ -79,34 +80,7 @@ function App() {
 							id="btn-ingest"
 							onClick={() => setShowIngestModal(true)}
 						>
-							<svg
-								className="ghost-icon"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<path
-									d="M12 4v9"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								/>
-								<path
-									d="M8.5 7.5L12 4l3.5 3.5"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								/>
-								<rect
-									x="5"
-									y="13"
-									width="14"
-									height="7"
-									rx="1"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								/>
-							</svg>
+							<IngestIcon />
 							Ingest Logs
 						</button>
 						<PrivacyToggle />
@@ -129,30 +103,7 @@ function App() {
 							</div>
 						) : (
 							<div className="panel-body empty">
-								<svg
-									className="empty-icon"
-									viewBox="0 0 64 64"
-									aria-hidden="true"
-								>
-									<path
-										d="M18 8h20l10 10v30a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-									<path
-										d="M38 8v12h12"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-									<path
-										d="M20 34h24M20 42h18"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-								</svg>
+								<EmptyLogsIcon />
 								<p className="empty-title">No Logs Ingested</p>
 								<button
 									type="button"
@@ -178,30 +129,7 @@ function App() {
 							</div>
 						) : (
 							<div className="panel-body empty">
-								<svg
-									className="empty-icon"
-									viewBox="0 0 64 64"
-									aria-hidden="true"
-								>
-									<path
-										d="M22 26a10 10 0 0 1 20 0c0 7-6 8-6 14H28c0-6-6-7-6-14z"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-									<path
-										d="M26 44h12M24 50h16"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-									<path
-										d="M14 28h6M44 28h6M32 12v6"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="3"
-									/>
-								</svg>
+								<EmptyInsightsIcon />
 								{analysisError ? (
 									<p className="empty-title error-text">{analysisError}</p>
 								) : (

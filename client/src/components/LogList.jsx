@@ -1,4 +1,6 @@
+import { useState } from "react";
 import "./LogList.css";
+import { AnalyzeIcon, ChevronIcon } from "@/components/icons";
 
 const SEVERITY_COLORS = {
 	INFO: "#4dd0e1",
@@ -14,15 +16,31 @@ export default function LogList({
 	onAnalyze,
 	analyzing,
 }) {
+	const [expandedIds, setExpandedIds] = useState(new Set());
+
+	const toggleExpand = (id, e) => {
+		e.stopPropagation();
+		setExpandedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	};
+
 	return (
 		<div className="log-list" role="list" aria-label="Ingested logs">
 			{logs.map((log) => {
 				const isSelected = selectedId === log.id;
+				const isExpanded = expandedIds.has(log.id);
 				return (
 					<div
 						key={log.id}
 						role="listitem"
-						className={`log-entry ${isSelected ? "selected" : ""}`}
+						className={`log-entry ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
 						onClick={() => onSelect(log.id)}
 					>
 						<div className="log-entry-header">
@@ -37,9 +55,20 @@ export default function LogList({
 							</span>
 							<span className="log-service">{log.serviceName}</span>
 							<span className="log-type">{log.type.replace(/_/g, " ")}</span>
+							<button
+								type="button"
+								className={`expand-btn ${isExpanded ? "expanded" : ""}`}
+								onClick={(e) => toggleExpand(log.id, e)}
+								aria-label={isExpanded ? "Collapse log" : "Expand log"}
+								aria-expanded={isExpanded}
+							>
+								<ChevronIcon />
+							</button>
 						</div>
 
-						<pre className="log-preview">{log.logContent}</pre>
+						<pre className={`log-preview ${isExpanded ? "log-preview--expanded" : ""}`}>
+							{log.logContent}
+						</pre>
 
 						<div className="log-entry-footer">
 							<span className="log-time">
@@ -62,26 +91,7 @@ export default function LogList({
 										</>
 									) : (
 										<>
-											<svg
-												className="ghost-icon"
-												viewBox="0 0 24 24"
-												aria-hidden="true"
-											>
-												<path
-													d="M22 26a10 10 0 0 1 20 0c0 7-6 8-6 14H28c0-6-6-7-6-14z"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-												/>
-												<path
-													d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-													strokeLinecap="round"
-													strokeLinejoin="round"
-												/>
-											</svg>
+											<AnalyzeIcon />
 											Analyze
 										</>
 									)}

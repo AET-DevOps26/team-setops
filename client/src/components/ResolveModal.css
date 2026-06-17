@@ -1,14 +1,14 @@
 /* ─── Resolve Modal ──────────────────────────────────── */
 
 .resolve-modal {
-	max-width: 520px;
+	max-width: 600px;
 }
 
 .resolve-body {
-	padding: 16px;
+	padding: 24px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 20px;
 }
 
 /* ─── Issue Context ──────────────────────────────────── */
@@ -16,22 +16,22 @@
 .resolve-context {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 8px 12px;
-	border: 1px solid #1e2d5f;
-	background: rgba(10, 14, 39, 0.6);
+	gap: 10px;
+	padding: 12px 16px;
+	border: 1px solid var(--border);
+	background: var(--background);
 }
 
 .resolve-context-label {
-	font-size: 10px;
+	font-size: 12px;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: #5a7aa3;
+	color: var(--muted-foreground);
 }
 
 .resolve-context-value {
-	font-size: 11px;
-	color: #b8f2ff;
+	font-size: 13px;
+	color: var(--foreground);
 	letter-spacing: 0.06em;
 }
 
@@ -40,20 +40,20 @@
 .resolve-section {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 10px;
 }
 
 .resolve-section-label {
-	font-size: 11px;
+	font-size: 13px;
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
-	color: #4dd0e1;
-	text-shadow: 0 0 6px rgba(77, 208, 225, 0.3);
+	color: var(--primary);
+	text-shadow: 0 0 6px rgba(var(--primary-rgb), 0.3);
 }
 
 .resolve-section-desc {
-	font-size: 11px;
-	color: #6b8fb5;
+	font-size: 13px;
+	color: var(--muted-foreground);
 	line-height: 1.5;
 	margin: 0;
 }
@@ -62,13 +62,13 @@
 
 .resolve-simple-btn {
 	align-self: flex-start;
-	border-color: #36526e !important;
+	border-color: var(--border) !important;
 }
 
 .resolve-simple-btn:hover:not(:disabled) {
-	border-color: #4dd0e1 !important;
-	color: #b8f2ff !important;
-	box-shadow: 0 0 10px rgba(77, 208, 225, 0.15);
+	border-color: var(--primary) !important;
+	color: var(--foreground) !important;
+	box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.15);
 }
 
 /* ─── RAG Submit Button ──────────────────────────────── */
@@ -82,7 +82,7 @@
 .resolve-divider {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 16px;
 }
 
 .resolve-divider::before,
@@ -90,12 +90,12 @@
 	content: "";
 	flex: 1;
 	height: 1px;
-	background: #1e2d5f;
+	background: var(--border);
 }
 
 .resolve-divider-text {
-	font-size: 10px;
+	font-size: 12px;
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	color: #3b5d7c;
+	color: var(--muted-foreground);
 }

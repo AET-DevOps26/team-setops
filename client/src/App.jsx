@@ -15,19 +15,37 @@ function App() {
 	/* ── State ──────────────────────────────────────────── */
 	const { mode } = usePrivacyMode();
 
+	const [theme, setTheme] = useState(() => {
+		try {
+			if (typeof localStorage !== "undefined" && typeof localStorage.getItem === "function") {
+				return localStorage.getItem("devpulse-theme") || "cyan";
+			}
+		} catch (e) {
+			// ignore
+		}
+		return "cyan";
+	});
 	const [logs, setLogs] = useState([]);
 	const [selectedLogId, setSelectedLogId] = useState(null);
 	const [showIngestModal, setShowIngestModal] = useState(false);
 
-	const [analysisResult, setAnalysisResult] = useState(null);
 	const [analyzing, setAnalyzing] = useState(false);
 	const [analysisError, setAnalysisError] = useState(null);
 
 	const [showResolveModal, setShowResolveModal] = useState(false);
-	const [resolved, setResolved] = useState(false);
 	const [notification, setNotification] = useState(null);
 
 	const [clock, setClock] = useState(new Date());
+
+	useEffect(() => {
+		try {
+			if (typeof localStorage !== "undefined" && typeof localStorage.setItem === "function") {
+				localStorage.setItem("devpulse-theme", theme);
+			}
+		} catch (e) {
+			// ignore
+		}
+	}, [theme]);
 
 	/* ── Live clock ─────────────────────────────────────── */
 	useEffect(() => {
@@ -52,12 +70,14 @@ function App() {
 		async (log) => {
 			setAnalyzing(true);
 			setAnalysisError(null);
-			setAnalysisResult(null);
-			setResolved(false);
 
 			try {
 				const result = await analyzeLog(log.logContent, mode);
-				setAnalysisResult(result);
+				setLogs((prev) =>
+					prev.map((l) =>
+						l.id === log.id ? { ...l, analysis: result, resolved: false } : l
+					)
+				);
 			} catch (err) {
 				setAnalysisError(err.message || "Analysis failed");
 			} finally {
@@ -71,38 +91,53 @@ function App() {
 		setSelectedLogId((prev) => (prev === id ? null : id));
 	}, []);
 
+	const handleDelete = useCallback((id) => {
+		setLogs((prev) => prev.filter((l) => l.id !== id));
+		setSelectedLogId((prev) => (prev === id ? null : prev));
+		setNotification("Log entry removed");
+	}, []);
+
 	const handleResolve = useCallback(
 		async (type, solutionText) => {
+			const selectedLog = logs.find((l) => l.id === selectedLogId);
+			const activeAnalysis = selectedLog?.analysis;
 			if (type === "rag" && solutionText) {
-				const title = analysisResult?.problem_type || "Resolved Issue";
+				const title = activeAnalysis?.problem_type || "Resolved Issue";
 				await submitRagDocument(title, solutionText, [
-					analysisResult?.severity || "unknown",
+					activeAnalysis?.severity || "unknown",
 					"user-solution",
 				]);
 			}
-			setResolved(true);
+			setLogs((prev) =>
+				prev.map((l) =>
+					l.id === selectedLogId ? { ...l, resolved: true } : l
+				)
+			);
 			setNotification(
 				type === "rag"
 					? "Issue resolved — solution submitted to knowledge base"
 					: "Issue marked as resolved",
 			);
 		},
-		[analysisResult],
+		[logs, selectedLogId],
 	);
 
 	/* ── Render ─────────────────────────────────────────── */
 	const hasLogs = logs.length > 0;
+	const selectedLog = logs.find((l) => l.id === selectedLogId);
+	const currentAnalysisResult = selectedLog?.analysis || null;
+	const isCurrentLogResolved = selectedLog?.resolved || false;
 
 	return (
-		<div className="page">
+		<div className={`page theme-${theme}`}>
 			<div className="scanlines" aria-hidden="true"></div>
 			<div className="frame">
 				<header className="topbar">
 					<div className="brand">
 						<div className="brand-mark">&gt;_</div>
 						<div>
-							<h1 className="brand-title">DevPulse</h1>
-							<p className="brand-sub">Intelligent Logbook v1.0.0</p>
+							<h1 className="brand-title">DEVPULSE</h1>
+							<p className="brand-sub">INTELLIGENT LOGBOOK // SYSTEM_ONLINE</p>
 						</div>
 					</div>
 					<div className="actions">
@@ -115,6 +150,20 @@ function App() {
 							<IngestIcon />
 							Ingest Logs
 						</button>
+						{hasLogs && (
+							<button
+								type="button"
+								className="ghost-btn"
+								id="btn-clear"
+								onClick={() => {
+									setLogs([]);
+									setSelectedLogId(null);
+									setNotification("All logs cleared");
+								}}
+							>
+								Clear Logs
+							</button>
+						)}
 						<PrivacyToggle />
 					</div>
 				</header>
@@ -131,6 +180,7 @@ function App() {
 									onSelect={handleSelectLog}
 									onAnalyze={handleAnalyze}
 									analyzing={analyzing}
+									onDelete={handleDelete}
 								/>
 							</div>
 						) : (
@@ -155,12 +205,12 @@ function App() {
 							<div className="panel-body">
 								<InsightsPanel loading={true} result={null} />
 							</div>
-						) : analysisResult ? (
+						) : currentAnalysisResult ? (
 							<div className="panel-body">
 								<InsightsPanel
 									loading={false}
-									result={analysisResult}
-									resolved={resolved}
+									result={currentAnalysisResult}
+									resolved={isCurrentLogResolved}
 									onMarkResolved={() => setShowResolveModal(true)}
 								/>
 							</div>
@@ -197,6 +247,15 @@ function App() {
 						<span className="mode-indicator">
 							Mode: {mode === "local" ? "🔒 Local" : "☁️ Cloud"}
 						</span>
+						<span className="divider"></span>
+						<button
+							type="button"
+							className="theme-btn"
+							onClick={() => setTheme((prev) => prev === "cyan" ? "green" : prev === "green" ? "amber" : "cyan")}
+							aria-label="Cycle UI theme"
+						>
+							🎨 Theme: {theme.toUpperCase()}
+						</button>
 					</div>
 					<div className="status-right">{clock.toLocaleString()}</div>
 				</footer>
@@ -213,7 +272,7 @@ function App() {
 			{/* ── Resolve Modal ─────────────────────────────── */}
 			{showResolveModal && (
 				<ResolveModal
-					result={analysisResult}
+					result={currentAnalysisResult}
 					onResolve={handleResolve}
 					onClose={() => setShowResolveModal(false)}
 				/>

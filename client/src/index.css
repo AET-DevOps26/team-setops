@@ -36,6 +36,64 @@
 	--sidebar-accent-foreground: #8bb4d9;
 	--sidebar-border: #2a3a6a;
 	--sidebar-ring: #4dd0e1;
+	--border: #2a3a6a;
+	--primary-rgb: 77, 208, 225;
+}
+
+/* Classic Phosphor Green Theme */
+.theme-green {
+	--background: #050a05;
+	--foreground: #33ff33;
+	--card: #0c180c;
+	--card-foreground: #a3ffa3;
+	--popover: #0f220f;
+	--popover-foreground: #a3ffa3;
+	--primary: #33ff33;
+	--primary-foreground: #050a05;
+	--secondary: #163316;
+	--secondary-foreground: #a3ffa3;
+	--muted: #0f220f;
+	--muted-foreground: #22aa22;
+	--destructive: #ff4d4d;
+	--ring: #33ff33;
+	--sidebar: #0c180c;
+	--sidebar-foreground: #a3ffa3;
+	--sidebar-primary: #33ff33;
+	--sidebar-primary-foreground: #050a05;
+	--sidebar-accent: #163316;
+	--sidebar-accent-foreground: #a3ffa3;
+	--sidebar-border: #1a3c1a;
+	--sidebar-ring: #33ff33;
+	--border: #1a3c1a;
+	--primary-rgb: 51, 255, 51;
+}
+
+/* Monochrome Phosphor Amber Theme */
+.theme-amber {
+	--background: #0a0600;
+	--foreground: #ffb000;
+	--card: #160d00;
+	--card-foreground: #ffd580;
+	--popover: #1f1200;
+	--popover-foreground: #ffd580;
+	--primary: #ffb000;
+	--primary-foreground: #0a0600;
+	--secondary: #301b00;
+	--secondary-foreground: #ffd580;
+	--muted: #1f1200;
+	--muted-foreground: #b37d00;
+	--destructive: #ff5500;
+	--ring: #ffb000;
+	--sidebar: #160d00;
+	--sidebar-foreground: #ffd580;
+	--sidebar-primary: #ffb000;
+	--sidebar-primary-foreground: #0a0600;
+	--sidebar-accent: #301b00;
+	--sidebar-accent-foreground: #ffd580;
+	--sidebar-border: #442600;
+	--sidebar-ring: #ffb000;
+	--border: #442600;
+	--primary-rgb: 255, 176, 0;
 }
 
 @theme inline {

@@ -30,8 +30,8 @@ const mockResult = {
 describe("InsightsPanel", () => {
 	it("should render loading state when loading is true", () => {
 		render(React.createElement(InsightsPanel, { loading: true, result: null }));
-		expect(screen.getByText("Analyzing…")).toBeInTheDocument();
-		expect(screen.getByText("Running AI analysis on selected log")).toBeInTheDocument();
+		expect(screen.getByText(/INITIALIZING CORE AGENT/i)).toBeInTheDocument();
+		expect(screen.getByText(/Core reasoning engine is processing/i)).toBeInTheDocument();
 	});
 
 	it("should render null when result is not provided and not loading", () => {

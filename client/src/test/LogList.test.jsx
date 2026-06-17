@@ -131,4 +131,19 @@ describe("LogList", () => {
 
 		expect(onSelect).not.toHaveBeenCalled();
 	});
+
+	it("should call onDelete and prevent propagation when delete button is clicked", () => {
+		const onDelete = vi.fn();
+		const onSelect = vi.fn();
+		const { container } = renderLogList({ onDelete, onSelect });
+
+		const firstEntry = container.querySelectorAll(".log-entry")[0];
+		const deleteBtn = firstEntry.querySelector(".delete-btn");
+
+		fireEvent.click(deleteBtn);
+
+		expect(onDelete).toHaveBeenCalledTimes(1);
+		expect(onDelete).toHaveBeenCalledWith(1);
+		expect(onSelect).not.toHaveBeenCalled();
+	});
 });

@@ -8,6 +8,22 @@ import {
 } from "../context/PrivacyModeContext";
 import { STORAGE_KEY } from "../context/privacyModeConstants";
 
+// Setup localStorage Mock for Vitest JSDOM environment
+const localStorageMock = (() => {
+	let store = {};
+	return {
+		getItem: (key) => store[key] || null,
+		setItem: (key, value) => { store[key] = String(value); },
+		clear: () => { store = {}; },
+		removeItem: (key) => { delete store[key]; }
+	};
+})();
+Object.defineProperty(window, "localStorage", {
+	value: localStorageMock,
+	writable: true,
+	configurable: true
+});
+
 // Helper: render toggle wrapped in its required provider
 function renderToggle() {
 	return render(

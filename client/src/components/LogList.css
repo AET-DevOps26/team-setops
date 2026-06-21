@@ -67,6 +67,41 @@
 	margin-left: auto;
 }
 
+/* ─── Expand / Collapse Button ───────────────────────── */
+
+.expand-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: 1px solid #2a3a6a;
+	color: #5a7aa3;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition:
+		color 0.2s,
+		border-color 0.2s,
+		transform 0.25s ease;
+}
+
+.expand-btn:hover {
+	color: #4dd0e1;
+	border-color: #4dd0e1;
+}
+
+.expand-btn .chevron-icon {
+	width: 14px;
+	height: 14px;
+	transition: transform 0.25s ease;
+}
+
+.expand-btn.expanded .chevron-icon {
+	transform: rotate(180deg);
+}
+
 /* ─── Content Preview ────────────────────────────────── */
 
 .log-preview {
@@ -79,10 +114,17 @@
 	word-break: break-all;
 	margin: 0;
 	opacity: 0.8;
+	transition:
+		max-height 0.35s ease,
+		opacity 0.2s;
 }
 
 .log-entry.selected .log-preview {
-	max-height: 120px;
+	opacity: 1;
+}
+
+.log-preview--expanded {
+	max-height: 2000px;
 	opacity: 1;
 }
 

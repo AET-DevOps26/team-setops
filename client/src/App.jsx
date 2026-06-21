@@ -20,7 +20,7 @@ function App() {
 			if (typeof localStorage !== "undefined" && typeof localStorage.getItem === "function") {
 				return localStorage.getItem("devpulse-theme") || "cyan";
 			}
-		} catch (e) {
+		} catch {
 			// ignore
 		}
 		return "cyan";
@@ -42,7 +42,7 @@ function App() {
 			if (typeof localStorage !== "undefined" && typeof localStorage.setItem === "function") {
 				localStorage.setItem("devpulse-theme", theme);
 			}
-		} catch (e) {
+		} catch {
 			// ignore
 		}
 	}, [theme]);

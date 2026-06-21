@@ -7,24 +7,21 @@ const CONFIDENCE_COLORS = {
 	high: "#4dd0e1",
 };
 
+const STAGES = [
+	"INITIALIZING CORE AGENT...",
+	"ESTABLISHING INCIDENT CONTEXT...",
+	"PARSING LOG STACK TRACES...",
+	"RUNNING PROMPT INFERENCE...",
+	"RETRIEVING LATEST RAG RUNBOOKS...",
+	"COMPILING REMEDIES...",
+	"FINALIZING DIAGNOSTIC REPORT...",
+];
+
 function RetroLoader() {
 	const [progress, setProgress] = useState(0);
 	const [stage, setStage] = useState(0);
 
-	const STAGES = [
-		"INITIALIZING CORE AGENT...",
-		"ESTABLISHING INCIDENT CONTEXT...",
-		"PARSING LOG STACK TRACES...",
-		"RUNNING PROMPT INFERENCE...",
-		"RETRIEVING LATEST RAG RUNBOOKS...",
-		"COMPILING REMEDIES...",
-		"FINALIZING DIAGNOSTIC REPORT..."
-	];
-
 	useEffect(() => {
-		setProgress(0);
-		setStage(0);
-		
 		const progressInterval = setInterval(() => {
 			setProgress((prev) => {
 				if (prev >= 100) {
@@ -33,13 +30,13 @@ function RetroLoader() {
 				}
 				const increment = Math.floor(Math.random() * 8) + 4;
 				const nextProgress = Math.min(prev + increment, 100);
-				
+
 				const stageIndex = Math.min(
 					Math.floor((nextProgress / 100) * STAGES.length),
-					STAGES.length - 1
+					STAGES.length - 1,
 				);
 				setStage(stageIndex);
-				
+
 				return nextProgress;
 			});
 		}, 250);
@@ -50,12 +47,15 @@ function RetroLoader() {
 	const totalBars = 20;
 	const filledBars = Math.round((progress / 100) * totalBars);
 	const emptyBars = totalBars - filledBars;
-	const barString = "=".repeat(Math.max(0, filledBars - 1)) + (filledBars > 0 ? ">" : "") + " ".repeat(emptyBars);
+	const barString =
+		"=".repeat(Math.max(0, filledBars - 1)) +
+		(filledBars > 0 ? ">" : "") +
+		" ".repeat(emptyBars);
 
 	return (
 		<div className="insights-loading retro-terminal-loader">
 			<pre className="ascii-spinner">
-{`
+				{`
    __  __  ____   ____  _     ___ _   _  ____ 
   |  \\/  |/ ___| / ___|| |   |_ _| \\ | |/ ___|
   | |\\/| | |  _  \\___ \\| |    | ||  \\| | |  _ 

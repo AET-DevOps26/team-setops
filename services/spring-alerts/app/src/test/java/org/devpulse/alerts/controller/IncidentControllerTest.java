@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @WebMvcTest(IncidentController.class)
 public class IncidentControllerTest {
@@ -30,8 +30,7 @@ public class IncidentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     // Mock the database layer so we only test the controller logic
     @MockitoBean
@@ -82,7 +81,7 @@ public class IncidentControllerTest {
         // Act & Assert: Call the PATCH endpoint
         mockMvc.perform(patch("/api/v1/incidents/" + logId + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(payload)))
+                .content(jsonMapper.writeValueAsString(payload)))
                 .andExpect(status().isOk());
 
         // Verify that the incident's status was changed and saved back to the database
@@ -101,7 +100,7 @@ public class IncidentControllerTest {
         // Act & Assert: Should return a 404 Not Found error
         mockMvc.perform(patch("/api/v1/incidents/" + unknownLogId + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(payload)))
+                .content(jsonMapper.writeValueAsString(payload)))
                 .andExpect(status().isNotFound());
     }
 }

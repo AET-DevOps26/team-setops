@@ -32,6 +32,7 @@ dependencies {
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.amqp:spring-rabbit-test")
     testImplementation("com.h2database:h2") // For isolated database tests
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

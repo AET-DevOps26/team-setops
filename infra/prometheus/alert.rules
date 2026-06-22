@@ -1,0 +1,20 @@
+groups:
+  - name: devpulse-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.instance }} is offline!"
+          description: "The container instance {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+      - alert: GenAiResponseTimeout
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler="/api/v1/analyze"}[5m])) by (le)) > 25
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow GenAI Ingestions detected"
+          description: "The local Qwen model is taking more than 25 seconds to generate log analysis."

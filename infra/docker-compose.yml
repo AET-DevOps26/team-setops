@@ -58,7 +58,7 @@ services:
       - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-user}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-password}
-      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-localhost}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
       - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
@@ -128,6 +128,8 @@ services:
     container_name: py-intelligence
     ports:
       - "8000:8000" # Assuming FastAPI or Flask default
+    env_file:
+      - ../services/py-intelligence/.env
     environment:
       - INGESTION_API_URL=http://spring-ingestion:8080
       - LOGBOOK_API_URL=http://spring-logbook:8080
@@ -135,8 +137,6 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
-      - MONGODB_URI=${MONGODB_URI}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     networks:
       - app-network
 
@@ -177,6 +177,42 @@ services:
       - spring-logbook
       - spring-alerts
       - py-intelligence
+    networks:
+      - app-network
+
+  # -------------------------------------
+  # Monitoring Services (Prometheus & Grafana)
+  # -------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert.rules:/etc/prometheus/alert.rules:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.route-prefix=/prometheus'
+      - '--web.external-url=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:8080/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
     networks:
       - app-network
 

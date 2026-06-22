@@ -1,0 +1,258 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "title": "Recommended Azure VM RAM Size",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "description": "Calculated Azure VM sizing budget (in GB), adding the host OS overhead, RabbitMQ, PostgreSQL, Nginx, Prometheus, Grafana baseline (approx. 600MB total) + 15% safety headroom.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "cyan"
+          },
+          "unit": "bytes"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "((sum(jvm_memory_committed_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0)) + 600000000) * 1.15",
+          "legendFormat": "Azure VM Target Size",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "title": "Total App Committed Memory",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "description": "The worst-case memory committed by the host OS to the JVMs plus the active RSS RAM of the Python service.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "unit": "bytes"
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "(sum(jvm_memory_committed_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0))",
+          "legendFormat": "Committed RAM",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "title": "Total App RAM In Use",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "description": "Sum of actual physical memory used by JVM heaps/non-heap regions and the Python GenAI process.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "unit": "bytes"
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "(sum(jvm_memory_used_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0))",
+          "legendFormat": "Used RAM",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "title": "Memory Breakdown by Service",
+      "type": "bargauge",
+      "datasource": "Prometheus",
+      "description": "Actual physical RAM usage per individual container service.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        }
+      },
+      "options": {
+        "displayMode": "lcd",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes) by (instance)",
+          "legendFormat": "{{instance}} (JVM)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(process_resident_memory_bytes{job=\"py-intelligence\"})",
+          "legendFormat": "py-intelligence (Python/Qwen)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 8,
+        "w": 14,
+        "x": 10,
+        "y": 6
+      },
+      "id": 5,
+      "title": "Memory Growth Timeline",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth"
+          },
+          "unit": "bytes"
+        }
+      },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes{job=\"py-intelligence\"}",
+          "legendFormat": "py-intelligence (Python/Qwen)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-ingestion:8080\"})",
+          "legendFormat": "spring-ingestion (JVM)",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-logbook:8080\"})",
+          "legendFormat": "spring-logbook (JVM)",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-alerts:8080\"})",
+          "legendFormat": "spring-alerts (JVM)",
+          "refId": "D"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "devpulse",
+    "sizing",
+    "memory"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Azure VM Sizing & Total Memory Estimation",
+  "uid": "azure-sizing-memory",
+  "version": 1,
+  "weekStart": ""
+}

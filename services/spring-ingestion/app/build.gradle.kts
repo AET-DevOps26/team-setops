@@ -18,6 +18,10 @@ dependencies {
     // JSON serialization
     implementation("com.fasterxml.jackson.core:jackson-databind")
 
+    // Actuator and Prometheus Metrics
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

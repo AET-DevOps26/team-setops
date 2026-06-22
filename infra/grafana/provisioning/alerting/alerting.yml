@@ -1,0 +1,77 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: "System Alerts"
+    folder: "DevPulse Alerts"
+    interval: 10s
+    rules:
+      - uid: service_down_alert
+        title: "Service Offline Alert"
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: "prometheus-datasource"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            model:
+              expr: "up"
+              refId: A
+          - refId: B
+            datasourceUid: "__expr__"
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: "__expr__"
+            model:
+              refId: C
+              type: math
+              expression: "$B < 1"
+        noDataState: OK
+        execErrState: Error
+        for: 10s
+        annotations:
+          summary: "Service {{ $labels.instance }} is offline!"
+          description: "A container instance is unreachable and down."
+        labels:
+          severity: "critical"
+
+contactPoints:
+  - orgId: 1
+    name: "Telegram"
+    receivers:
+      - uid: telegram-contact-point
+        type: telegram
+        settings:
+          bottoken: "8867762559:AAGYN5Nv2n9I8iv9vikEuc6UVGU1SPyv7gA"
+          chatid: "-5200211006"
+          message: |
+            {{ range .Alerts }}
+            {{ if eq .Status "firing" }}🚨 <b>SYSTEM OFFLINE ALERT</b> 🚨
+
+            <b>Service:</b> <code>{{ .Labels.instance }}</code> ({{ .Labels.job }})
+            <b>Summary:</b> {{ .Annotations.summary }}
+            <b>Description:</b> {{ .Annotations.description }}
+            <b>Severity:</b> {{ .Labels.severity }}
+
+            ⚠️ <i>Immediate action required.</i>
+            {{ else }}✅ <b>SYSTEM RECOVERED</b> ✅
+
+            <b>Service:</b> <code>{{ .Labels.instance }}</code> ({{ .Labels.job }})
+            <b>Status:</b> Back online and healthy.
+
+            🎉 <i>The issue has been resolved.</i>
+            {{ end }}
+            {{ end }}
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: "Telegram"
+    group_by: ["alertname", "instance"]
+    group_wait: 10s
+    group_interval: 1m

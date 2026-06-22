@@ -1,0 +1,10 @@
+apiVersion: 1
+providers:
+  - name: 'devpulse-dashboards'
+    orgId: 1
+    folder: 'DevPulse Monitoring'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

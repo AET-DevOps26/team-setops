@@ -43,9 +43,7 @@ def test_get_embedding(mock_sentence_transformer):
     embedding = get_embedding("test text")
 
     assert embedding == [0.1, 0.2, 0.3]
-    mock_sentence_transformer.encode.assert_called_once_with(
-        "test text", convert_to_numpy=True
-    )
+    mock_sentence_transformer.encode.assert_called_once_with("test text", convert_to_numpy=True)
 
 
 def test_create_all_embeddings_success(mock_db, mock_sentence_transformer):

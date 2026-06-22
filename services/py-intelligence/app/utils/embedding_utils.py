@@ -18,9 +18,7 @@ def get_embedding(text: str) -> list[float]:
     global _model
     if _model is None:
         # nomic-embed-text-v1.5 produces 768-dim vectors, matching the nomic-embed-text dimension.
-        _model = SentenceTransformer(
-            "nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True
-        )
+        _model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
 
     # Generate the embedding
     embedding = _model.encode(text, convert_to_numpy=True)
@@ -52,9 +50,7 @@ def create_all_embeddings(collection_name: str = None):
     documents = list(collection.find(query))
 
     if not documents:
-        print(
-            f"No documents without embeddings found in collection '{collection_name}'"
-        )
+        print(f"No documents without embeddings found in collection '{collection_name}'")
         return True
 
     print(f"Found {len(documents)} documents to embed in '{collection_name}'")
@@ -68,9 +64,7 @@ def create_all_embeddings(collection_name: str = None):
                 continue
 
             embedding = get_embedding(content)
-            collection.update_one(
-                {"_id": document["_id"]}, {"$set": {"embedding": embedding}}
-            )
+            collection.update_one({"_id": document["_id"]}, {"$set": {"embedding": embedding}})
             count += 1
         except Exception as e:
             print(f"Error processing document {document['_id']}: {e}")
@@ -80,9 +74,7 @@ def create_all_embeddings(collection_name: str = None):
     return True
 
 
-def similarity_search(
-    query: str, limit: int = 5, collection_name: str = None
-) -> list[dict]:
+def similarity_search(query: str, limit: int = 5, collection_name: str = None) -> list[dict]:
     """
     Perform a vector similarity search in MongoDB using a text query.
 

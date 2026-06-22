@@ -33,9 +33,7 @@ def test_local_model_matches_docker_gguf() -> None:
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])
 
     assert local_model["name"] == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
-    assert (
-        local_model["model_path"] == "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
-    )
+    assert local_model["model_path"] == "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
 
 
 @patch("app.apis.intelligence.get_model_for_mode")
@@ -107,9 +105,7 @@ def test_analyze_endpoint_uses_rag(mock_search, mock_get_model) -> None:
     body = response.json()
     assert body["sources"][0]["title"] == "Database timeout fix"
     assert body["confidence"] == "high"
-    mock_search.assert_called_once_with(
-        "Deployment failed: database connection timeout", limit=3
-    )
+    mock_search.assert_called_once_with("Deployment failed: database connection timeout", limit=3)
     assert "Database timeout fix" in mock_model.generate.call_args.args[0]
 
 
@@ -171,9 +167,7 @@ def test_parse_model_response_handling() -> None:
     assert intel._parse_model_response('```json\n{"test": 123}\n```') == {"test": 123}
 
     # Nested JSON in text
-    assert intel._parse_model_response('Some text {\n  "test": 123\n} other text') == {
-        "test": 123
-    }
+    assert intel._parse_model_response('Some text {\n  "test": 123\n} other text') == {"test": 123}
 
     # Empty response raises ValueError
     with pytest.raises(ValueError, match="Model returned an empty response."):
@@ -184,9 +178,9 @@ def test_parse_model_response_handling() -> None:
         intel._parse_model_response("not a json string")
 
     # Unescaped double quotes in JSON string
-    assert intel._parse_model_response(
-        '{"evidence": ["Module \'"./App.css"\' has no default export."]}'
-    ) == {"evidence": ["Module '\"./App.css\"' has no default export."]}
+    assert intel._parse_model_response('{"evidence": ["Module \'"./App.css"\' has no default export."]}') == {
+        "evidence": ["Module '\"./App.css\"' has no default export."]
+    }
 
 
 def test_normalize_response_defaults_and_rag_sources() -> None:
@@ -204,9 +198,7 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
         "severity": None,
         "summary": "Server down",
     }
-    normalized = intel._normalize_response(
-        incomplete_res, retrieved_docs=[], use_rag=False
-    )
+    normalized = intel._normalize_response(incomplete_res, retrieved_docs=[], use_rag=False)
 
     assert normalized["problem_type"] == "infra_issue"
     assert normalized["severity"] == "unknown"
@@ -227,17 +219,12 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
             "content": "This is a detailed snippet of Doc 1.",
         }
     ]
-    normalized_rag = intel._normalize_response(
-        {"problem_type": "x"}, retrieved_docs=retrieved, use_rag=True
-    )
+    normalized_rag = intel._normalize_response({"problem_type": "x"}, retrieved_docs=retrieved, use_rag=True)
 
     assert len(normalized_rag["sources"]) == 1
     assert normalized_rag["sources"][0]["id"] == "1a"
     assert normalized_rag["sources"][0]["title"] == "Doc 1"
-    assert (
-        normalized_rag["sources"][0]["snippet"]
-        == "This is a detailed snippet of Doc 1."
-    )
+    assert normalized_rag["sources"][0]["snippet"] == "This is a detailed snippet of Doc 1."
 
 
 def test_removed_endpoints_return_404() -> None:
@@ -279,9 +266,7 @@ def test_create_rag_document_success(mock_db, mock_create_embeddings) -> None:
 
 @patch("app.apis.create_all_embeddings")
 @patch("app.apis.db")
-def test_delete_rag_document_endpoint_is_mapped(
-    mock_db, mock_create_embeddings
-) -> None:
+def test_delete_rag_document_endpoint_is_mapped(mock_db, mock_create_embeddings) -> None:
     """Verifies that deleting a document via /api/v1/rag/documents/{id} correctly removes it and updates embeddings."""
     mock_db.delete_document.return_value = True
     mock_create_embeddings.return_value = True
@@ -295,12 +280,8 @@ def test_delete_rag_document_endpoint_is_mapped(
 @patch("app.apis.similarity_search")
 def test_rag_search_success(mock_search) -> None:
     """Verifies that semantic searching via /api/v1/rag/search returns ranked search results from embedding_utils."""
-    mock_search.return_value = [
-        {"_id": "mock_id", "title": "Mock Title", "content": "Mock Content", "tags": []}
-    ]
-    response = client.post(
-        "/api/v1/rag/search", json={"query": "crash loop", "limit": 3}
-    )
+    mock_search.return_value = [{"_id": "mock_id", "title": "Mock Title", "content": "Mock Content", "tags": []}]
+    response = client.post("/api/v1/rag/search", json={"query": "crash loop", "limit": 3})
 
     assert response.status_code == 200
     res_data = response.json()
@@ -358,9 +339,7 @@ def test_model_load_raises_runtime_error_on_import_error_google() -> None:
     model = Model(google_cfg)
 
     with patch.dict("sys.modules", {"google": None}):
-        with pytest.raises(
-            RuntimeError, match="Google GenAI dependencies are not installed."
-        ):
+        with pytest.raises(RuntimeError, match="Google GenAI dependencies are not installed."):
             model._load()
 
 
@@ -378,9 +357,7 @@ def test_model_load_raises_runtime_error_on_import_error_qwen() -> None:
     model = Model(qwen_cfg)
 
     with patch.dict("sys.modules", {"llama_cpp": None}):
-        with pytest.raises(
-            RuntimeError, match="llama-cpp-python is required for local GGUF inference."
-        ):
+        with pytest.raises(RuntimeError, match="llama-cpp-python is required for local GGUF inference."):
             model._load()
 
 
@@ -397,9 +374,7 @@ def test_model_load_raises_runtime_error_if_qwen_path_missing() -> None:
     model = Model(qwen_cfg)
 
     with patch("builtins.__import__"):
-        with pytest.raises(
-            RuntimeError, match="Local Qwen GGUF model_path is not configured."
-        ):
+        with pytest.raises(RuntimeError, match="Local Qwen GGUF model_path is not configured."):
             model._load()
 
 
@@ -435,13 +410,9 @@ def test_openai_model_load_and_generate() -> None:
     assert model._load() is True
 
     # Test generate
-    with patch("httpx.post") as mock_post, patch.dict(
-        "os.environ", {"OPENAI_API_KEY": "test-key"}
-    ):
+    with patch("httpx.post") as mock_post, patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
         mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": '{"problem_type": "none"}'}}]
-        }
+        mock_response.json.return_value = {"choices": [{"message": {"content": '{"problem_type": "none"}'}}]}
         mock_post.return_value = mock_response
 
         res = model.generate("test prompt")
@@ -461,11 +432,10 @@ def test_analyze_fallback_to_openai(mock_models) -> None:
     openai_model = next(m for m in intel.models if m.provider == "openai")
 
     # Mock Gemini model generate to raise an exception, and OpenAI model generate to return JSON
-    with patch.object(
-        gemini_model, "generate", side_effect=Exception("Gemini Offline")
-    ), patch.object(
-        openai_model, "generate", return_value=json.dumps(LOCAL_ANALYSIS_RESPONSE)
-    ) as mock_openai_gen:
+    with (
+        patch.object(gemini_model, "generate", side_effect=Exception("Gemini Offline")),
+        patch.object(openai_model, "generate", return_value=json.dumps(LOCAL_ANALYSIS_RESPONSE)) as mock_openai_gen,
+    ):
 
         res = intel.analyze(content="test logs", mode="cloud", use_rag=False)
 

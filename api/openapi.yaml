@@ -11,6 +11,8 @@ tags:
   - name: Intelligence
   - name: RAG
   - name: Ingestion
+  - name: Alerts
+  - name: Logbook
 paths:
   /health:
     get:
@@ -78,8 +80,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -98,8 +100,22 @@ paths:
       responses:
         "204":
           description: Deleted
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /api/v1/rag/delete_all:
+    delete:
+      tags: [RAG]
+      operationId: deleteAllRagDocuments
+      summary: Remove all documents from the RAG retrieval store
+      responses:
+        "200":
+          description: All documents deleted successfully
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -128,17 +144,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
-        "501":
-          description: Not implemented
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
 
-  /api/v1/logs/deployment:
+  /api/v1/logs:
     post:
       tags: [Ingestion]
-      operationId: ingestDeploymentLog
+      operationId: ingestLog
       summary: Ingest a deployment log event
       description: Accepts a deployment log event and publishes it asynchronously via RabbitMQ for processing
       requestBody:
@@ -150,18 +166,43 @@ paths:
       responses:
         "202":
           description: Log event accepted for asynchronous processing
-        "422":
-          description: Validation error
+    get:
+      tags: [Logbook]
+      operationId: getDeploymentHistory
+      summary: Get the historical deployment timeline
+      responses:
+        "200":
+          description: List of historical deployment logs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorDetail"
-        "500":
-          description: Internal server error
+                type: array
+                items:
+                  $ref: "#/components/schemas/Log"
+
+  /api/v1/logs/search:
+    get:
+      tags: [Logbook]
+      operationId: getLogsByIds
+      summary: Retrieve deployment logs matching a given list of UUIDs
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+      responses:
+        "200":
+          description: Filtered list of logs by IDs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorDetail"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Log"
 
   /api/v1/alerts/system:
     post:
@@ -190,6 +231,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+
+  /api/v1/incidents:
+    get:
+      tags: [Alerts]
+      operationId: getIncidentStatuses
+      summary: Retrieve a list of incident statuses, optionally filtered by status
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "ACTIVE"
+      responses:
+        "200":
+          description: A list of incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IncidentStatus"
+
+  /api/v1/incidents/{logId}/status:
+    patch:
+      tags: [Alerts]
+      operationId: updateStatus
+      summary: Update the status of a specific incident
+      parameters:
+        - name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusUpdateDto"
+      responses:
+        "200":
+          description: Status successfully updated
+        "404":
+          description: Incident status not found
 
 components:
   schemas:
@@ -411,4 +498,36 @@ components:
           example:
             cpu_load: 92.5
             memory_usage: "8GB"
-
+    Log:
+      type: object
+      description: Representation of a log entity from the logbook service
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceName:
+          type: string
+        logContent:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        severity:
+          type: string
+    IncidentStatus:
+      type: object
+      description: Represents the status of a parsed incident log
+      properties:
+        logId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: "ACTIVE"
+    StatusUpdateDto:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: "RESOLVED"

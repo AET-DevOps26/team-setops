@@ -85,3 +85,32 @@ export async function checkHealth() {
 	}
 	return response.json();
 }
+
+/**
+ * Submit a custom solution document to the RAG knowledge base.
+ *
+ * Maps to POST /api/v1/rag/documents (see OpenAPI spec).
+ *
+ * @param {string} title   – Document title (e.g. problem type or summary).
+ * @param {string} content – The custom solution / root-cause fix text.
+ * @param {string[]} [tags] – Optional tags for categorization.
+ * @returns {Promise<object>} The created RagDocument.
+ */
+export async function submitRagDocument(title, content, tags = []) {
+	const response = await fetch(`${BASE_URL}/api/v1/rag/documents`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ title, content, tags }),
+	});
+
+	if (!response.ok) {
+		const error = await response
+			.json()
+			.catch(() => ({ detail: response.statusText }));
+		throw new Error(
+			error.detail || `RAG submission failed (${response.status})`,
+		);
+	}
+
+	return response.json();
+}

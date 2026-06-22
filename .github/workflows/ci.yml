@@ -19,6 +19,30 @@ env:
 
 
 jobs:
+  openapi-sync-check:
+    name: OpenAPI Client Sync Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Run generation script
+        run: |
+          chmod +x api/scripts/gen-all.sh
+          ./api/scripts/gen-all.sh
+
+      - name: Check for unsynced changes
+        run: |
+          # If git diff shows changes, it means a developer modified openapi.yaml 
+          # but forgot to run gen-all.sh and commit the updated client/src/api.ts.
+          echo "Checking if client/src/api.ts is up-to-date with api/openapi.yaml..."
+          git diff --exit-code
+
   spring-services:
     name: Spring services
     runs-on: ubuntu-latest

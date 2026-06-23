@@ -228,11 +228,16 @@ jobs:
           kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-logbook=ghcr.io/${{ env.REPO }}/spring-logbook:${{ github.sha }}
 
       - name: Create kubeconfig
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
         run: |
           mkdir -p ~/.kube
-          cat << 'EOF' > ~/.kube/config
-          ${{ secrets.KUBE_CONFIG_DATA }}
-          EOF
+          # Check if the secret is already plain YAML or Base64 encoded
+          if echo "$KUBE_CONFIG" | grep -q "apiVersion"; then
+            echo "$KUBE_CONFIG" > ~/.kube/config
+          else
+            echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+          fi
           chmod 600 ~/.kube/config
 
       - name: Deploy to Kubernetes

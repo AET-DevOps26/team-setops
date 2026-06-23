@@ -166,10 +166,15 @@ kubectl get all -n setops
 ```
 
 #### Accessing the Application
-* **Via Gateway NodePort:** The gateway service is exposed externally on the cluster node port `30080`. You can access the app at `http://<node-ip-address>:30080`.
+* **Via Gateway NodePort:** The gateway service is exposed externally on a dynamically assigned port on every cluster node. To find the port, run:
+  ```bash
+  kubectl get service gateway -n setops
+  ```
+  Look for the port mapped to `80:` under the `PORT(S)` column (e.g. `80:31234/TCP`). You can then access the app at `http://<node-ip-address>:<assigned-nodeport>`.
 * **Via Local Port-Forwarding:** If you are behind a firewall or want to test locally:
   ```bash
   kubectl port-forward service/gateway 8080:80 -n setops
   ```
   Then open [http://localhost:8080](http://localhost:8080) in your browser.
+
 

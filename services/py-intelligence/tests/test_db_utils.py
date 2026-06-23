@@ -11,7 +11,11 @@ def mock_db_config():
     """
     with patch.dict(
         "os.environ",
-        {"MONGODB_URI": "mongodb://localhost:27017", "DB_NAME": "test_db", "COLLECTION_NAME": "test_collection"},
+        {
+            "MONGODB_URI": "mongodb://localhost:27017",
+            "DB_NAME": "test_db",
+            "COLLECTION_NAME": "test_collection",
+        },
     ):
         yield
 

@@ -17,6 +17,12 @@ AVAILABLE_MODELS = [
         "cloud": True,
     },
     {
+        "name": "openai/gpt-oss-120b",
+        "provider": "openai",
+        "shortened": "GPT",
+        "cloud": True,
+    },
+    {
         "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
         "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
@@ -159,7 +165,18 @@ class Intelligence:
         """
         model = self.get_model_for_mode(mode)
         prompt = self._build_analysis_prompt(content, mode, use_rag, context, retrieved_docs or [])
-        raw_response = model.generate(prompt)
+        try:
+            raw_response = model.generate(prompt)
+        except Exception as e:
+            # Fallback to OpenAI GPT model if Gemini cloud provider fails
+            if mode == "cloud":
+                try:
+                    fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
+                    raw_response = fallback_model.generate(prompt)
+                except StopIteration:
+                    raise e
+            else:
+                raise e
         parsed_response = self._parse_model_response(raw_response)
         return self._normalize_response(parsed_response, retrieved_docs or [], use_rag)
 
@@ -287,7 +304,10 @@ class Intelligence:
             raise ValueError("Model response was not valid JSON.")
 
     def _normalize_response(
-        self, response: dict[str, Any], retrieved_docs: list[dict[str, Any]], use_rag: bool
+        self,
+        response: dict[str, Any],
+        retrieved_docs: list[dict[str, Any]],
+        use_rag: bool,
     ) -> dict[str, Any]:
         """Ensures that the model's parsed JSON response is fully compliant and structurally sound.
 

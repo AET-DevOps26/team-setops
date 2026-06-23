@@ -1,0 +1,134 @@
+# ============================================================
+# spring-ingestion: Deployment + Service
+# ============================================================
+# Stateless app → uses Deployment (not StatefulSet).
+# K8s can freely kill/recreate pods since state lives in Postgres.
+#
+# "depends_on" replacement:
+#   initContainers wait for postgres + rabbitmq TCP ports
+#   before the main container starts.
+#
+# RESOURCE BUDGET: 100m CPU / 256Mi memory (requests)
+# ============================================================
+
+# ---------- Service ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-ingestion
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: spring-ingestion
+    app.kubernetes.io/part-of: devpulse
+spec:
+  type: ClusterIP
+  selector:
+    app: spring-ingestion
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+
+---
+# ---------- Deployment ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-ingestion
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: spring-ingestion
+    app.kubernetes.io/part-of: devpulse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-ingestion
+  template:
+    metadata:
+      labels:
+        app: spring-ingestion
+    spec:
+      # ---------- Init Containers (replace depends_on) ----------
+      # These run sequentially BEFORE the main container.
+      # "nc -z" does a zero-I/O TCP connect test on a host:port.
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z postgres 5432; do echo 'waiting for postgres...'; sleep 2; done"]
+          securityContext:
+            allowPrivilegeEscalation: false
+          resources:
+            limits:
+              memory: "32Mi"
+              cpu: "50m"
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z rabbitmq 5672; do echo 'waiting for rabbitmq...'; sleep 2; done"]
+          securityContext:
+            allowPrivilegeEscalation: false
+          resources:
+            limits:
+              memory: "32Mi"
+              cpu: "50m"
+
+      containers:
+        - name: spring-ingestion
+          image: ghcr.io/aet-devops26/team-setops/spring-ingestion:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+            # K8s DNS resolves "postgres" to the PostgreSQL Service,
+            # just like Docker's internal DNS did in compose.
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/appdb"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: RABBITMQ_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: RABBITMQ_PASSWORD
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

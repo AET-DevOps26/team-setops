@@ -1,4 +1,6 @@
+import { useState } from "react";
 import "./LogList.css";
+import { AnalyzeIcon, ChevronIcon } from "@/components/icons";
 
 const SEVERITY_COLORS = {
 	INFO: "#4dd0e1",
@@ -13,84 +15,150 @@ export default function LogList({
 	onSelect,
 	onAnalyze,
 	analyzing,
+	onDelete,
 }) {
+	const [searchQuery, setSearchQuery] = useState("");
+	const [expandedIds, setExpandedIds] = useState(new Set());
+
+	const toggleExpand = (id, e) => {
+		e.stopPropagation();
+		setExpandedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	};
+
+	const filteredLogs = logs.filter((log) => {
+		const query = searchQuery.toLowerCase().trim();
+		if (!query) return true;
+		return (
+			(log.serviceName && log.serviceName.toLowerCase().includes(query)) ||
+			(log.severity && log.severity.toLowerCase().includes(query)) ||
+			(log.type && log.type.toLowerCase().includes(query)) ||
+			(log.logContent && log.logContent.toLowerCase().includes(query))
+		);
+	});
+
 	return (
-		<div className="log-list" role="list" aria-label="Ingested logs">
-			{logs.map((log) => {
-				const isSelected = selectedId === log.id;
-				return (
-					<div
-						key={log.id}
-						role="listitem"
-						className={`log-entry ${isSelected ? "selected" : ""}`}
-						onClick={() => onSelect(log.id)}
+		<div className="log-list-wrapper">
+			<div className="log-search-container">
+				<span className="search-prompt">&gt;</span>
+				<input
+					type="text"
+					className="log-search-input"
+					placeholder="SEARCH LOGS (SERVICE, SEVERITY, MSG)..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+				/>
+				{searchQuery && (
+					<button
+						type="button"
+						className="clear-search-btn"
+						onClick={() => setSearchQuery("")}
 					>
-						<div className="log-entry-header">
-							<span
-								className="severity-badge"
-								style={{
-									color: SEVERITY_COLORS[log.severity] || "#8bb4d9",
-									borderColor: SEVERITY_COLORS[log.severity] || "#2a3a6a",
-								}}
-							>
-								{log.severity}
-							</span>
-							<span className="log-service">{log.serviceName}</span>
-							<span className="log-type">{log.type.replace(/_/g, " ")}</span>
-						</div>
+						[ESC]
+					</button>
+				)}
+			</div>
 
-						<pre className="log-preview">{log.logContent}</pre>
-
-						<div className="log-entry-footer">
-							<span className="log-time">
-								{new Date(log.timestamp).toLocaleString()}
-							</span>
-							{isSelected && (
-								<button
-									type="button"
-									className="ghost-btn compact analyze-btn"
-									onClick={(e) => {
-										e.stopPropagation();
-										onAnalyze(log);
-									}}
-									disabled={analyzing}
-								>
-									{analyzing ? (
-										<>
-											<span className="spinner" aria-hidden="true" />
-											Analyzing…
-										</>
-									) : (
-										<>
-											<svg
-												className="ghost-icon"
-												viewBox="0 0 24 24"
-												aria-hidden="true"
-											>
-												<path
-													d="M22 26a10 10 0 0 1 20 0c0 7-6 8-6 14H28c0-6-6-7-6-14z"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-												/>
-												<path
-													d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-													strokeLinecap="round"
-													strokeLinejoin="round"
-												/>
-											</svg>
-											Analyze
-										</>
-									)}
-								</button>
-							)}
-						</div>
+			<div className="log-list" role="list" aria-label="Ingested logs">
+				{filteredLogs.length === 0 ? (
+					<div className="no-matches-text">
+						&gt; NO LOGS MATCHING SEARCH QUERY
 					</div>
-				);
-			})}
+				) : (
+					filteredLogs.map((log) => {
+						const isSelected = selectedId === log.id;
+						const isExpanded = expandedIds.has(log.id);
+						return (
+							<div
+								key={log.id}
+								role="listitem"
+								className={`log-entry ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
+								onClick={() => onSelect(log.id)}
+							>
+								<div className="log-entry-header">
+									<span
+										className="severity-badge"
+										style={{
+											color: SEVERITY_COLORS[log.severity] || "#8bb4d9",
+											borderColor: SEVERITY_COLORS[log.severity] || "#2a3a6a",
+										}}
+									>
+										{log.severity}
+									</span>
+									<span className="log-service">{log.serviceName}</span>
+									<span className="log-type">{log.type.replace(/_/g, " ")}</span>
+									<button
+										type="button"
+										className={`expand-btn ${isExpanded ? "expanded" : ""}`}
+										onClick={(e) => toggleExpand(log.id, e)}
+										aria-label={isExpanded ? "Collapse log" : "Expand log"}
+										aria-expanded={isExpanded}
+									>
+										<ChevronIcon />
+									</button>
+									<button
+										type="button"
+										className="delete-btn"
+										onClick={(e) => {
+											e.stopPropagation();
+											if (onDelete) onDelete(log.id);
+										}}
+										aria-label="Delete log"
+									>
+										✕
+									</button>
+								</div>
+
+								<pre className={`log-preview ${isExpanded ? "log-preview--expanded" : ""}`}>
+									{log.logContent}
+								</pre>
+
+								<div className="log-entry-footer">
+									<span className="log-time">
+										{new Date(log.timestamp).toLocaleString()}
+									</span>
+									{isSelected && (
+										log.analysis ? (
+											<span className="analyzed-badge" aria-label="Already analyzed">
+												[✓] ANALYZED
+											</span>
+										) : (
+											<button
+												type="button"
+												className="ghost-btn compact analyze-btn"
+												onClick={(e) => {
+													e.stopPropagation();
+													onAnalyze(log);
+												}}
+												disabled={analyzing}
+											>
+												{analyzing ? (
+													<>
+														<span className="spinner" aria-hidden="true" />
+														Analyzing…
+													</>
+												) : (
+													<>
+														<AnalyzeIcon />
+														Analyze
+													</>
+												)}
+											</button>
+										)
+									)}
+								</div>
+							</div>
+						);
+					})
+				)}
+			</div>
 		</div>
 	);
 }

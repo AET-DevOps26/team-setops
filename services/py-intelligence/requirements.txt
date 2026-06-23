@@ -9,9 +9,5 @@ httpx==0.28.1
 certifi
 python-dotenv
 google-genai
-cryptography==46.0.7
+cryptography==48.0.1
 prometheus-fastapi-instrumentator==7.0.0
-
-
-
-

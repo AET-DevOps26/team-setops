@@ -50,7 +50,7 @@ groups:
               from: 900
               to: 0
             model:
-              expr: "increase(kube_pod_container_status_restarts_total[15m])"
+              expr: 'increase(kube_pod_container_status_restarts_total{namespace="setops"}[15m])'
               refId: A
           - refId: B
             datasourceUid: "__expr__"
@@ -84,7 +84,7 @@ groups:
               from: 300
               to: 0
             model:
-              expr: 'kube_pod_container_status_terminated_reason{reason="OOMKilled"}'
+              expr: 'kube_pod_container_status_terminated_reason{namespace="setops", reason="OOMKilled"}'
               refId: A
           - refId: B
             datasourceUid: "__expr__"

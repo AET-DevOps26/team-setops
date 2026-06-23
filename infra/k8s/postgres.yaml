@@ -56,6 +56,7 @@ spec:
       # Pod-level security: postgres image runs as uid 70 (postgres user)
       securityContext:
         runAsNonRoot: true
+        runAsUser: 70
         fsGroup: 70           # Ensures volume permissions work for postgres user
       containers:
         - name: postgres
@@ -79,6 +80,8 @@ spec:
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               value: appdb
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

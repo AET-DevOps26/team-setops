@@ -27,8 +27,7 @@ app = FastAPI(
 )
 
 ANALYSES_COMPLETED_METRIC = Gauge(
-    "devpulse_analyses_completed_total",
-    "Total number of completed AI analyses persisted in MongoDB"
+    "devpulse_analyses_completed_total", "Total number of completed AI analyses persisted in MongoDB"
 )
 
 
@@ -105,20 +104,22 @@ def analyze(
             context=context,
             retrieved_docs=retrieved_docs,
         )
-        
+
         # Persist completed analysis event in MongoDB and update gauge
         try:
-            get_db().db["completed_analyses"].insert_one({
-                "timestamp": datetime.datetime.now(datetime.timezone.utc),
-                "mode": mode,
-                "problem_type": result.get("problem_type"),
-                "severity": result.get("severity"),
-                "confidence": result.get("confidence")
-            })
+            get_db().db["completed_analyses"].insert_one(
+                {
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc),
+                    "mode": mode,
+                    "problem_type": result.get("problem_type"),
+                    "severity": result.get("severity"),
+                    "confidence": result.get("confidence"),
+                }
+            )
             ANALYSES_COMPLETED_METRIC.inc()
         except Exception as db_err:
             print(f"Failed to persist analysis to database: {db_err}")
-            
+
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

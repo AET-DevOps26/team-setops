@@ -62,9 +62,6 @@ env/
 docker-compose.override.yml
 *.pid
 
-# Kubernetes secrets (only .template is tracked)
-infra/k8s/secrets.yaml
-
 # Generated or local model data
 models/
 *.gguf

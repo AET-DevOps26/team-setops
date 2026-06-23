@@ -33,7 +33,7 @@
       "title": "Recommended Azure VM RAM Size",
       "type": "stat",
       "datasource": "Prometheus",
-      "description": "Calculated Azure VM sizing budget (in GB), adding the host OS overhead, RabbitMQ, PostgreSQL, Nginx, Prometheus, Grafana baseline (approx. 600MB total) + 15% safety headroom.",
+      "description": "Calculated Azure VM sizing budget, summing container memory usage working set + 15% safety headroom.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -59,7 +59,7 @@
       },
       "targets": [
         {
-          "expr": "((sum(jvm_memory_committed_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0)) + 600000000) * 1.15",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"setops\", container!=\"\"}) * 1.15",
           "legendFormat": "Azure VM Target Size",
           "refId": "A"
         }
@@ -74,10 +74,10 @@
         "y": 0
       },
       "id": 2,
-      "title": "Total App Committed Memory",
+      "title": "Total Container Memory Limits",
       "type": "stat",
       "datasource": "Prometheus",
-      "description": "The worst-case memory committed by the host OS to the JVMs plus the active RSS RAM of the Python service.",
+      "description": "The sum of the memory limits configured for all containers in the setops namespace.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -100,8 +100,8 @@
       },
       "targets": [
         {
-          "expr": "(sum(jvm_memory_committed_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0))",
-          "legendFormat": "Committed RAM",
+          "expr": "sum(container_spec_memory_limit_bytes{namespace=\"setops\", container!=\"\"})",
+          "legendFormat": "Memory Limit",
           "refId": "A"
         }
       ]
@@ -115,10 +115,10 @@
         "y": 0
       },
       "id": 3,
-      "title": "Total App RAM In Use",
+      "title": "Total Container Memory In Use",
       "type": "stat",
       "datasource": "Prometheus",
-      "description": "Sum of actual physical memory used by JVM heaps/non-heap regions and the Python GenAI process.",
+      "description": "Sum of actual physical memory working set used by all containers in the setops namespace.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -141,7 +141,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(jvm_memory_used_bytes) or vector(0)) + (sum(process_resident_memory_bytes{job=\"py-intelligence\"}) or vector(0))",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"setops\", container!=\"\"})",
           "legendFormat": "Used RAM",
           "refId": "A"
         }
@@ -159,7 +159,7 @@
       "title": "Memory Breakdown by Service",
       "type": "bargauge",
       "datasource": "Prometheus",
-      "description": "Actual physical RAM usage per individual container service.",
+      "description": "Actual container memory working set usage per individual service in the setops namespace.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -181,14 +181,9 @@
       },
       "targets": [
         {
-          "expr": "sum(jvm_memory_used_bytes) by (instance)",
-          "legendFormat": "{{instance}} (JVM)",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"setops\", container!=\"\"}) by (container)",
+          "legendFormat": "{{container}}",
           "refId": "A"
-        },
-        {
-          "expr": "sum(process_resident_memory_bytes{job=\"py-intelligence\"})",
-          "legendFormat": "py-intelligence (Python/Qwen)",
-          "refId": "B"
         }
       ]
     },
@@ -215,24 +210,9 @@
       },
       "targets": [
         {
-          "expr": "process_resident_memory_bytes{job=\"py-intelligence\"}",
-          "legendFormat": "py-intelligence (Python/Qwen)",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"setops\", container!=\"\"}) by (container)",
+          "legendFormat": "{{container}}",
           "refId": "A"
-        },
-        {
-          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-ingestion:8080\"})",
-          "legendFormat": "spring-ingestion (JVM)",
-          "refId": "B"
-        },
-        {
-          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-logbook:8080\"})",
-          "legendFormat": "spring-logbook (JVM)",
-          "refId": "C"
-        },
-        {
-          "expr": "sum(jvm_memory_used_bytes{instance=\"spring-alerts:8080\"})",
-          "legendFormat": "spring-alerts (JVM)",
-          "refId": "D"
         }
       ]
     }

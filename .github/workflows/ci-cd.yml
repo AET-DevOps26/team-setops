@@ -202,7 +202,6 @@ jobs:
           # PostgreSQL
           sed -i "s|<BASE64_POSTGRES_USER>|$(echo -n '${{ secrets.POSTGRES_USER }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
           sed -i "s|<BASE64_POSTGRES_PASSWORD>|$(echo -n '${{ secrets.POSTGRES_PASSWORD }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
-          sed -i "s|<BASE64_POSTGRES_DB>|$(echo -n '${{ secrets.POSTGRES_DB }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
           sed -i "s|<BASE64_POSTGRES_URL>|$(echo -n '${{ secrets.POSTGRES_URL }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
 
           # RabbitMQ

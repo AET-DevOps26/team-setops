@@ -52,6 +52,7 @@ spec:
       # rabbitmq image runs as uid 999 (rabbitmq user)
       securityContext:
         runAsNonRoot: true
+        runAsUser: 999
         fsGroup: 999
       containers:
         - name: rabbitmq

@@ -78,10 +78,7 @@ spec:
                   name: devpulse-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: devpulse-secrets
-                  key: POSTGRES_DB
+              value: appdb
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

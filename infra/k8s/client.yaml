@@ -1,0 +1,77 @@
+# ============================================================
+# client: Deployment + Service
+# ============================================================
+# React/Vite frontend. Lightweight — just serves the UI.
+# RESOURCE BUDGET: 100m CPU / 128Mi memory (requests)
+# ============================================================
+
+# ---------- Service ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: client
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: client
+    app.kubernetes.io/part-of: devpulse
+spec:
+  type: ClusterIP
+  selector:
+    app: client
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+
+---
+# ---------- Deployment ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: client
+    app.kubernetes.io/part-of: devpulse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: ghcr.io/aet-devops26/team-setops/client:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: VITE_API_BASE_URL
+              value: "http://gateway:80"
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"

@@ -1,0 +1,35 @@
+# ============================================================
+# Kustomization — one-command deployment
+# ============================================================
+# This file tells "kubectl apply -k" which manifests to deploy.
+#
+# Deploy everything:   kubectl apply -k infra/k8s/
+# Tear down:           kubectl delete -k infra/k8s/
+#
+# IMPORTANT: Before deploying, you must create your secrets:
+#   cp infra/k8s/secrets.yaml.template infra/k8s/secrets.yaml
+#   # Fill in the base64-encoded values
+#   kubectl apply -f infra/k8s/secrets.yaml
+# ============================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: setops
+
+resources:
+  # Infrastructure (deploy first — other services depend on these)
+  - postgres.yaml
+  - rabbitmq.yaml
+  # Application services
+  - spring-ingestion.yaml
+  - spring-logbook.yaml
+  - spring-alerts.yaml
+  - py-intelligence.yaml
+  - client.yaml
+  # API gateway (external entry point)
+  - gateway.yaml
+
+# Common labels applied to ALL resources for easy querying:
+#   kubectl get all -n setops -l app.kubernetes.io/part-of=devpulse
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize

@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -119,9 +119,13 @@ jobs:
       - name: Build
         run: npm run build
 
-  docker-checks:
-    name: Docker build checks
+  docker-build-push:
+    name: Build and Push Docker images
     runs-on: ubuntu-latest
+    needs: [spring-services, py-intelligence, client]
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
@@ -155,10 +159,86 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build image (${{ matrix.name }})
+      - name: Log in to the Container registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Downcase GitHub repository name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Build and Push image (${{ matrix.name }})
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
-          push: false
-          tags: local/${{ matrix.image }}:ci
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            ghcr.io/${{ env.REPO }}/${{ matrix.image }}:latest
+            ghcr.io/${{ env.REPO }}/${{ matrix.image }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: [docker-build-push]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Downcase GitHub repository name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Generate secrets.yaml
+        run: |
+          cp infra/k8s/secrets.yaml.template infra/k8s/secrets.yaml
+          
+          # Replace placeholders with Base64 encoded secrets
+          # "-w 0" is used to prevent line wrapping for long secrets
+
+          # PostgreSQL
+          sed -i "s|<BASE64_POSTGRES_USER>|$(echo -n '${{ secrets.POSTGRES_USER }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_POSTGRES_PASSWORD>|$(echo -n '${{ secrets.POSTGRES_PASSWORD }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_POSTGRES_DB>|$(echo -n '${{ secrets.POSTGRES_DB }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_POSTGRES_URL>|$(echo -n '${{ secrets.POSTGRES_URL }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+
+          # RabbitMQ
+          sed -i "s|<BASE64_RABBITMQ_USER>|$(echo -n '${{ secrets.RABBITMQ_USER }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_RABBITMQ_PASSWORD>|$(echo -n '${{ secrets.RABBITMQ_PASSWORD }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_RABBITMQ_HOST>|$(echo -n '${{ secrets.RABBITMQ_HOST }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_RABBITMQ_PORT>|$(echo -n '${{ secrets.RABBITMQ_PORT }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+
+          # Python Intelligence / GenAI
+          sed -i "s|<BASE64_MONGODB_URI>|$(echo -n '${{ secrets.MONGODB_URI }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_GOOGLE_API_KEY>|$(echo -n '${{ secrets.GOOGLE_API_KEY }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_OPENAI_API_KEY>|$(echo -n '${{ secrets.OPENAI_API_KEY }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_OPENAI_BASE_URL>|$(echo -n '${{ secrets.OPENAI_BASE_URL }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+
+      - name: Set Specific Image Tags
+        working-directory: infra/k8s
+        run: |
+          # Use Kustomize to update the image tags to the exact commit SHA we just built
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/client=ghcr.io/${{ env.REPO }}/client:${{ github.sha }}
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/py-intelligence=ghcr.io/${{ env.REPO }}/py-intelligence:${{ github.sha }}
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-alerts=ghcr.io/${{ env.REPO }}/spring-alerts:${{ github.sha }}
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-ingestion=ghcr.io/${{ env.REPO }}/spring-ingestion:${{ github.sha }}
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-logbook=ghcr.io/${{ env.REPO }}/spring-logbook:${{ github.sha }}
+
+      - name: Create kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          cat << 'EOF' > ~/.kube/config
+          ${{ secrets.KUBE_CONFIG_DATA }}
+          EOF
+          chmod 600 ~/.kube/config
+
+      - name: Deploy to Kubernetes
+        run: |
+          # 1. Apply secrets first so they are available for pods
+          kubectl apply -f infra/k8s/secrets.yaml
+          
+          # 2. Apply everything else (with the updated image tags from kustomize)
+          kubectl apply -k infra/k8s/

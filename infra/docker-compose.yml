@@ -16,7 +16,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d appdb" ]
+      test: ["CMD-SHELL", "pg_isready -U user -d appdb"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -38,7 +38,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -128,8 +128,6 @@ services:
     container_name: py-intelligence
     ports:
       - "8000:8000" # Assuming FastAPI or Flask default
-    env_file:
-      - ../services/py-intelligence/.env
     environment:
       - INGESTION_API_URL=http://spring-ingestion:8080
       - LOGBOOK_API_URL=http://spring-logbook:8080
@@ -137,6 +135,12 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - MONGODB_URI=${MONGODB_URI:-}
+      - DB_NAME=${DB_NAME:-}
+      - COLLECTION_NAME=${COLLECTION_NAME:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
     networks:
       - app-network
 
@@ -190,9 +194,9 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alert.rules:/etc/prometheus/alert.rules:ro
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.route-prefix=/prometheus'
-      - '--web.external-url=/prometheus'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.route-prefix=/prometheus"
+      - "--web.external-url=/prometheus"
     ports:
       - "9090:9090"
     networks:

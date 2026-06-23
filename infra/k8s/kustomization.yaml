@@ -5,11 +5,6 @@
 #
 # Deploy everything:   kubectl apply -k infra/k8s/
 # Tear down:           kubectl delete -k infra/k8s/
-#
-# IMPORTANT: Before deploying, you must create your secrets:
-#   cp infra/k8s/secrets.yaml.template infra/k8s/secrets.yaml
-#   # Fill in the base64-encoded values
-#   kubectl apply -f infra/k8s/secrets.yaml
 # ============================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

@@ -74,7 +74,6 @@ spec:
 
       containers:
         - name: spring-ingestion
-          # ⚠️  TODO: Replace with real image once CI/CD pushes to a registry.
           image: ghcr.io/aet-devops26/team-setops/spring-ingestion:latest
           imagePullPolicy: Always
           ports:

@@ -1,0 +1,121 @@
+# ============================================================
+# PostgreSQL: StatefulSet + Service + PersistentVolumeClaim
+# ============================================================
+# WHY StatefulSet (not Deployment)?
+#   Databases need two things Deployments can't guarantee:
+#   1. Stable pod name (postgres-0, not postgres-xk4f2)
+#   2. Storage that sticks to the specific pod across restarts
+#   StatefulSet gives both.
+#
+# RESOURCE BUDGET (AET Policy: max 4 vCPU / 6 GB per team):
+#   This service: 100m CPU / 256Mi memory (requests)
+# ============================================================
+
+# ---------- Service (headless) ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: devpulse
+spec:
+  # "ClusterIP: None" = headless service.
+  # Returns the pod's actual IP instead of a virtual IP.
+  # Required for StatefulSets.
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: tcp-postgresql
+
+---
+# ---------- StatefulSet ----------
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: devpulse
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      # Pod-level security: postgres image runs as uid 70 (postgres user)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        fsGroup: 70           # Ensures volume permissions work for postgres user
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+              name: tcp-postgresql
+          # Container-level security (AET policy: no privilege escalation)
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: appdb
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          # Readiness probe — K8s won't send traffic until this passes.
+          # Wrapped in "sh -c" because env var expansion ($POSTGRES_USER)
+          # does NOT work directly in probe exec commands.
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # Conservative resource requests per AET fair-use policy.
+          # Start small, increase only after measuring real usage.
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

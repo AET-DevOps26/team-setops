@@ -20,7 +20,8 @@ class DB:
         collection_name = os.getenv("COLLECTION_NAME", "rag_documents")
 
         self.client = pymongo.MongoClient(
-            mongodb_uri, tlsCAFile=certifi.where() if "mongodb+srv" in mongodb_uri else None
+            mongodb_uri,
+            tlsCAFile=certifi.where() if "mongodb+srv" in mongodb_uri else None,
         )
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]

@@ -2,7 +2,11 @@ import os
 import pytest
 import numpy as np
 from unittest.mock import MagicMock, patch
-from app.utils.embedding_utils import get_embedding, create_all_embeddings, similarity_search
+from app.utils.embedding_utils import (
+    get_embedding,
+    create_all_embeddings,
+    similarity_search,
+)
 
 
 @pytest.fixture
@@ -52,7 +56,10 @@ def test_create_all_embeddings_success(mock_db, mock_sentence_transformer):
     mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock documents to be processed
-    mock_collection.find.return_value = [{"_id": "1", "content": "text 1"}, {"_id": "2", "content": "text 2"}]
+    mock_collection.find.return_value = [
+        {"_id": "1", "content": "text 1"},
+        {"_id": "2", "content": "text 2"},
+    ]
 
     # Mock embedding generation
     mock_sentence_transformer.encode.return_value = np.array([0.5, 0.6])
@@ -93,7 +100,10 @@ def test_similarity_search(mock_db, mock_sentence_transformer):
     mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock aggregation results
-    mock_collection.aggregate.return_value = [{"title": "Result 1", "embedding": [0.1]}, {"title": "Result 2"}]
+    mock_collection.aggregate.return_value = [
+        {"title": "Result 1", "embedding": [0.1]},
+        {"title": "Result 2"},
+    ]
 
     # Mock query embedding
     mock_sentence_transformer.encode.return_value = np.array([0.9, 0.8])

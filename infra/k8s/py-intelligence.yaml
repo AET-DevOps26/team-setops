@@ -1,0 +1,111 @@
+# ============================================================
+# py-intelligence: Deployment + Service
+# ============================================================
+# Python GenAI service — needs more resources than others
+# because it loads ML models and runs inference.
+#
+# RESOURCE BUDGET: 200m CPU / 512Mi memory (requests)
+#   (higher than Spring services but still conservative)
+# ============================================================
+
+# ---------- Service ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: py-intelligence
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: py-intelligence
+    app.kubernetes.io/part-of: devpulse
+spec:
+  type: ClusterIP
+  selector:
+    app: py-intelligence
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+
+---
+# ---------- Deployment ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-intelligence
+  namespace: setops
+  labels:
+    app.kubernetes.io/name: py-intelligence
+    app.kubernetes.io/part-of: devpulse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: py-intelligence
+  template:
+    metadata:
+      labels:
+        app: py-intelligence
+    spec:
+      containers:
+        - name: py-intelligence
+          image: ghcr.io/aet-devops26/team-setops/py-intelligence:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            # Internal service URLs — K8s DNS resolves service names
+            # within the same namespace automatically.
+            - name: INGESTION_API_URL
+              value: "http://spring-ingestion:8080"
+            - name: LOGBOOK_API_URL
+              value: "http://spring-logbook:8080"
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbitmq"
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: RABBITMQ_USER
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: MONGODB_URI
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: GOOGLE_API_KEY
+          # This service has a real /health endpoint (from openapi.yaml)
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"

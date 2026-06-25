@@ -115,8 +115,8 @@ contactPoints:
       - uid: telegram-contact-point
         type: telegram
         settings:
-          bottoken: "8867762559:AAGYN5Nv2n9I8iv9vikEuc6UVGU1SPyv7gA"
-          chatid: "-5200211006"
+          bottoken: "${TELEGRAM_BOT_TOKEN}"
+          chatid: "${TELEGRAM_CHAT_ID}"
           message: |
             {{ range .Alerts }}
             {{ if eq .Status "firing" }}🚨 <b>{{ if eq .Labels.alertname "Container OOM Killed Alert" }}CONTAINER OOM KILLED ALERT{{ else if eq .Labels.alertname "Container Restart Loop Alert" }}CONTAINER RESTART LOOP ALERT{{ else }}SYSTEM OFFLINE ALERT{{ end }}</b> 🚨

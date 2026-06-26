@@ -29,22 +29,23 @@
   DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and troubleshooting notes. The goal is to help a team quickly understand what happened during a failed deployment or incident by showing the raw information together with AI-generated summaries and suggested fixes.
 </p>
 
-## Components
+## Components & Responsibilities
 
-- **Client:** `client/`
+- **Client:** `client/` — **Responsible: @sachmi**
   - Dashboard UI for developers and operators.
   - Shows logs, alerts, notes, and AI-generated insights.
 
-- **Server microservices:** `services/spring-*`
+- **Server microservices:** `services/spring-*` — **Responsible: @tahahundekari**
   - Java 21 / Spring Boot 3 services.
   - The server side is split into at least three microservices with separate responsibilities.
   - Exposes REST APIs and coordinates persistent storage and GenAI analysis.
 
-- **GenAI:** `services/py-intelligence/`
+- **GenAI:** `services/py-intelligence/` — **Responsible: @memreo**
   - Separate Python service.
   - Produces summaries, troubleshooting hints, and possible next steps from log content.
 
-- **Infrastructure:** `infra/`
+- **Infrastructure:** `infra/` — **Responsible: @sachmi, @memreo**
+
   - Place for Docker Compose, Kubernetes or Helm files, database setup, Prometheus, and Grafana.
 
 ## Repository Layout

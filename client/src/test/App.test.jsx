@@ -33,17 +33,6 @@ const MOCK_RESOLVED_INCIDENTS = [
 	{ logId: "bbb-222", status: "RESOLVED" },
 ];
 
-const MOCK_ANALYSIS = {
-	problem_type: "database_timeout",
-	severity: "High",
-	summary: "Database connection timeout detected",
-	problem_summary: "Connection pool exhausted",
-	evidence: ["timeout after 30s"],
-	troubleshoot: ["Check connection pool size"],
-	solutions: ["Increase pool size"],
-	confidence: "High",
-};
-
 /* ── Mock openapi-fetch ────────────────────────────────── */
 vi.mock("openapi-fetch", () => ({
 	default: () => {
@@ -201,7 +190,7 @@ describe("App", () => {
 		});
 
 		it("should handle GET /api/v1/logs failure gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 			mockGET = vi.fn().mockImplementation((path) => {
 				if (path === "/api/v1/logs") {
 					return Promise.resolve({

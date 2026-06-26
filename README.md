@@ -1,6 +1,18 @@
-# DevPulse - Team SETOps
+<p align="center">
+  <img src="client/public/favicon.svg" alt="DevPulse Logo" width="120" height="120" />
+</p>
 
-DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and troubleshooting notes. The goal is to help a team quickly understand what happened during a failed deployment or incident by showing the raw information together with AI-generated summaries and suggested fixes.
+<h1 align="center">DevPulse — Team SETOps</h1>
+
+<p align="center">
+  <a href="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml">
+    <img src="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml/badge.svg?branch=main" alt="CI/CD Pipeline Status" />
+  </a>
+</p>
+
+<p align="center">
+  DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and troubleshooting notes. The goal is to help a team quickly understand what happened during a failed deployment or incident by showing the raw information together with AI-generated summaries and suggested fixes.
+</p>
 
 ## Components
 

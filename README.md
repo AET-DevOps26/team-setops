@@ -1,9 +1,10 @@
+<h1 align="center"><code>&gt;_ DEVPULSE</code></h1>
 <p align="center">
-  <code><b>&gt;_ DEVPULSE</b></code><br>
   <sub><b>INTELLIGENT LOGBOOK // SYSTEM_ONLINE</b></sub>
 </p>
 
-<h1 align="center">Team SETOps</h1>
+<h3 align="center">Team SETOps</h3>
+
 
 
 <p align="center">

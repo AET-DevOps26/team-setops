@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="client/public/favicon.svg" alt="DevPulse Logo" width="120" height="120" />
+  <code><b>&gt;_ DEVPULSE</b></code><br>
+  <sub><b>INTELLIGENT LOGBOOK // SYSTEM_ONLINE</b></sub>
 </p>
 
-<h1 align="center">DevPulse — Team SETOps</h1>
+<h1 align="center">Team SETOps</h1>
+
 
 <p align="center">
   <a href="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml">

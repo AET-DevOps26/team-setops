@@ -25,6 +25,7 @@ function App() {
 		}
 		return "cyan";
 	});
+	const [useRag, setUseRag] = useState(true);
 	const [logs, setLogs] = useState([]);
 	const [selectedLogId, setSelectedLogId] = useState(null);
 	const [showIngestModal, setShowIngestModal] = useState(false);
@@ -111,7 +112,7 @@ function App() {
 
 			try {
 				const { data, error, response } = await client.POST("/api/v1/analyze", {
-					body: { content: log.logContent, mode, use_rag: false, context: null },
+					body: { content: log.logContent, mode, use_rag: useRag, context: null },
 				});
 				if (!response.ok || error) {
 					throw new Error(error?.detail || `Analysis failed (${response.status})`);
@@ -127,7 +128,7 @@ function App() {
 				setAnalyzing(false);
 			}
 		},
-		[mode],
+		[mode, useRag],
 	);
 
 	const handleSelectLog = useCallback((id) => {
@@ -215,6 +216,15 @@ function App() {
 								Clear Logs
 							</button>
 						)}
+						<label className="rag-toggle" aria-label="Include Past Solutions (RAG)">
+							<input
+								type="checkbox"
+								className="rag-toggle-checkbox"
+								checked={useRag}
+								onChange={(e) => setUseRag(e.target.checked)}
+							/>
+							<span className="rag-toggle-text">RAG Search</span>
+						</label>
 						<PrivacyToggle />
 					</div>
 				</header>

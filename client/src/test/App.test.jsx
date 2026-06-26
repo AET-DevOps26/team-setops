@@ -35,4 +35,17 @@ describe("App", () => {
 			screen.getByRole("heading", { name: /devpulse/i }),
 		).toBeInTheDocument();
 	});
+
+	it("should render the RAG toggle with default checked state", () => {
+		render(
+			React.createElement(
+				PrivacyModeProvider,
+				null,
+				React.createElement(App),
+			),
+		);
+		const checkbox = screen.getByRole("checkbox");
+		expect(checkbox).toBeInTheDocument();
+		expect(checkbox).toBeChecked();
+	});
 });

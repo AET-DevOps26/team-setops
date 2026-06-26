@@ -7,9 +7,9 @@ import LogList from "@/components/LogList";
 import InsightsPanel from "@/components/InsightsPanel";
 import { IngestIcon, EmptyLogsIcon, EmptyInsightsIcon } from "@/components/icons";
 import { usePrivacyMode } from "@/context/PrivacyModeContext";
-import { ingestLog, analyzeLog, submitRagDocument } from "@/lib/api";
+import createClient from "openapi-fetch";
 
-let nextLogId = 1;
+const client = createClient({ baseUrl: import.meta.env.VITE_API_BASE_URL || "" });
 
 function App() {
 	/* ── State ──────────────────────────────────────────── */
@@ -47,6 +47,35 @@ function App() {
 		}
 	}, [theme]);
 
+	/* ── Helper: fetch logs + resolved state from backend ── */
+	const loadLogsAndIncidents = useCallback(async () => {
+		const [logsRes, incidentsRes] = await Promise.all([
+			client.GET("/api/v1/logs"),
+			client.GET("/api/v1/incidents", { params: { query: { status: "RESOLVED" } } }),
+		]);
+
+		if (!logsRes.response.ok) throw new Error(`Failed to fetch logs (${logsRes.response.status})`);
+		if (!incidentsRes.response.ok) throw new Error(`Failed to fetch incidents (${incidentsRes.response.status})`);
+
+		const resolvedIds = new Set((incidentsRes.data || []).map((inc) => inc.logId));
+
+		return (logsRes.data || []).map((log) => ({
+			...log,
+			resolved: resolvedIds.has(log.id),
+		}));
+	}, []);
+
+	/* ── Load timeline & resolved state on mount ────────── */
+	useEffect(() => {
+		let cancelled = false;
+
+		loadLogsAndIncidents()
+			.then((data) => { if (!cancelled) setLogs(data); })
+			.catch((err) => console.error("Failed to load initial data:", err));
+
+		return () => { cancelled = true; };
+	}, [loadLogsAndIncidents]);
+
 	/* ── Live clock ─────────────────────────────────────── */
 	useEffect(() => {
 		const timer = setInterval(() => setClock(new Date()), 1000);
@@ -62,9 +91,18 @@ function App() {
 
 	/* ── Handlers ───────────────────────────────────────── */
 	const handleIngest = useCallback(async (payload) => {
-		await ingestLog(payload);
-		setLogs((prev) => [{ ...payload, id: nextLogId++ }, ...prev]);
-	}, []);
+		const { response } = await client.POST("/api/v1/logs", { body: payload });
+		if (!response.ok) throw new Error(`Ingestion failed (${response.status})`);
+
+		// Re-fetch logs from the server to get the server-assigned ID
+		try {
+			const data = await loadLogsAndIncidents();
+			setLogs(data);
+		} catch {
+			// Fallback: add locally with a temp id
+			setLogs((prev) => [{ ...payload, id: crypto.randomUUID() }, ...prev]);
+		}
+	}, [loadLogsAndIncidents]);
 
 	const handleAnalyze = useCallback(
 		async (log) => {
@@ -72,10 +110,15 @@ function App() {
 			setAnalysisError(null);
 
 			try {
-				const result = await analyzeLog(log.logContent, mode);
+				const { data, error, response } = await client.POST("/api/v1/analyze", {
+					body: { content: log.logContent, mode, use_rag: false, context: null },
+				});
+				if (!response.ok || error) {
+					throw new Error(error?.detail || `Analysis failed (${response.status})`);
+				}
 				setLogs((prev) =>
 					prev.map((l) =>
-						l.id === log.id ? { ...l, analysis: result, resolved: false } : l
+						l.id === log.id ? { ...l, analysis: data, resolved: false } : l
 					)
 				);
 			} catch (err) {
@@ -103,11 +146,19 @@ function App() {
 			const activeAnalysis = selectedLog?.analysis;
 			if (type === "rag" && solutionText) {
 				const title = activeAnalysis?.problem_type || "Resolved Issue";
-				await submitRagDocument(title, solutionText, [
-					activeAnalysis?.severity || "unknown",
-					"user-solution",
-				]);
+				await client.POST("/api/v1/rag/documents", {
+					body: {
+						title,
+						content: solutionText,
+						tags: [activeAnalysis?.severity || "unknown", "user-solution"],
+					},
+				});
 			}
+			// Persist resolved status to the backend
+			await client.PATCH("/api/v1/incidents/{logId}/status", {
+				params: { path: { logId: selectedLogId } },
+				body: { status: "RESOLVED" },
+			});
 			setLogs((prev) =>
 				prev.map((l) =>
 					l.id === selectedLogId ? { ...l, resolved: true } : l

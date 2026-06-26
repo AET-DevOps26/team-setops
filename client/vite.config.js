@@ -28,6 +28,10 @@ export default defineConfig({
 				target: "http://localhost:8080",
 				changeOrigin: true,
 			},
+			"/api/v1/incidents": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
 			"/api/v1/analyze": {
 				target: "http://localhost:8080",
 				changeOrigin: true,

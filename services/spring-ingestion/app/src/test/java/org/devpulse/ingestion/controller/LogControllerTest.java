@@ -1,13 +1,13 @@
 package org.devpulse.ingestion.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.devpulse.ingestion.dto.IncomingLogEventDto;
 import org.devpulse.ingestion.service.EventPublisherService;
 import org.devpulse.ingestion.type.LogType;
 import org.devpulse.ingestion.type.Severity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,8 +26,7 @@ public class LogControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     @MockitoBean
     private EventPublisherService eventPublisherService;
@@ -45,7 +44,7 @@ public class LogControllerTest {
 
         mockMvc.perform(post("/api/v1/logs")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validPayload)))
+                        .content(jsonMapper.writeValueAsString(validPayload)))
                 .andExpect(status().isAccepted());
 
         verify(eventPublisherService).publishLog(any(IncomingLogEventDto.class));
@@ -65,7 +64,7 @@ public class LogControllerTest {
 
         mockMvc.perform(post("/api/v1/logs")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidPayload)))
+                        .content(jsonMapper.writeValueAsString(invalidPayload)))
                 .andExpect(status().isUnprocessableEntity()); // Note: Adjust to isBadRequest() if you change to 400
     }
 }

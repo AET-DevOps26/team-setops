@@ -8,7 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -22,6 +22,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // OpenAPI / Swagger UI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+
+    // JSON serialization
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     
     // Database Persistence
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -29,6 +35,7 @@ dependencies {
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.amqp:spring-rabbit-test")
     testImplementation("com.h2database:h2") // For isolated database tests
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -37,7 +44,7 @@ dependencies {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 

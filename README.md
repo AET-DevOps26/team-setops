@@ -11,7 +11,17 @@
   <a href="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml">
     <img src="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml/badge.svg?branch=main" alt="CI/CD Pipeline Status" />
   </a>
+  <a href="https://github.com/AET-DevOps26/team-setops/issues">
+    <img src="https://img.shields.io/github/issues/AET-DevOps26/team-setops?style=flat-square&color=blue" alt="GitHub Issues" />
+  </a>
+  <a href="https://github.com/AET-DevOps26/team-setops/pulls">
+    <img src="https://img.shields.io/github/issues-pr/AET-DevOps26/team-setops?style=flat-square&color=orange" alt="GitHub Pull Requests" />
+  </a>
+  <a href="https://github.com/AET-DevOps26/team-setops/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/AET-DevOps26/team-setops?style=flat-square&color=green" alt="GitHub Contributors" />
+  </a>
 </p>
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring-boot&logoColor=white" alt="Spring Boot" />

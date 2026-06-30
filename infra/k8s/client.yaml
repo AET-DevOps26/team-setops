@@ -53,7 +53,7 @@ spec:
             allowPrivilegeEscalation: false
           env:
             - name: VITE_API_BASE_URL
-              value: "http://gateway:80"
+              value: ""
           readinessProbe:
             tcpSocket:
               port: 3000

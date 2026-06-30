@@ -12,7 +12,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rabbitmq
-  namespace: setops
+  namespace: devpulse-prod
   labels:
     app.kubernetes.io/name: rabbitmq
     app.kubernetes.io/part-of: devpulse
@@ -34,7 +34,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: rabbitmq
-  namespace: setops
+  namespace: devpulse-prod
   labels:
     app.kubernetes.io/name: rabbitmq
     app.kubernetes.io/part-of: devpulse

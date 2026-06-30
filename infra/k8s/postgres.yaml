@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: setops
+  namespace: devpulse-prod
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/part-of: devpulse
@@ -38,7 +38,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: setops
+  namespace: devpulse-prod
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/part-of: devpulse

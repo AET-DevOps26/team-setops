@@ -125,7 +125,7 @@ npm run test -- --run
 
 ## 🚀 Kubernetes Deployment & CI/CD Pipeline
 
-The application is configured to run on a Kubernetes cluster (specifically, the AET Rancher cluster) inside the `setops` namespace.
+The application is configured to run on a Kubernetes cluster (specifically, the AET Rancher cluster) inside the `devpulse-prod` namespace.
 
 ### CI/CD Workflow Overview
 
@@ -162,18 +162,18 @@ kubectl apply -k infra/k8s/
 #### Check Status
 Verify that all pods, services, and workloads are running correctly:
 ```bash
-kubectl get all -n setops
+kubectl get all -n devpulse-prod
 ```
 
 #### Accessing the Application
 * **Via Gateway NodePort:** The gateway service is exposed externally on a dynamically assigned port on every cluster node. To find the port, run:
   ```bash
-  kubectl get service gateway -n setops
+  kubectl get service gateway -n devpulse-prod
   ```
   Look for the port mapped to `80:` under the `PORT(S)` column (e.g. `80:31234/TCP`). You can then access the app at `http://<node-ip-address>:<assigned-nodeport>`.
 * **Via Local Port-Forwarding:** If you are behind a firewall or want to test locally:
   ```bash
-  kubectl port-forward service/gateway 8080:80 -n setops
+  kubectl port-forward service/gateway 8080:80 -n devpulse-prod
   ```
   Then open [http://localhost:8080](http://localhost:8080) in your browser.
 

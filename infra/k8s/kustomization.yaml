@@ -25,6 +25,6 @@ resources:
   - gateway.yaml
 
 # Common labels applied to ALL resources for easy querying:
-#   kubectl get all -n setops -l app.kubernetes.io/part-of=devpulse
+#   kubectl get all -n devpulse-prod -l app.kubernetes.io/part-of=devpulse
 commonLabels:
   app.kubernetes.io/managed-by: kustomize

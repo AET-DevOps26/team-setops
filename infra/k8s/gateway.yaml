@@ -157,7 +157,7 @@ metadata:
     app.kubernetes.io/name: gateway
     app.kubernetes.io/part-of: devpulse
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: gateway
   ports:

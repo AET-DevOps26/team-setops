@@ -1,0 +1,4 @@
+#!/bin/sh
+# pre-commit hook
+cd client
+npx lint-staged

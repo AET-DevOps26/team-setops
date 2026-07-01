@@ -51,4 +51,20 @@ public class LogService {
         logger.info("Successfully persisted log [{}] for '{}' to PostgreSQL.", logId, payload.serviceName());
         return saved;
     }
+
+    /**
+     * Deletes a specific log by ID.
+     */
+    public void deleteLog(UUID logId) {
+        logRepository.deleteById(logId);
+        logger.info("Deleted log [{}]", logId);
+    }
+
+    /**
+     * Deletes all logs in the database.
+     */
+    public void deleteAllLogs() {
+        logRepository.deleteAll();
+        logger.info("Deleted all logs");
+    }
 }

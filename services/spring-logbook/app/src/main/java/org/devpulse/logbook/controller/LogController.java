@@ -51,4 +51,16 @@ public class LogController {
 
         return ResponseEntity.ok(logs);
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLog(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
+        logService.deleteLog(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping
+    public ResponseEntity<Void> deleteAllLogs() {
+        logService.deleteAllLogs();
+        return ResponseEntity.noContent().build();
+    }
 }

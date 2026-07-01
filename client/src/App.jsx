@@ -101,7 +101,7 @@ function App() {
 			setLogs(data);
 		} catch {
 			// Fallback: add locally with a temp id
-			setLogs((prev) => [{ ...payload, id: crypto.randomUUID() }, ...prev]);
+			setLogs((prev) => [{ ...payload, id: Date.now().toString() + Math.random().toString(36).substring(2) }, ...prev]);
 		}
 	}, [loadLogsAndIncidents]);
 
@@ -135,7 +135,15 @@ function App() {
 		setSelectedLogId((prev) => (prev === id ? null : id));
 	}, []);
 
-	const handleDelete = useCallback((id) => {
+	const handleDelete = useCallback(async (id) => {
+		try {
+			const res = await client.DELETE("/api/v1/logs/{id}", { params: { path: { id } } });
+			if (res.response && !res.response.ok && res.response.status !== 404) {
+				console.error("Failed to delete from backend", res.response.status);
+			}
+		} catch (e) {
+			console.error("Delete error:", e);
+		}
 		setLogs((prev) => prev.filter((l) => l.id !== id));
 		setSelectedLogId((prev) => (prev === id ? null : prev));
 		setNotification("Log entry removed");
@@ -207,7 +215,15 @@ function App() {
 								type="button"
 								className="ghost-btn"
 								id="btn-clear"
-								onClick={() => {
+								onClick={async () => {
+									try {
+										const res = await client.DELETE("/api/v1/logs");
+										if (res.response && !res.response.ok) {
+											console.error("Failed to clear backend logs", res.response.status);
+										}
+									} catch(e) {
+										console.error("Clear logs error:", e);
+									}
 									setLogs([]);
 									setSelectedLogId(null);
 									setNotification("All logs cleared");

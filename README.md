@@ -250,14 +250,14 @@ ansible-playbook playbook.yml
 
 ### Accessing the Application on Azure
 
-Once deployed, the application is accessible via the VM's public IP address on port 80. You can find the IP from the Terraform output:
+Once deployed, the application is accessible via a nice, fully qualified domain name (FQDN). You can find the exact URL from the Terraform output:
 
 ```bash
 cd infra/terraform
-terraform output vm_public_ip
+terraform output vm_fqdn
 ```
 
-Then open `http://<vm_public_ip>` in your browser.
+Then open `http://<vm_fqdn>` in your browser. (The raw IP is also available via `terraform output vm_public_ip`).
 
 ---
 

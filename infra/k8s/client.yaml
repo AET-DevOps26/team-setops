@@ -51,9 +51,6 @@ spec:
             - containerPort: 3000
           securityContext:
             allowPrivilegeEscalation: false
-          env:
-            - name: VITE_API_BASE_URL
-              value: ""
           readinessProbe:
             tcpSocket:
               port: 3000

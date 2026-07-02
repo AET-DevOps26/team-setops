@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/incidents")
+@CrossOrigin(origins = "*")
 public class IncidentController {
 
     private static final Logger log = LoggerFactory.getLogger(IncidentController.class);

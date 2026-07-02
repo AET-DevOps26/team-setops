@@ -282,7 +282,11 @@ class Intelligence:
             raise ValueError("Model returned an empty response.")
 
         cleaned = raw_response.strip()
-        if cleaned.startswith("```"):
+        # If the response contains markdown code blocks, extract the content inside
+        match = re.search(r"```(?:json)?\s*(.*?)\s*```", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(1).strip()
+        elif cleaned.startswith("```"):
             cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
             cleaned = re.sub(r"\s*```$", "", cleaned)
 
@@ -300,8 +304,10 @@ class Intelligence:
                     try:
                         return json.loads(repaired, strict=False)
                     except json.JSONDecodeError as e:
-                        raise ValueError(str(e))
-            raise ValueError("Model response was not valid JSON.")
+                        print(f"Failed to parse repaired JSON. Error: {e}. Raw response: {raw_response}")
+                        raise ValueError(f"{str(e)}. Raw response: {raw_response[:200]}")
+            print(f"No JSON object found in response. Raw response: {raw_response}")
+            raise ValueError(f"Model response was not valid JSON. Response snippet: {raw_response[:200]}")
 
     def _normalize_response(
         self,

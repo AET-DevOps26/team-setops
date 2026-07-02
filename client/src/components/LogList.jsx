@@ -79,7 +79,7 @@ export default function LogList({
 							<div
 								key={log.id}
 								role="listitem"
-								className={`log-entry ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""}`}
+								className={`log-entry ${isSelected ? "selected" : ""} ${isExpanded ? "expanded" : ""} ${log.resolved ? "resolved" : ""}`}
 								onClick={() => onSelect(log.id)}
 							>
 								<div className="log-entry-header">
@@ -92,6 +92,25 @@ export default function LogList({
 									>
 										{log.severity}
 									</span>
+									{log.resolved && (
+										<span className="log-resolved-badge" aria-label="Resolved">
+											<svg
+												className="log-resolved-icon"
+												viewBox="0 0 24 24"
+												fill="none"
+												aria-hidden="true"
+											>
+												<path
+													d="M20 6L9 17l-5-5"
+													stroke="currentColor"
+													strokeWidth="2.5"
+													strokeLinecap="round"
+													strokeLinejoin="round"
+												/>
+											</svg>
+											RESOLVED
+										</span>
+									)}
 									<span className="log-service">{log.serviceName}</span>
 									<span className="log-type">{log.type.replace(/_/g, " ")}</span>
 									<button

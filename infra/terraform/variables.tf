@@ -18,8 +18,8 @@ variable "vm_name" {
 
 variable "vm_size" {
   type        = string
-  description = "The size of the virtual machine. Using B2s for cost efficiency (student account)."
-  default     = "Standard_B2s"
+  description = "The size of the virtual machine. Using Standard_DS2_v3."
+  default     = "Standard_DS2_v3"
 }
 
 variable "admin_username" {

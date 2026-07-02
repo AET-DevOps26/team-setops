@@ -79,13 +79,13 @@ services:
       - "8082:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-user}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,13 +103,13 @@ services:
       - "8083:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-user}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
     depends_on:
       postgres:
         condition: service_healthy
@@ -129,12 +129,12 @@ services:
     ports:
       - "8000:8000" # Assuming FastAPI or Flask default
     environment:
-      - INGESTION_API_URL=http://spring-ingestion:8080
-      - LOGBOOK_API_URL=http://spring-logbook:8080
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
+      - INGESTION_API_URL=${INGESTION_API_URL:-http://spring-ingestion:8080}
+      - LOGBOOK_API_URL=${LOGBOOK_API_URL:-http://spring-logbook:8080}
+      - SPRING_RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - SPRING_RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
       - MONGODB_URI=${MONGODB_URI}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}

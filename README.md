@@ -61,12 +61,14 @@ fix/18/handle-empty-ai-response
 ### 🛠 Prerequisites
 
 To run this project locally, you must have the following installed:
-* [Docker](https://docs.docker.com/get-docker/) (Docker Desktop recommended for Mac/Windows)
-* [Docker Compose](https://docs.docker.com/compose/install/)
 
-*(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application, as everything runs inside the containers!)*
+- [Docker](https://docs.docker.com/get-docker/) (Docker Desktop recommended for Mac/Windows)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+_(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application, as everything runs inside the containers!)_
 
 ### Build
+
 ```bash
 cd infra
 docker-compose up --build
@@ -130,6 +132,7 @@ The application is configured to run on a Kubernetes cluster (specifically, the 
 ### CI/CD Workflow Overview
 
 We use GitHub Actions to automate the entire testing, building, and deployment process:
+
 1. **Pull Requests & Non-Main Branches:** The pipeline runs automated unit/integration tests for the Spring Boot microservices, Python intelligence service, and React frontend.
 2. **Main Branch:** Once merged into `main`, the pipeline:
    - Builds Docker images for all services.
@@ -141,37 +144,43 @@ We use GitHub Actions to automate the entire testing, building, and deployment p
 
 For the CD deployment pipeline to succeed, you must add the following **Repository Secrets** under **Settings > Secrets and variables > Actions** in GitHub:
 
-* **`KUBE_CONFIG_DATA`**: The raw text content of your `kubeconfig` file (granting namespace-level access to the cluster).
-* **`POSTGRES_USER`**, **`POSTGRES_PASSWORD`**, and **`POSTGRES_DB`**: Database credentials.
-* **`RABBITMQ_USER`** and **`RABBITMQ_PASSWORD`**: Broker credentials.
-* **`MONGODB_URI`**: URI to the MongoDB instance used by the alert service.
-* **`GOOGLE_API_KEY`**: API key for GenAI analysis features.
+- **`KUBE_CONFIG_DATA`**: The raw text content of your `kubeconfig` file (granting namespace-level access to the cluster).
+- **`POSTGRES_USER`**, **`POSTGRES_PASSWORD`**, and **`POSTGRES_DB`**: Database credentials.
+- **`RABBITMQ_USER`** and **`RABBITMQ_PASSWORD`**: Broker credentials.
+- **`MONGODB_URI`**: URI to the MongoDB instance used by the alert service.
+- **`GOOGLE_API_KEY`**: API key for GenAI analysis features.
 
-*Note: The pipeline automatically Base64-encodes these values at runtime, so paste them as raw plain-text in GitHub.*
+_Note: The pipeline automatically Base64-encodes these values at runtime, so paste them as raw plain-text in GitHub._
 
 ### Local Verification & Deployment
 
 If you have `kubectl` configured and connected to the cluster, you can perform tasks manually:
 
 #### Apply Manifests
+
 Deploy the entire stack with a single command from the project root:
+
 ```bash
 kubectl apply -k infra/k8s/
 ```
 
 #### Check Status
+
 Verify that all pods, services, and workloads are running correctly:
+
 ```bash
 kubectl get all -n devpulse-prod
 ```
 
 #### Accessing the Application
-* **Via Gateway NodePort:** The gateway service is exposed externally on a dynamically assigned port on every cluster node. To find the port, run:
+
+- **Via URL:** [https://team-setops.stud.k8s.aet.cit.tum.de/](https://team-setops.stud.k8s.aet.cit.tum.de/) is routed through the shared student cluster's ingress-nginx controller.
+- **Via Gateway NodePort:** The gateway service is exposed externally on a dynamically assigned port on every cluster node. To find the port, run:
   ```bash
   kubectl get service gateway -n devpulse-prod
   ```
   Look for the port mapped to `80:` under the `PORT(S)` column (e.g. `80:31234/TCP`). You can then access the app at `http://<node-ip-address>:<assigned-nodeport>`.
-* **Via Local Port-Forwarding:** If you are behind a firewall or want to test locally:
+- **Via Local Port-Forwarding:** If you are behind a firewall or want to test locally:
   ```bash
   kubectl port-forward service/gateway 8080:80 -n devpulse-prod
   ```
@@ -181,9 +190,9 @@ kubectl get all -n devpulse-prod
 
 Interactive API documentation (Swagger UI) is automatically generated and accessible at runtime for each microservice. When running the services locally, you can view the API references at the following URLs:
 
-* **Py-Intelligence (FastAPI):** [http://localhost:8001/docs](http://localhost:8001/docs)
-* **Spring Ingestion:** `http://localhost:<PORT>/swagger-ui.html`
-* **Spring Alerts:** `http://localhost:<PORT>/swagger-ui.html`
-* **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
+- **Py-Intelligence (FastAPI):** [http://localhost:8001/docs](http://localhost:8001/docs)
+- **Spring Ingestion:** `http://localhost:<PORT>/swagger-ui.html`
+- **Spring Alerts:** `http://localhost:<PORT>/swagger-ui.html`
+- **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
 
-*(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties).*
+_(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties)._

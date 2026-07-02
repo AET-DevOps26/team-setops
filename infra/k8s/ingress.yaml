@@ -1,0 +1,31 @@
+# ============================================================
+# Ingress: exposes the gateway under the team's TUM subdomain
+# ============================================================
+# team-setops.stud.k8s.aet.cit.tum.de
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devpulse-ingress
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: devpulse-ingress
+    app.kubernetes.io/part-of: devpulse
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - team-setops.stud.k8s.aet.cit.tum.de
+      secretName: team-setops-tls
+  rules:
+    - host: team-setops.stud.k8s.aet.cit.tum.de
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 80

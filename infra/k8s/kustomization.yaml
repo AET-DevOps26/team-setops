@@ -23,6 +23,8 @@ resources:
   - client.yaml
   # API gateway (external entry point)
   - gateway.yaml
+  # Ingress (team subdomain)
+  - ingress.yaml
 
 # Common labels applied to ALL resources for easy querying:
 #   kubectl get all -n devpulse-prod -l app.kubernetes.io/part-of=devpulse

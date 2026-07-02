@@ -19,6 +19,7 @@ export default defineConfig({
 		jsxImportSource: "react",
 	},
 	server: {
+		allowedHosts: [".stud.k8s.aet.cit.tum.de"],
 		proxy: {
 			"/api/v1/logs": {
 				target: "http://localhost:8080",

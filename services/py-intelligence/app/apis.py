@@ -7,7 +7,7 @@ import os
 
 db: DB | None = None
 intelligence = Intelligence()
-COLLECTION_NAME = os.getenv("COLLECTION_NAME", "rag_documents")
+COLLECTION_NAME = os.getenv("COLLECTION_NAME", "ingestions")
 
 
 def get_db() -> DB:

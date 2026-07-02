@@ -109,8 +109,8 @@ spec:
               memory: "256Mi"
               cpu: "100m"
             limits:
+              cpu: "300m"
               memory: "512Mi"
-              cpu: "500m"
   volumeClaimTemplates:
     - metadata:
         name: postgres-data

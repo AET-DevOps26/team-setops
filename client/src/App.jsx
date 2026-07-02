@@ -60,10 +60,15 @@ function App() {
 
 		const resolvedIds = new Set((incidentsRes.data || []).map((inc) => inc.logId));
 
-		return (logsRes.data || []).map((log) => ({
-			...log,
-			resolved: resolvedIds.has(log.id),
-		}));
+		return (logsRes.data || []).map((log) => {
+			// Backend entity uses "logId"; normalise to "id" for the frontend
+			const id = log.id ?? log.logId;
+			return {
+				...log,
+				id,
+				resolved: resolvedIds.has(id),
+			};
+		});
 	}, []);
 
 	/* ── Load timeline & resolved state on mount ────────── */
@@ -95,14 +100,21 @@ function App() {
 		const { response } = await client.POST("/api/v1/logs", { body: payload });
 		if (!response.ok) throw new Error(`Ingestion failed (${response.status})`);
 
-		// Re-fetch logs from the server to get the server-assigned ID
-		try {
-			const data = await loadLogsAndIncidents();
-			setLogs(data);
-		} catch {
-			// Fallback: add locally with a temp id
-			setLogs((prev) => [{ ...payload, id: Date.now().toString() + Math.random().toString(36).substring(2) }, ...prev]);
-		}
+		// Optimistically add the log locally so it appears immediately
+		const tempId = crypto.randomUUID();
+		setLogs((prev) => [{ ...payload, id: tempId }, ...prev]);
+
+		// Re-fetch from server after a short delay to allow async
+		// RabbitMQ processing to complete (ingestion → logbook)
+		setTimeout(async () => {
+			try {
+				const data = await loadLogsAndIncidents();
+				setLogs(data);
+			} catch {
+				// Fallback: add locally with a temp id
+				setLogs((prev) => [{ ...payload, id: Date.now().toString() + Math.random().toString(36).substring(2) }, ...prev]);
+			}
+		}, 1500);
 	}, [loadLogsAndIncidents]);
 
 	const handleAnalyze = useCallback(

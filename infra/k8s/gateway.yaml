@@ -53,9 +53,24 @@ data:
         server {
             listen 80;
 
+            error_page 418 = @get_logs;
             location /api/v1/logs {
                 include /etc/nginx/cors.conf;
+                if ($request_method = GET) {
+                    return 418;
+                }
+                if ($request_method = DELETE) {
+                    return 418;
+                }
                 proxy_pass http://spring-ingestion:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            location @get_logs {
+                proxy_pass http://spring-logbook:8080;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -83,6 +98,24 @@ data:
             location /api/v1/alerts {
                 include /etc/nginx/cors.conf;
                 proxy_pass http://spring-alerts:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            location /api/v1/incidents {
+                include /etc/nginx/cors.conf;
+                proxy_pass http://spring-alerts:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            location /api/v1/metrics {
+                include /etc/nginx/cors.conf;
+                proxy_pass http://spring-logbook:8080;
                 proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -132,7 +165,7 @@ data:
   cors.conf: |
     if ($request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' $allow_origin always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain; charset=utf-8';
@@ -141,7 +174,7 @@ data:
     }
 
     add_header 'Access-Control-Allow-Origin' $allow_origin always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
     add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization' always;
 
 ---
@@ -222,8 +255,8 @@ spec:
               memory: "64Mi"
               cpu: "50m"
             limits:
+              cpu: "100m"
               memory: "128Mi"
-              cpu: "200m"
       volumes:
         - name: nginx-config
           configMap:

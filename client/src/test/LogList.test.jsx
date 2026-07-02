@@ -146,4 +146,32 @@ describe("LogList", () => {
 		expect(onDelete).toHaveBeenCalledWith(1);
 		expect(onSelect).not.toHaveBeenCalled();
 	});
+
+	it("should show a resolved badge on log entries with resolved=true", () => {
+		const resolvedLogs = [
+			{ ...mockLogs[0], resolved: false },
+			{ ...mockLogs[1], resolved: true },
+		];
+		const { container } = renderLogList({ logs: resolvedLogs });
+
+		const entries = container.querySelectorAll(".log-entry");
+
+		// First entry is not resolved — no badge
+		expect(entries[0].querySelector(".log-resolved-badge")).toBeNull();
+		expect(entries[0]).not.toHaveClass("resolved");
+
+		// Second entry is resolved — badge present
+		const badge = entries[1].querySelector(".log-resolved-badge");
+		expect(badge).not.toBeNull();
+		expect(badge).toHaveTextContent("RESOLVED");
+		expect(badge).toHaveAttribute("aria-label", "Resolved");
+		expect(entries[1]).toHaveClass("resolved");
+	});
+
+	it("should not show resolved badge when resolved is falsy", () => {
+		const { container } = renderLogList({ logs: mockLogs });
+
+		const badges = container.querySelectorAll(".log-resolved-badge");
+		expect(badges).toHaveLength(0);
+	});
 });

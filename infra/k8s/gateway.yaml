@@ -129,6 +129,9 @@ data:
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
+                # LLM calls can retry against Gemini before falling back to OpenAI,
+                # which routinely exceeds the default 60s read timeout.
+                proxy_read_timeout 180s;
             }
 
             location /api/v1/rag {
@@ -138,6 +141,7 @@ data:
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_read_timeout 180s;
             }
 
             location /health {

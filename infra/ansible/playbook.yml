@@ -1,0 +1,104 @@
+---
+- name: Configure Azure VM and Deploy App
+  hosts: azure_vm
+  become: yes
+  vars:
+    app_dir: "/opt/team-setops"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Install Docker and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Ensure Docker service is running and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add azureuser to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Create application directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copy nginx configurations
+      copy:
+        src: ../nginx
+        dest: "{{ app_dir }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Copy production docker-compose file
+      copy:
+        src: ../docker-compose.prod.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Create .env file for Docker Compose
+      template:
+        src: ../.env
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+      # Ignore error if .env doesn't exist locally, as it might be managed by CI
+      ignore_errors: yes
+
+    - name: Start the application with Docker Compose
+      command: docker compose up -d
+      args:
+        chdir: "{{ app_dir }}"
+      environment:
+        # Pass secrets as env vars from the environment where ansible runs (e.g., CI)
+        # Assuming the env file or GH Actions will supply these
+        POSTGRES_USER: "{{ lookup('env', 'POSTGRES_USER') | default('user', true) }}"
+        POSTGRES_PASSWORD: "{{ lookup('env', 'POSTGRES_PASSWORD') | default('password', true) }}"
+        POSTGRES_URL: "{{ lookup('env', 'POSTGRES_URL') | default('jdbc:postgresql://postgres:5432/appdb', true) }}"
+        RABBITMQ_USER: "{{ lookup('env', 'RABBITMQ_USER') | default('guest', true) }}"
+        RABBITMQ_PASSWORD: "{{ lookup('env', 'RABBITMQ_PASSWORD') | default('guest', true) }}"
+        RABBITMQ_HOST: "{{ lookup('env', 'RABBITMQ_HOST') | default('rabbitmq', true) }}"
+        RABBITMQ_PORT: "{{ lookup('env', 'RABBITMQ_PORT') | default('5672', true) }}"
+        MONGODB_URI: "{{ lookup('env', 'MONGODB_URI') | default('', true) }}"
+        GOOGLE_API_KEY: "{{ lookup('env', 'GOOGLE_API_KEY') | default('', true) }}"
+        OPENAI_API_KEY: "{{ lookup('env', 'OPENAI_API_KEY') | default('', true) }}"
+        OPENAI_BASE_URL: "{{ lookup('env', 'OPENAI_BASE_URL') | default('', true) }}"

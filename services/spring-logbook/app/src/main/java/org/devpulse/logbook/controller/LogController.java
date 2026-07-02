@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,13 +54,13 @@ public class LogController {
         return ResponseEntity.ok(logs);
     }
 
-    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLog(@org.springframework.web.bind.annotation.PathVariable java.util.UUID id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLog(@PathVariable java.util.UUID id) {
         logService.deleteLog(id);
         return ResponseEntity.noContent().build();
     }
 
-    @org.springframework.web.bind.annotation.DeleteMapping
+    @DeleteMapping
     public ResponseEntity<Void> deleteAllLogs() {
         logService.deleteAllLogs();
         return ResponseEntity.noContent().build();

@@ -137,6 +137,8 @@ services:
       - SPRING_RABBITMQ_PASSWORD=guest
       - MONGODB_URI=${MONGODB_URI}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
     networks:
       - app-network
 

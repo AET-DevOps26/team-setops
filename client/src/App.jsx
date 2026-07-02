@@ -101,7 +101,7 @@ function App() {
 		if (!response.ok) throw new Error(`Ingestion failed (${response.status})`);
 
 		// Optimistically add the log locally so it appears immediately
-		const tempId = crypto.randomUUID();
+		const tempId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `temp-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 		setLogs((prev) => [{ ...payload, id: tempId }, ...prev]);
 
 		// Re-fetch from server after a short delay to allow async

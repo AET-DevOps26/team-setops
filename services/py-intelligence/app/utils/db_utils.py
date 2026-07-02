@@ -16,8 +16,8 @@ class DB:
 
     def __init__(self):
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-        db_name = os.getenv("DB_NAME", "devpulse")
-        collection_name = os.getenv("COLLECTION_NAME", "rag_documents")
+        db_name = os.getenv("DB_NAME", "rag")
+        collection_name = os.getenv("COLLECTION_NAME", "ingestions")
 
         self.client = pymongo.MongoClient(
             mongodb_uri,

@@ -40,7 +40,7 @@ def create_all_embeddings(collection_name: str = None):
         bool: True if the process completed successfully, False otherwise.
     """
     if collection_name is None:
-        collection_name = os.getenv("COLLECTION_NAME", "injestions")
+        collection_name = os.getenv("COLLECTION_NAME", "rag_documents")
 
     db = DB()
     collection = db.db[collection_name]
@@ -92,7 +92,7 @@ def similarity_search(query: str, limit: int = 5, collection_name: str = None) -
         list[dict]: A list of similar documents, with the 'embedding' field removed.
     """
     if collection_name is None:
-        collection_name = os.getenv("COLLECTION_NAME", "injestions")
+        collection_name = os.getenv("COLLECTION_NAME", "rag_documents")
 
     db_instance = DB()
     collection = db_instance.db[collection_name]

@@ -1,13 +1,20 @@
 from app.utils.embedding_utils import create_all_embeddings
 from fastapi import Body, FastAPI, HTTPException, Response
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Gauge
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
 from app.func import Intelligence
 import os
+import datetime
 
 db: DB | None = None
 intelligence = Intelligence()
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "ingestions")
+
+ANALYSES_COMPLETED_METRIC = Gauge(
+    "devpulse_analyses_completed_total", "Total number of completed AI analyses persisted in MongoDB"
+)
 
 
 def get_db() -> DB:
@@ -22,6 +29,17 @@ app = FastAPI(
     description="GenAI/RAG service for log summarization and troubleshooting.",
     version="0.1.0",
 )
+
+Instrumentator().instrument(app).expose(app)
+
+
+@app.on_event("startup")
+def init_analyses_metric():
+    try:
+        count = get_db().db["completed_analyses"].count_documents({})
+        ANALYSES_COMPLETED_METRIC.set(count)
+    except Exception as e:
+        print(f"Failed to initialize analyses metric: {e}")
 
 
 @app.get("/health")
@@ -74,13 +92,30 @@ def analyze(
             raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {str(e)}")
 
     try:
-        return intelligence.analyze(
+        result = intelligence.analyze(
             content=content,
             mode=mode,
             use_rag=use_rag,
             context=context,
             retrieved_docs=retrieved_docs,
         )
+
+        # Persist completed analysis event in MongoDB and update the gauge
+        try:
+            get_db().db["completed_analyses"].insert_one(
+                {
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc),
+                    "mode": mode,
+                    "problem_type": result.get("problem_type"),
+                    "severity": result.get("severity"),
+                    "confidence": result.get("confidence"),
+                }
+            )
+            ANALYSES_COMPLETED_METRIC.inc()
+        except Exception as db_err:
+            print(f"Failed to persist analysis to database: {db_err}")
+
+        return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 

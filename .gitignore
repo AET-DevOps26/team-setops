@@ -35,6 +35,7 @@ api/*.html
 
 # Java / Spring Boot
 target/
+bin/
 *.class
 *.jar
 *.war

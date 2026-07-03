@@ -9,7 +9,7 @@ DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and 
   - Shows logs, alerts, notes, and AI-generated insights.
 
 - **Server microservices:** `services/spring-*`
-  - Java 21 / Spring Boot 3 services.
+  - Java 25 / Spring Boot 4 services.
   - The server side is split into at least three microservices with separate responsibilities.
   - Exposes REST APIs and coordinates persistent storage and GenAI analysis.
 

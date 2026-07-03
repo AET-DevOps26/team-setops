@@ -10,5 +10,4 @@ certifi
 python-dotenv
 google-genai
 cryptography==43.0.3
-
-
+prometheus-fastapi-instrumentator==7.0.0

@@ -16,3 +16,14 @@ devpulse:
     routing:
       deployment-log: "log.deployment.received"
       system-alert: "alert.system.received"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health, prometheus"
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: "never"

@@ -33,3 +33,14 @@ devpulse:
       deployment-logs: devpulse.logs.deployment.queue
     routing-key:
       deployment-logs: log.deployment.received
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health, prometheus"
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: "never"

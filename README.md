@@ -219,16 +219,17 @@ In addition to the Rancher Kubernetes cluster, the application is also deployabl
 
 The Azure deployment pipeline requires the following **additional** secrets:
 
-| Secret | Description |
-| :--- | :--- |
-| `ARM_CLIENT_ID` | Azure Service Principal `appId` |
-| `ARM_CLIENT_SECRET` | Azure Service Principal `password` |
-| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID |
-| `ARM_TENANT_ID` | Azure Active Directory `tenant` ID |
-| `SSH_PRIVATE_KEY` | Private SSH key for Ansible to access the VM |
-| `SSH_PUBLIC_KEY` | Public SSH key injected into the VM at creation |
+| Secret                | Description                                     |
+| :-------------------- | :---------------------------------------------- |
+| `ARM_CLIENT_ID`       | Azure Service Principal `appId`                 |
+| `ARM_CLIENT_SECRET`   | Azure Service Principal `password`              |
+| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID                           |
+| `ARM_TENANT_ID`       | Azure Active Directory `tenant` ID              |
+| `SSH_PRIVATE_KEY`     | Private SSH key for Ansible to access the VM    |
+| `SSH_PUBLIC_KEY`      | Public SSH key injected into the VM at creation |
 
 To create the Service Principal, run locally:
+
 ```bash
 az ad sp create-for-rbac --name "github-actions-team-setops" --role contributor --scopes /subscriptions/<YOUR_SUBSCRIPTION_ID>
 ```
@@ -260,6 +261,15 @@ terraform output vm_fqdn
 Then open `http://<vm_fqdn>` in your browser. (The raw IP is also available via `terraform output vm_public_ip`).
 
 ---
+
+## Monitoring (Local)
+
+Running `docker-compose up` also starts Prometheus and Grafana, both reachable through the gateway:
+
+- **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
+- **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth (dev-only, not used in production/K8s). Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, not committed.
+
+_Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics, which the local Prometheus doesn't scrape — it stays empty locally by design and is meant to be imported into the shared cluster Grafana._
 
 ## API Documentation (Swagger UI)
 

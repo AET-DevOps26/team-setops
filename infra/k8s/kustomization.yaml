@@ -1,10 +1,13 @@
 # ============================================================
 # Kustomization — one-command deployment
 # ============================================================
-# This file tells "kubectl apply -k" which manifests to deploy.
+# Deploy everything:
+#   kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl apply -f -
+# Tear down:
+#   kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl delete -f -
 #
-# Deploy everything:   kubectl apply -k infra/k8s/
-# Tear down:           kubectl delete -k infra/k8s/
+# Plain `kubectl apply -k` won't work here: the Prometheus/Grafana
+# configMapGenerator entries below read files from outside infra/k8s/.
 # ============================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -21,10 +24,34 @@ resources:
   - spring-alerts.yaml
   - py-intelligence.yaml
   - client.yaml
+  # Monitoring
+  - prometheus.yaml
+  - grafana.yaml
   # API gateway (external entry point)
   - gateway.yaml
   # Ingress (team subdomain)
   - ingress.yaml
+
+# Generated from the same config files docker-compose uses locally.
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - ../prometheus/prometheus.yml
+      - ../prometheus/alert.rules
+  - name: grafana-datasources
+    files:
+      - ../grafana/provisioning/datasources/datasource.yml
+  - name: grafana-dashboards-provider
+    files:
+      - ../grafana/provisioning/dashboards/dashboards.yml
+  - name: grafana-alerting
+    files:
+      - ../grafana/provisioning/alerting/alerting.yml
+  - name: grafana-dashboards
+    files:
+      - ../grafana/dashboards/devpulse_dashboard.json
+      - ../grafana/dashboards/devpulse_resources_dashboard.json
+      - ../grafana/dashboards/azure_sizing_dashboard.json
 
 # Common labels applied to ALL resources for easy querying:
 #   kubectl get all -n devpulse-prod -l app.kubernetes.io/part-of=devpulse

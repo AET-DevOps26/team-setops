@@ -4,8 +4,8 @@
 # Python GenAI service — needs more resources than others
 # because it loads ML models and runs inference.
 #
-# RESOURCE BUDGET: 200m CPU / 512Mi memory (requests)
-#   (higher than Spring services but still conservative)
+# RESOURCE BUDGET: 400m CPU / 1Gi memory (requests), 1200m / 4Gi (limits)
+#   Highest of any service, needs headroom for the local Qwen model.
 # ============================================================
 
 # ---------- Service ----------
@@ -116,8 +116,8 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "200m"
+              memory: "1Gi"
+              cpu: "400m"
             limits:
-              cpu: "700m"
-              memory: "3Gi"
+              cpu: "1200m"
+              memory: "4Gi"

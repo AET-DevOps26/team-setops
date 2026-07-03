@@ -7,8 +7,8 @@
 #   2. Storage that sticks to the specific pod across restarts
 #   StatefulSet gives both.
 #
-# RESOURCE BUDGET (AET Policy: max 4 vCPU / 6 GB per team):
-#   This service: 100m CPU / 256Mi memory (requests)
+# RESOURCE BUDGET (AET Policy: max 4 vCPU / 8Gi memory per team):
+#   This service: 150m CPU / 384Mi memory (requests)
 # ============================================================
 
 # ---------- Service (headless) ----------
@@ -102,12 +102,10 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-          # Conservative resource requests per AET fair-use policy.
-          # Start small, increase only after measuring real usage.
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "384Mi"
+              cpu: "150m"
             limits:
               cpu: "300m"
               memory: "512Mi"

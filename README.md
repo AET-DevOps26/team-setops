@@ -205,3 +205,23 @@ Interactive API documentation (Swagger UI) is automatically generated and access
 - **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
 
 _(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties)._
+
+## Team & Responsibilities
+
+- Muhammed Emre Bayraktaroglu
+   - Github username - memreo
+   - TUMOnline - ge95jes
+   - Matriculation number - 03772842
+   - Primary subsystem owned - GenAI
+
+- Sehmuel Wagner
+   - Github username - sachmii
+   - TUMOnline - ge84qiy
+   - Matriculation number - 03772842
+   - Primary subsystem owned - Client
+
+- Taha Huzefa Hundekari
+   - Github username - tahahundekari
+   - TUMOnline - ge47mut
+   - Matriculation number - 03757146
+   - Primary subsystem owned - Server

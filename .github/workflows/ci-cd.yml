@@ -281,9 +281,6 @@ jobs:
           # 1. Apply secrets first so they are available for pods
           kubectl apply -f infra/k8s/secrets.yaml
 
-          # 2. Apply everything else (with the updated image tags from kustomize).
-          # `kubectl apply -k` doesn't support --load-restrictor, but the
-          # Prometheus/Grafana configMapGenerator entries reference files
-          # outside infra/k8s/ (infra/prometheus/, infra/grafana/) on purpose,
-          # so build with the standalone kustomize CLI and pipe into kubectl.
+          # 2. Apply everything else. Uses the standalone kustomize CLI since
+          # `kubectl apply -k` doesn't support --load-restrictor.
           kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl apply -f -

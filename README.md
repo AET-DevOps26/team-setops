@@ -161,7 +161,7 @@ If you have `kubectl` configured and connected to the cluster, you can perform t
 
 #### Apply Manifests
 
-Deploy the entire stack with a single command from the project root. Note this uses the standalone `kustomize` CLI (not `kubectl apply -k`, which doesn't support `--load-restrictor`) because the Prometheus/Grafana ConfigMaps are generated from files outside `infra/k8s/` on purpose — see `infra/k8s/kustomization.yaml`:
+Deploy the entire stack with a single command from the project root. Note this uses the standalone `kustomize` CLI (not `kubectl apply -k`, which doesn't support `--load-restrictor`) because the Prometheus/Grafana ConfigMaps are generated from files outside `infra/k8s/` on purpose. See `infra/k8s/kustomization.yaml`:
 
 ```bash
 kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl apply -f -
@@ -191,15 +191,15 @@ kubectl get all -n devpulse-prod
 
 ## Monitoring
 
-Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`) — same dashboards, same alerting rules, same Telegram integration, mounted from ConfigMaps in K8s instead of bind-mounted files.
+Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`), with the same dashboards, alerting rules, and Telegram integration. In K8s, config is mounted from ConfigMaps instead of bind-mounted files.
 
 **Local (docker-compose):**
-* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`.
-* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth. Default `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. Credential file is generated at container startup, never committed.
+* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/), default login `admin` / `admin`.
+* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/), gated by HTTP basic auth. Default `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. Credential file is generated at container startup, never committed.
 
 **Kubernetes:**
 * **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
-* **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/) — same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
+* **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/), same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
 
 *Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics. Neither the local nor the in-cluster Prometheus scrapes those (both only scrape our own app-level `/actuator/prometheus` and `/metrics` endpoints), so that specific dashboard stays empty by design in both environments unless pointed at a Prometheus that does scrape cAdvisor.*
 

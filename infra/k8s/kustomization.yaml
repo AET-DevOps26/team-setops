@@ -1,10 +1,13 @@
 # ============================================================
 # Kustomization — one-command deployment
 # ============================================================
-# This file tells "kubectl apply -k" which manifests to deploy.
+# Deploy everything:
+#   kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl apply -f -
+# Tear down:
+#   kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl delete -f -
 #
-# Deploy everything:   kubectl apply -k infra/k8s/
-# Tear down:           kubectl delete -k infra/k8s/
+# Plain `kubectl apply -k` won't work here: the Prometheus/Grafana
+# configMapGenerator entries below read files from outside infra/k8s/.
 # ============================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -29,8 +32,7 @@ resources:
   # Ingress (team subdomain)
   - ingress.yaml
 
-# Prometheus/Grafana ConfigMaps are generated from
-# config files under infra/prometheus/ and infra/grafana/ .
+# Generated from the same config files docker-compose uses locally.
 configMapGenerator:
   - name: prometheus-config
     files:

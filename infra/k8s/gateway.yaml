@@ -155,9 +155,7 @@ data:
 
             location /prometheus {
                 include /etc/nginx/cors.conf;
-                # Prometheus has no auth of its own; .htpasswd is generated at
-                # container startup from PROMETHEUS_AUTH_USER/PASSWORD env
-                # vars (see infra/nginx/generate-htpasswd.sh), never committed.
+                # .htpasswd is generated at container startup, see infra/nginx/generate-htpasswd.sh
                 auth_basic "Restricted";
                 auth_basic_user_file /etc/nginx/.htpasswd;
                 proxy_pass http://prometheus:9090;
@@ -257,9 +255,7 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           env:
-            # Dev-tier gate on the /prometheus route — see
-            # infra/nginx/generate-htpasswd.sh for how these become
-            # the actual .htpasswd file at container startup.
+            # Used by infra/nginx/generate-htpasswd.sh to gate /prometheus
             - name: PROMETHEUS_AUTH_USER
               valueFrom:
                 secretKeyRef:

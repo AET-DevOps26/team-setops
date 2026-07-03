@@ -5,8 +5,7 @@
 # because it loads ML models and runs inference.
 #
 # RESOURCE BUDGET: 400m CPU / 1Gi memory (requests), 1200m / 4Gi (limits)
-#   Highest of any service — loads embeddings + the local Qwen GGUF
-#   model, needs real headroom to avoid OOM during inference.
+#   Highest of any service, needs headroom for the local Qwen model.
 # ============================================================
 
 # ---------- Service ----------

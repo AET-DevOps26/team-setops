@@ -29,6 +29,28 @@ resources:
   # Ingress (team subdomain)
   - ingress.yaml
 
+# Prometheus/Grafana ConfigMaps are generated from
+# config files under infra/prometheus/ and infra/grafana/ .
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - ../prometheus/prometheus.yml
+      - ../prometheus/alert.rules
+  - name: grafana-datasources
+    files:
+      - ../grafana/provisioning/datasources/datasource.yml
+  - name: grafana-dashboards-provider
+    files:
+      - ../grafana/provisioning/dashboards/dashboards.yml
+  - name: grafana-alerting
+    files:
+      - ../grafana/provisioning/alerting/alerting.yml
+  - name: grafana-dashboards
+    files:
+      - ../grafana/dashboards/devpulse_dashboard.json
+      - ../grafana/dashboards/devpulse_resources_dashboard.json
+      - ../grafana/dashboards/azure_sizing_dashboard.json
+
 # Common labels applied to ALL resources for easy querying:
 #   kubectl get all -n devpulse-prod -l app.kubernetes.io/part-of=devpulse
 commonLabels:

@@ -161,10 +161,10 @@ If you have `kubectl` configured and connected to the cluster, you can perform t
 
 #### Apply Manifests
 
-Deploy the entire stack with a single command from the project root:
+Deploy the entire stack with a single command from the project root. Note this uses the standalone `kustomize` CLI (not `kubectl apply -k`, which doesn't support `--load-restrictor`) because the Prometheus/Grafana ConfigMaps are generated from files outside `infra/k8s/` on purpose — see `infra/k8s/kustomization.yaml`:
 
 ```bash
-kubectl apply -k infra/k8s/
+kustomize build infra/k8s/ --load-restrictor LoadRestrictionsNone | kubectl apply -f -
 ```
 
 #### Check Status

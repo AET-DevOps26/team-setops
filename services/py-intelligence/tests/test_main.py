@@ -394,6 +394,61 @@ def test_model_load_raises_value_error_for_unknown_provider() -> None:
         model._load()
 
 
+def _qwen_model():
+    from app.model import Model
+
+    return Model(
+        {
+            "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+            "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+            "provider": "Qwen",
+            "shortened": "Qwen",
+            "cloud": False,
+        }
+    )
+
+
+def test_count_tokens_uses_local_tokenizer() -> None:
+    """Verifies that count_tokens delegates to the loaded local model's own tokenizer."""
+    model = _qwen_model()
+    mock_client = MagicMock()
+    mock_client.tokenize.return_value = [1, 2, 3, 4, 5]
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        assert model.count_tokens("some text") == 5
+        mock_client.tokenize.assert_called_once_with(b"some text")
+
+
+def test_qwen_generate_raises_value_error_on_token_overflow() -> None:
+    """Verifies that generate() rejects oversized local prompts before running inference."""
+    from app.model import LOCAL_MODEL_N_CTX, LOCAL_MODEL_MAX_OUTPUT_TOKENS
+
+    model = _qwen_model()
+    mock_client = MagicMock()
+    overflow_token_count = LOCAL_MODEL_N_CTX - LOCAL_MODEL_MAX_OUTPUT_TOKENS + 1
+    mock_client.tokenize.return_value = list(range(overflow_token_count))
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        with pytest.raises(ValueError, match="switch to cloud mode"):
+            model.generate("a very long prompt")
+
+    mock_client.create_chat_completion.assert_not_called()
+
+
+def test_qwen_generate_success_within_budget() -> None:
+    """Verifies that generate() runs local inference normally when the prompt fits the context budget."""
+    model = _qwen_model()
+    mock_client = MagicMock()
+    mock_client.tokenize.return_value = [1, 2, 3]
+    mock_client.create_chat_completion.return_value = {"choices": [{"message": {"content": '{"ok": true}'}}]}
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        result = model.generate("short prompt")
+
+    assert result == '{"ok": true}'
+    assert mock_client.create_chat_completion.call_args.kwargs["max_tokens"] == 768
+
+
 def test_openai_model_load_and_generate() -> None:
     """Verifies that the Model class successfully handles the OpenAI provider."""
     from app.model import Model

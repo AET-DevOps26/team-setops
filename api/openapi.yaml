@@ -330,6 +330,9 @@ components:
       type: object
       required: [problem_type, severity, summary, problem_summary, evidence, troubleshoot, solutions, confidence]
       properties:
+        model:
+          type: string
+          description: Shortened name of the model that actually produced this result (e.g. Qwen, Gemini, GPT).
         problem_type:
           type: string
           description: UI tag/category of the detected problem.

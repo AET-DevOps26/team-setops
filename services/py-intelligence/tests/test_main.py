@@ -8,6 +8,7 @@ from app.func import AVAILABLE_MODELS
 client = TestClient(app)
 
 LOCAL_ANALYSIS_RESPONSE = {
+    "model": "Qwen",
     "problem_type": "database_connectivity",
     "severity": "high",
     "summary": "The model identified a database connectivity issue.",
@@ -43,6 +44,7 @@ def test_analyze_endpoint_returns_structured_analysis(mock_get_model) -> None:
     model execution, and structured normalization.
     """
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
     mock_get_model.return_value = mock_model
 
@@ -77,6 +79,7 @@ def test_analyze_endpoint_uses_rag(mock_search, mock_get_model) -> None:
         }
     ]
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(
         {
             **LOCAL_ANALYSIS_RESPONSE,
@@ -440,6 +443,7 @@ def test_analyze_fallback_to_openai(mock_models) -> None:
         res = intel.analyze(content="test logs", mode="cloud", use_rag=False)
 
         assert res["problem_type"] == LOCAL_ANALYSIS_RESPONSE["problem_type"]
+        assert res["model"] == openai_model.shortened
         mock_openai_gen.assert_called_once()
 
 
@@ -448,6 +452,7 @@ def test_analyze_fallback_to_openai(mock_models) -> None:
 def test_analyze_persists_with_log_id(mock_get_model, mock_db) -> None:
     """Verifies that /api/v1/analyze upserts the result into completed_analyses when log_id is given."""
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
     mock_get_model.return_value = mock_model
     collection = mock_db.db["completed_analyses"]
@@ -477,6 +482,7 @@ def test_analyze_persists_with_log_id(mock_get_model, mock_db) -> None:
 def test_analyze_without_log_id_inserts_without_upsert(mock_get_model, mock_db) -> None:
     """Verifies that /api/v1/analyze inserts a plain record when no log_id is given."""
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
     mock_get_model.return_value = mock_model
     collection = mock_db.db["completed_analyses"]

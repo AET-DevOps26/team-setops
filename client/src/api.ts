@@ -256,6 +256,8 @@ export interface components {
             log_id?: string | null;
         };
         AnalyzeResponse: {
+            /** @description Shortened name of the model that actually produced this result (e.g. Qwen, Gemini, GPT). */
+            model?: string;
             /**
              * @description UI tag/category of the detected problem.
              * @example database_timeout

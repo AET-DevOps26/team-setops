@@ -43,4 +43,4 @@ management:
     prometheus:
       enabled: true
     health:
-      show-details: "always"
+      show-details: "never"

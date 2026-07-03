@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from app.utils.embedding_utils import create_all_embeddings
 from fastapi import Body, FastAPI, HTTPException, Response
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -24,22 +26,24 @@ def get_db() -> DB:
     return db
 
 
-app = FastAPI(
-    title="DevPulse Intelligence Service",
-    description="GenAI/RAG service for log summarization and troubleshooting.",
-    version="0.1.0",
-)
-
-Instrumentator().instrument(app).expose(app)
-
-
-@app.on_event("startup")
-def init_analyses_metric():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
         count = get_db().db["completed_analyses"].count_documents({})
         ANALYSES_COMPLETED_METRIC.set(count)
     except Exception as e:
         print(f"Failed to initialize analyses metric: {e}")
+    yield
+
+
+app = FastAPI(
+    title="DevPulse Intelligence Service",
+    description="GenAI/RAG service for log summarization and troubleshooting.",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")

@@ -10,9 +10,7 @@ from app.model import Model
 
 load_dotenv()
 
-INFERENCE_TOTAL = Counter(
-    "devpulse_inference_total", "Total number of AI inference requests by mode", ["mode"]
-)
+INFERENCE_TOTAL = Counter("devpulse_inference_total", "Total number of AI inference requests by mode", ["mode"])
 INFERENCE_FALLBACK_TOTAL = Counter(
     "devpulse_inference_fallback_total",
     "Total number of times cloud inference fell back from Gemini to the OpenAI-compatible model",

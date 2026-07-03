@@ -177,6 +177,15 @@ kubectl get all -n devpulse-prod
   ```
   Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
+## Monitoring (Local)
+
+Running `docker-compose up` also starts Prometheus and Grafana, both reachable through the gateway:
+
+* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
+* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth (dev-only, not used in production/K8s): `admin` / `devpulse`. Credentials live in `infra/nginx/.htpasswd`.
+
+*Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics, which the local Prometheus doesn't scrape — it stays empty locally by design and is meant to be imported into the shared cluster Grafana.*
+
 ## API Documentation (Swagger UI)
 
 Interactive API documentation (Swagger UI) is automatically generated and accessible at runtime for each microservice. When running the services locally, you can view the API references at the following URLs:

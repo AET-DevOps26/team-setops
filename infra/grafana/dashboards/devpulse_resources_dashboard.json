@@ -32,7 +32,10 @@
       "id": 1,
       "title": "Python Service RAM Usage",
       "type": "stat",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -91,7 +94,10 @@
       "id": 2,
       "title": "Spring Boot Heap Memory Usage",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -120,7 +126,10 @@
       "id": 3,
       "title": "Hikari Database Connections",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -153,7 +162,10 @@
       "id": 4,
       "title": "Live JVM Threads",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -181,7 +193,10 @@
       "id": 5,
       "title": "Kubernetes Container Restarts",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -209,7 +224,10 @@
       "id": 6,
       "title": "Kubernetes Container OOM Kills",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -237,7 +255,10 @@
       "id": 7,
       "title": "Kubernetes Container CPU Usage",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -266,7 +287,10 @@
       "id": 8,
       "title": "Kubernetes Container Memory Usage (cAdvisor)",
       "type": "timeseries",
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-datasource"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {

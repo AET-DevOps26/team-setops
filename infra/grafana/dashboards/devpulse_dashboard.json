@@ -298,6 +298,106 @@
           "refId": "B"
         }
       ]
+    },
+    {
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 6,
+      "title": "Inference Mode (Local vs Cloud)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "none"
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "sum(devpulse_inference_total{mode=\"local\"}) or vector(0)",
+          "legendFormat": "Local",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(devpulse_inference_total{mode=\"cloud\"}) or vector(0)",
+          "legendFormat": "Cloud",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 7,
+      "title": "Gemini \u2192 OpenAI Fallbacks",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "expr": "sum(devpulse_inference_fallback_total) or vector(0)",
+          "legendFormat": "Fallbacks",
+          "refId": "A"
+        }
+      ]
     }
   ],
   "refresh": "5s",

@@ -4,10 +4,19 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+from prometheus_client import Counter
 
 from app.model import Model
 
 load_dotenv()
+
+INFERENCE_TOTAL = Counter(
+    "devpulse_inference_total", "Total number of AI inference requests by mode", ["mode"]
+)
+INFERENCE_FALLBACK_TOTAL = Counter(
+    "devpulse_inference_fallback_total",
+    "Total number of times cloud inference fell back from Gemini to the OpenAI-compatible model",
+)
 
 AVAILABLE_MODELS = [
     {
@@ -165,6 +174,7 @@ class Intelligence:
         """
         model = self.get_model_for_mode(mode)
         prompt = self._build_analysis_prompt(content, mode, use_rag, context, retrieved_docs or [])
+        INFERENCE_TOTAL.labels(mode=mode).inc()
         try:
             raw_response = model.generate(prompt)
         except Exception as e:
@@ -172,6 +182,7 @@ class Intelligence:
             if mode == "cloud":
                 try:
                     fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
+                    INFERENCE_FALLBACK_TOTAL.inc()
                     raw_response = fallback_model.generate(prompt)
                 except StopIteration:
                     raise e

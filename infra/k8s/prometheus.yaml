@@ -1,0 +1,159 @@
+# ============================================================
+# prometheus: ConfigMap + Deployment + Service
+# ============================================================
+# Same static scrape config as the local docker-compose setup —
+# in-namespace Service DNS names resolve identically, so the
+# targets don't need to change. No PVC: metrics history is not
+# meant to survive a Pod restart in this course project.
+#
+# RESOURCE BUDGET: 100m CPU / 128Mi memory (requests) — kept lean,
+#   py-intelligence needs most of the namespace's 8Gi quota.
+# ============================================================
+
+# ---------- ConfigMap ----------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: devpulse
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      evaluation_interval: 10s
+
+    rule_files:
+      - "alert.rules"
+
+    scrape_configs:
+      - job_name: 'spring-services'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets:
+              - 'spring-ingestion:8080'
+              - 'spring-logbook:8080'
+              - 'spring-alerts:8080'
+
+      - job_name: 'py-intelligence'
+        metrics_path: '/metrics'
+        static_configs:
+          - targets:
+              - 'py-intelligence:8000'
+
+  alert.rules: |
+    groups:
+      - name: devpulse-alerts
+        rules:
+          - alert: ServiceDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.instance }} is offline!"
+              description: "The container instance {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+          - alert: GenAiResponseTimeout
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler="/api/v1/analyze"}[5m])) by (le)) > 25
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Slow GenAI Ingestions detected"
+              description: "The local Qwen model is taking more than 25 seconds to generate log analysis."
+
+---
+# ---------- Service ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: devpulse
+spec:
+  type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      name: http
+
+---
+# ---------- Deployment ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: devpulse
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--web.route-prefix=/prometheus"
+            - "--web.external-url=/prometheus"
+          ports:
+            - containerPort: 9090
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+              readOnly: true
+            - name: prometheus-config
+              mountPath: /etc/prometheus/alert.rules
+              subPath: alert.rules
+              readOnly: true
+            - name: prometheus-data
+              mountPath: /prometheus
+          readinessProbe:
+            httpGet:
+              path: /prometheus/-/ready
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /prometheus/-/healthy
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              cpu: "300m"
+              memory: "384Mi"
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          emptyDir: {}

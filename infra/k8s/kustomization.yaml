@@ -21,6 +21,9 @@ resources:
   - spring-alerts.yaml
   - py-intelligence.yaml
   - client.yaml
+  # Monitoring
+  - prometheus.yaml
+  - grafana.yaml
   # API gateway (external entry point)
   - gateway.yaml
   # Ingress (team subdomain)

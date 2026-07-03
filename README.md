@@ -145,10 +145,13 @@ We use GitHub Actions to automate the entire testing, building, and deployment p
 For the CD deployment pipeline to succeed, you must add the following **Repository Secrets** under **Settings > Secrets and variables > Actions** in GitHub:
 
 - **`KUBE_CONFIG_DATA`**: The raw text content of your `kubeconfig` file (granting namespace-level access to the cluster).
-- **`POSTGRES_USER`**, **`POSTGRES_PASSWORD`**, and **`POSTGRES_DB`**: Database credentials.
-- **`RABBITMQ_USER`** and **`RABBITMQ_PASSWORD`**: Broker credentials.
+- **`POSTGRES_USER`**, **`POSTGRES_PASSWORD`**, and **`POSTGRES_URL`**: Database credentials.
+- **`RABBITMQ_USER`**, **`RABBITMQ_PASSWORD`**, **`RABBITMQ_HOST`**, and **`RABBITMQ_PORT`**: Broker credentials.
 - **`MONGODB_URI`**: URI to the MongoDB instance used by the alert service.
 - **`GOOGLE_API_KEY`**: API key for GenAI analysis features.
+- **`OPENAI_API_KEY`** and **`OPENAI_BASE_URL`**: Fallback GenAI provider, used when Gemini is unavailable.
+- **`TELEGRAM_BOT_TOKEN`** and **`TELEGRAM_CHAT_ID`**: Destination for Grafana alerting notifications.
+- **`PROMETHEUS_AUTH_USER`** and **`PROMETHEUS_AUTH_PASSWORD`**: Basic-auth credentials gating the `/prometheus` route on the gateway.
 
 _Note: The pipeline automatically Base64-encodes these values at runtime, so paste them as raw plain-text in GitHub._
 
@@ -186,14 +189,19 @@ kubectl get all -n devpulse-prod
   ```
   Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
-## Monitoring (Local)
+## Monitoring
 
-Running `docker-compose up` also starts Prometheus and Grafana, both reachable through the gateway:
+Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`) — same dashboards, same alerting rules, same Telegram integration, mounted from ConfigMaps in K8s instead of bind-mounted files.
 
-* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
-* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth (dev-only, not used in production/K8s). Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, not committed.
+**Local (docker-compose):**
+* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`.
+* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth. Default `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. Credential file is generated at container startup, never committed.
 
-*Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics, which the local Prometheus doesn't scrape — it stays empty locally by design and is meant to be imported into the shared cluster Grafana.*
+**Kubernetes:**
+* **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
+* **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/) — same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
+
+*Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics. Neither the local nor the in-cluster Prometheus scrapes those (both only scrape our own app-level `/actuator/prometheus` and `/metrics` endpoints), so that specific dashboard stays empty by design in both environments unless pointed at a Prometheus that does scrape cAdvisor.*
 
 ## API Documentation (Swagger UI)
 

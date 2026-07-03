@@ -173,6 +173,10 @@ jobs:
             context: services/spring-logbook
             dockerfile: services/spring-logbook/Dockerfile
             image: spring-logbook
+          - name: gateway
+            context: infra/nginx
+            dockerfile: infra/nginx/Dockerfile
+            image: gateway
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -244,6 +248,10 @@ jobs:
           sed -i "s|<BASE64_TELEGRAM_BOT_TOKEN>|$(echo -n '${{ secrets.TELEGRAM_BOT_TOKEN }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
           sed -i "s|<BASE64_TELEGRAM_CHAT_ID>|$(echo -n '${{ secrets.TELEGRAM_CHAT_ID }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
 
+          # Gateway basic auth (Prometheus route)
+          sed -i "s|<BASE64_PROMETHEUS_AUTH_USER>|$(echo -n '${{ secrets.PROMETHEUS_AUTH_USER }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+          sed -i "s|<BASE64_PROMETHEUS_AUTH_PASSWORD>|$(echo -n '${{ secrets.PROMETHEUS_AUTH_PASSWORD }}' | base64 -w 0)|g" infra/k8s/secrets.yaml
+
       - name: Set Specific Image Tags
         working-directory: infra/k8s
         run: |
@@ -253,6 +261,7 @@ jobs:
           kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-alerts=ghcr.io/${{ env.REPO }}/spring-alerts:${{ github.sha }}
           kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-ingestion=ghcr.io/${{ env.REPO }}/spring-ingestion:${{ github.sha }}
           kustomize edit set image ghcr.io/aet-devops26/team-setops/spring-logbook=ghcr.io/${{ env.REPO }}/spring-logbook:${{ github.sha }}
+          kustomize edit set image ghcr.io/aet-devops26/team-setops/gateway=ghcr.io/${{ env.REPO }}/gateway:${{ github.sha }}
 
       - name: Create kubeconfig
         env:

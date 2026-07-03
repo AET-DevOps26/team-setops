@@ -4,7 +4,7 @@
 # Same StatefulSet pattern as PostgreSQL — message brokers
 # store messages on disk and need stable identity.
 #
-# RESOURCE BUDGET: 100m CPU / 256Mi memory (requests)
+# RESOURCE BUDGET: 150m CPU / 384Mi memory (requests)
 # ============================================================
 
 # ---------- Service (headless) ----------
@@ -110,8 +110,8 @@ spec:
             failureThreshold: 5
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "384Mi"
+              cpu: "150m"
             limits:
               cpu: "300m"
               memory: "512Mi"

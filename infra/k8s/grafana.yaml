@@ -1,0 +1,1220 @@
+# ============================================================
+# grafana: ConfigMaps (datasources/dashboards/alerting provisioning
+# + dashboard JSON) + Deployment + Service
+# ============================================================
+# Mirrors the local docker-compose Grafana setup 1:1 so the same
+# dashboards/alerting rules apply in the cluster. No PVC: the
+# Grafana SQLite state (users, sessions) is ephemeral by design
+# for this course project — dashboards/alerting reprovision from
+# the mounted ConfigMaps on every restart anyway.
+#
+# RESOURCE BUDGET: 100m CPU / 128Mi memory (requests) — kept lean,
+#   py-intelligence needs most of the namespace's 8Gi quota.
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+data:
+  datasource.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus-datasource
+        access: proxy
+        url: http://prometheus:9090/prometheus
+        isDefault: true
+        editable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-provider
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+data:
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: 'devpulse-dashboards'
+        orgId: 1
+        folder: 'DevPulse Monitoring'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+data:
+  alerting.yml: "apiVersion: 1\n\ngroups:\n  - orgId: 1\n    name: \"System Alerts\"\n    folder: \"DevPulse Alerts\"\n    interval: 10s\n    rules:\n      - uid: service_down_alert\n        title: \"Service Offline Alert\"\n        condition: C\n        data:\n          - refId: A\n            datasourceUid: \"prometheus-datasource\"\n            relativeTimeRange:\n              from: 300\n              to: 0\n            model:\n              expr: \"up\"\n              refId: A\n          - refId: B\n            datasourceUid: \"__expr__\"\n            model:\n              refId: B\n              type: reduce\n              expression: A\n              reducer: last\n          - refId: C\n            datasourceUid: \"__expr__\"\n            model:\n              refId: C\n              type: math\n              expression: \"$B < 1\"\n        noDataState: OK\n        execErrState: Error\n        for: 2m\n        annotations:\n          summary: \"Service {{ $labels.instance }} is offline!\"\n          description: \"A container instance is unreachable and down.\"\n        labels:\n          severity: \"critical\"\n\n      - uid: container_restart_alert\n        title: \"Container Restart Loop Alert\"\n        condition: C\n        data:\n          - refId: A\n            datasourceUid: \"prometheus-datasource\"\n            relativeTimeRange:\n              from: 900\n              to: 0\n            model:\n              expr: 'increase(kube_pod_container_status_restarts_total{namespace=\"devpulse-prod\"}[15m])'\n              refId: A\n          - refId: B\n            datasourceUid: \"__expr__\"\n            model:\n              refId: B\n              type: reduce\n              expression: A\n              reducer: last\n          - refId: C\n            datasourceUid: \"__expr__\"\n            model:\n              refId: C\n              type: math\n              expression: \"$B > 3\"\n        noDataState: OK\n        execErrState: Error\n        for: 2m\n        annotations:\n          summary: \"Container {{ $labels.container }} in Pod {{ $labels.pod }} is restarting frequently!\"\n          description: \"A container is restarting frequently (more than 3 times in 15 minutes), indicating instability.\"\n        labels:\n          severity: \"warning\"\n\n      - uid: container_oom_alert\n        title: \"Container OOM Killed Alert\"\n        condition: C\n        data:\n          - refId: A\n            datasourceUid: \"prometheus-datasource\"\n            relativeTimeRange:\n              from: 300\n              to: 0\n            model:\n              expr: 'kube_pod_container_status_terminated_reason{namespace=\"devpulse-prod\", reason=\"OOMKilled\"}'\n              refId: A\n          - refId: B\n            datasourceUid: \"__expr__\"\n            model:\n              refId: B\n              type: reduce\n              expression: A\n              reducer: last\n          - refId: C\n            datasourceUid: \"__expr__\"\n            model:\n              refId: C\n              type: math\n              expression: \"$B == 1\"\n        noDataState: OK\n        execErrState: Error\n        for: 10s\n        annotations:\n          summary: \"Container {{ $labels.container }} in Pod {{ $labels.pod }} was killed due to Out-Of-Memory (OOM)!\"\n          description: \"A container was terminated with OOMKilled reason, meaning it exceeded its memory limit.\"\n        labels:\n          severity: \"critical\"\n\ncontactPoints:\n  - orgId: 1\n    name: \"Telegram\"\n    receivers:\n      - uid: telegram-contact-point\n        type: telegram\n        settings:\n          bottoken: \"${TELEGRAM_BOT_TOKEN}\"\n          chatid: \"${TELEGRAM_CHAT_ID}\"\n          message: |\n            {{ range .Alerts }}\n            {{ if eq .Status \"firing\" }}\U0001F6A8 <b>{{ if eq .Labels.alertname \"Container OOM Killed Alert\" }}CONTAINER OOM KILLED ALERT{{ else if eq .Labels.alertname \"Container Restart Loop Alert\" }}CONTAINER RESTART LOOP ALERT{{ else }}SYSTEM OFFLINE ALERT{{ end }}</b> \U0001F6A8\n            \n            {{ if .Labels.pod }}<b>Pod:</b> <code>{{ .Labels.pod }}</code> ({{ .Labels.container }})\n            {{ else if .Labels.instance }}<b>Service:</b> <code>{{ .Labels.instance }}</code> ({{ .Labels.job }})\n            {{ end }}<b>Summary:</b> {{ .Annotations.summary }}\n            <b>Description:</b> {{ .Annotations.description }}\n            <b>Severity:</b> {{ .Labels.severity }}\n            \n            \u26A0\uFE0F <i>Immediate action required.</i>\n            {{ else }}\u2705 <b>{{ if eq .Labels.alertname \"Container OOM Killed Alert\" }}OOM KILLED RESOLVED{{ else if eq .Labels.alertname \"Container Restart Loop Alert\" }}RESTART LOOP RESOLVED{{ else }}SYSTEM RECOVERED{{ end }}</b> \u2705\n            \n            {{ if .Labels.pod }}<b>Pod:</b> <code>{{ .Labels.pod }}</code> ({{ .Labels.container }})\n            {{ else if .Labels.instance }}<b>Service:</b> <code>{{ .Labels.instance }}</code> ({{ .Labels.job }})\n            {{ end }}<b>Status:</b> Back online and healthy.\n            \n            \U0001F389 <i>The issue has been resolved.</i>\n            {{ end }}\n            {{ end }}\n        disableResolveMessage: false\n\npolicies:\n  - orgId: 1\n    receiver: \"Telegram\"\n    group_by: [\"alertname\", \"instance\", \"pod\"]\n    group_wait: 10s\n    group_interval: 1m\n"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+data:
+  devpulse_dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "title": "Service Status (Uptime)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "0": {
+                      "color": "red",
+                      "index": 0,
+                      "text": "DOWN"
+                    },
+                    "1": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "UP"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "name"
+          },
+          "targets": [
+            {
+              "expr": "up{job=~\"spring-services|py-intelligence\"}",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 4
+          },
+          "id": 2,
+          "title": "Total Operations (Run Counts)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "none"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "sum(http_server_requests_seconds_count{uri=\"/api/v1/logs\", status=\"202\"}) or vector(0)",
+              "legendFormat": "Logs Ingested",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(devpulse_analyses_completed_total) or vector(0)",
+              "legendFormat": "AI Analyses Completed",
+              "refId": "B"
+            },
+            {
+              "expr": "sum(http_server_requests_seconds_count{uri=~\"/api/v1/incidents.*\"}) or vector(0)",
+              "legendFormat": "Incident Queries",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 4
+          },
+          "id": 3,
+          "title": "Average Response Latency",
+          "type": "gauge",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "max": 30,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5
+                  },
+                  {
+                    "color": "red",
+                    "value": 15
+                  }
+                ]
+              },
+              "unit": "s"
+            }
+          },
+          "options": {
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "expr": "(sum(http_request_duration_seconds_sum{handler=\"/api/v1/analyze\"}) / sum(http_request_duration_seconds_count{handler=\"/api/v1/analyze\"})) or vector(0)",
+              "legendFormat": "AI Analysis Latency",
+              "refId": "B"
+            },
+            {
+              "expr": "(sum(http_server_requests_seconds_sum{uri=\"/api/v1/logs\"}) / sum(http_server_requests_seconds_count{uri=\"/api/v1/logs\"})) or vector(0)",
+              "legendFormat": "Log Ingestion Latency",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 18,
+            "x": 0,
+            "y": 10
+          },
+          "id": 4,
+          "title": "Application Activity Timeline (Runs)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "bars",
+                "lineInterpolation": "linear"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/logs\", status=\"202\"}[2m])) or vector(0)",
+              "legendFormat": "Log Ingestions",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(increase(devpulse_analyses_completed_total[2m])) or vector(0)",
+              "legendFormat": "AI Analyses",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 10
+          },
+          "id": 5,
+          "title": "Errors & Failures (Total Counts)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              },
+              "unit": "none"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "vertical",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "(sum(http_server_requests_seconds_count{status=~\"5..\", uri!~\"/actuator.*|/metrics.*|/health.*\"}) or vector(0)) + (sum(http_requests_total{status=\"5xx\", handler!~\"/metrics|/health\"}) or vector(0))",
+              "legendFormat": "HTTP 5xx Server Errors",
+              "refId": "A"
+            },
+            {
+              "expr": "(sum(http_server_requests_seconds_count{status=~\"4..\", uri!~\"/actuator.*|/metrics.*|/health.*\"}) or vector(0)) + (sum(http_requests_total{status=\"4xx\", handler!~\"/metrics|/health\"}) or vector(0))",
+              "legendFormat": "HTTP 4xx Client Errors",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 6,
+          "title": "Inference Mode (Local vs Cloud)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "none"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "sum(devpulse_inference_total{mode=\"local\"}) or vector(0)",
+              "legendFormat": "Local",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(devpulse_inference_total{mode=\"cloud\"}) or vector(0)",
+              "legendFormat": "Cloud",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "id": 7,
+          "title": "Gemini \u2192 OpenAI Fallbacks",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "sum(devpulse_inference_fallback_total) or vector(0)",
+              "legendFormat": "Fallbacks",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": [
+        "devpulse",
+        "monitoring"
+      ],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "DevPulse System Monitoring",
+      "uid": "devpulse-system-monitoring",
+      "version": 1,
+      "weekStart": ""
+    }
+  devpulse_resources_dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "title": "Python Service RAM Usage",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 3221225472
+                  },
+                  {
+                    "color": "red",
+                    "value": 5368709120
+                  }
+                ]
+              },
+              "unit": "bytes"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "vertical",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes{job=\"py-intelligence\"}",
+              "legendFormat": "py-intelligence",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 18,
+            "x": 6,
+            "y": 0
+          },
+          "id": 2,
+          "title": "Spring Boot Heap Memory Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth"
+              },
+              "unit": "bytes"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(jvm_memory_used_bytes{area=\"heap\"}) by (instance)",
+              "legendFormat": "{{instance}} heap",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 6
+          },
+          "id": 3,
+          "title": "Hikari Database Connections",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "hikaricp_connections_active",
+              "legendFormat": "{{instance}} - Active",
+              "refId": "A"
+            },
+            {
+              "expr": "hikaricp_connections_idle",
+              "legendFormat": "{{instance}} - Idle",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 6
+          },
+          "id": 4,
+          "title": "Live JVM Threads",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "jvm_threads_live_threads",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 14
+          },
+          "id": 5,
+          "title": "Kubernetes Container Restarts",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"devpulse-prod\"}) by (container)",
+              "legendFormat": "{{container}} restarts",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 14
+          },
+          "id": 6,
+          "title": "Kubernetes Container OOM Kills",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_terminated_reason{namespace=\"devpulse-prod\", reason=\"OOMKilled\"}) by (container)",
+              "legendFormat": "{{container}} OOM Kills",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 7,
+          "title": "Kubernetes Container CPU Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth"
+              },
+              "unit": "short"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"devpulse-prod\", container!=\"\"}[5m])) by (container)",
+              "legendFormat": "{{container}} CPU",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 8,
+          "title": "Kubernetes Container Memory Usage (cAdvisor)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth"
+              },
+              "unit": "bytes"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
+              "legendFormat": "{{container}} Memory",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": [
+        "devpulse",
+        "resources"
+      ],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "DevPulse Runtime Resources & Performance",
+      "uid": "devpulse-resources",
+      "version": 1,
+      "weekStart": ""
+    }
+  azure_sizing_dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "title": "Recommended Azure VM RAM Size",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "description": "Calculated Azure VM sizing budget, summing container memory usage working set + 15% safety headroom.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "cyan"
+              },
+              "unit": "bytes"
+            }
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "vertical",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value"
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) * 1.15",
+              "legendFormat": "Azure VM Target Size",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 0
+          },
+          "id": 2,
+          "title": "Total Container Memory Limits",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "description": "The sum of the memory limits configured for all containers in the devpulse-prod namespace.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "orange"
+              },
+              "unit": "bytes"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "sum(container_spec_memory_limit_bytes{namespace=\"devpulse-prod\", container!=\"\"})",
+              "legendFormat": "Memory Limit",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 0
+          },
+          "id": 3,
+          "title": "Total Container Memory In Use",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "description": "Sum of actual physical memory working set used by all containers in the devpulse-prod namespace.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "fixed",
+                "fixedColor": "green"
+              },
+              "unit": "bytes"
+            }
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"})",
+              "legendFormat": "Used RAM",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 0,
+            "y": 6
+          },
+          "id": 4,
+          "title": "Memory Breakdown by Service",
+          "type": "bargauge",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "description": "Actual container memory working set usage per individual service in the devpulse-prod namespace.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "bytes"
+            }
+          },
+          "options": {
+            "displayMode": "lcd",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
+              "legendFormat": "{{container}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 8,
+            "w": 14,
+            "x": 10,
+            "y": 6
+          },
+          "id": 5,
+          "title": "Memory Growth Timeline",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth"
+              },
+              "unit": "bytes"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
+              "legendFormat": "{{container}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": [
+        "devpulse",
+        "sizing",
+        "memory"
+      ],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Azure VM Sizing & Total Memory Estimation",
+      "uid": "azure-sizing-memory",
+      "version": 1,
+      "weekStart": "",
+      "description": "Requires a cluster-level Prometheus scraping cAdvisor/kube-state-metrics (container_memory_working_set_bytes, container_spec_memory_limit_bytes). The local docker-compose Prometheus only scrapes application-level metrics, so these panels stay empty in local dev by design \u2014 import this dashboard into the shared cluster Grafana to see real data."
+    }
+---
+# ---------- Service ----------
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+
+---
+# ---------- Deployment ----------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: devpulse-prod
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: devpulse
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: GF_SERVER_ROOT_URL
+              value: "https://team-setops.stud.k8s.aet.cit.tum.de/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: devpulse-secrets
+                  key: TELEGRAM_CHAT_ID
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+            - name: alerting
+              mountPath: /etc/grafana/provisioning/alerting
+              readOnly: true
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /grafana/api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /grafana/api/health
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              cpu: "300m"
+              memory: "384Mi"
+      volumes:
+        - name: grafana-data
+          emptyDir: {}
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboards-provider
+          configMap:
+            name: grafana-dashboards-provider
+        - name: alerting
+          configMap:
+            name: grafana-alerting
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards

@@ -8,7 +8,7 @@
 #   initContainers wait for postgres + rabbitmq TCP ports
 #   before the main container starts.
 #
-# RESOURCE BUDGET: 100m CPU / 256Mi memory (requests)
+# RESOURCE BUDGET: 150m CPU / 384Mi memory (requests)
 # ============================================================
 
 # ---------- Service ----------
@@ -41,6 +41,8 @@ metadata:
     app.kubernetes.io/part-of: devpulse
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: spring-ingestion
@@ -127,8 +129,8 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "384Mi"
+              cpu: "150m"
             limits:
               memory: "512Mi"
               cpu: "300m"

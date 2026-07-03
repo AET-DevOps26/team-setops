@@ -38,6 +38,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analyses/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch previously persisted analyses for a set of log IDs */
+        post: operations["queryAnalyses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analyses/{log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove the persisted analysis for a single log */
+        delete: operations["deleteAnalysis"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analyses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove all persisted analyses that are tied to a log */
+        delete: operations["deleteAllAnalyses"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rag/documents": {
         parameters: {
             query?: never;
@@ -201,6 +252,8 @@ export interface components {
             use_rag: boolean;
             /** @description Optional additional context from the caller. */
             context?: string | null;
+            /** @description Log this analysis belongs to, if any. When set, the result is persisted and retrievable via /api/v1/analyses/query. */
+            log_id?: string | null;
         };
         AnalyzeResponse: {
             /**
@@ -230,6 +283,14 @@ export interface components {
              * @example Medium
              */
             confidence: string;
+        };
+        AnalysesQueryRequest: {
+            /** @description Log IDs to fetch persisted analyses for. */
+            log_ids: string[];
+        };
+        /** @description Map of log_id to its persisted analysis. Log IDs with no stored analysis are omitted. */
+        AnalysesQueryResponse: {
+            [key: string]: components["schemas"]["AnalyzeResponse"];
         };
         SourceRef: {
             /** @description Source identifier (e.g., document id). */
@@ -381,6 +442,68 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorDetail"];
                 };
+            };
+        };
+    };
+    queryAnalyses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalysesQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description Map of log_id to persisted analysis */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysesQueryResponse"];
+                };
+            };
+        };
+    };
+    deleteAnalysis: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                log_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteAllAnalyses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All persisted analyses deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

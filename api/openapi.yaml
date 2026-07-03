@@ -56,6 +56,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+  /api/v1/analyses/query:
+    post:
+      tags: [Intelligence]
+      operationId: queryAnalyses
+      summary: Fetch previously persisted analyses for a set of log IDs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysesQueryRequest"
+      responses:
+        "200":
+          description: Map of log_id to persisted analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysesQueryResponse"
+  /api/v1/analyses/{log_id}:
+    delete:
+      tags: [Intelligence]
+      operationId: deleteAnalysis
+      summary: Remove the persisted analysis for a single log
+      parameters:
+        - name: log_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+  /api/v1/analyses:
+    delete:
+      tags: [Intelligence]
+      operationId: deleteAllAnalyses
+      summary: Remove all persisted analyses that are tied to a log
+      responses:
+        "200":
+          description: All persisted analyses deleted successfully
   /api/v1/rag/documents:
     post:
       tags: [RAG]
@@ -282,6 +322,10 @@ components:
           type: string
           nullable: true
           description: Optional additional context from the caller.
+        log_id:
+          type: string
+          nullable: true
+          description: Log this analysis belongs to, if any. When set, the result is persisted and retrievable via /api/v1/analyses/query.
     AnalyzeResponse:
       type: object
       required: [problem_type, severity, summary, problem_summary, evidence, troubleshoot, solutions, confidence]
@@ -324,6 +368,20 @@ components:
           type: string
           description: Confidence level of the analysis.
           example: Medium
+    AnalysesQueryRequest:
+      type: object
+      required: [log_ids]
+      properties:
+        log_ids:
+          type: array
+          items:
+            type: string
+          description: Log IDs to fetch persisted analyses for.
+    AnalysesQueryResponse:
+      type: object
+      description: Map of log_id to its persisted analysis. Log IDs with no stored analysis are omitted.
+      additionalProperties:
+        $ref: "#/components/schemas/AnalyzeResponse"
     SourceRef:
       type: object
       required: [id]

@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Gauge
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
-from app.func import Intelligence
+from app.func import Intelligence, REQUIRED_RESPONSE_KEYS
 import os
 import datetime
 
@@ -63,6 +63,7 @@ def analyze(
     mode: str = Body("local"),
     use_rag: bool = Body(False),
     context: str | None = Body(None),
+    log_id: str | None = Body(None),
 ) -> dict:
     """
     The main intelligence endpoint for analyzing log content.
@@ -75,6 +76,8 @@ def analyze(
         mode (str, optional): The analysis mode ("local" or "cloud"). Defaults to "local".
         use_rag (bool, optional): Whether to use Retrieval-Augmented Generation for context. Defaults to False.
         context (str, optional): Additional context to include in the analysis. Defaults to None.
+        log_id (str, optional): Log this analysis belongs to. When set, the result is persisted
+            and can be fetched again via /api/v1/analyses/query.
 
     Returns:
         dict: A structured JSON response containing:
@@ -104,24 +107,77 @@ def analyze(
             retrieved_docs=retrieved_docs,
         )
 
-        # Persist completed analysis event in MongoDB and update the gauge
+        # Persist the analysis in MongoDB (keyed by log_id if given, so a
+        # re-analysis of the same log overwrites its previous result instead
+        # of piling up duplicates) and update the completed-analyses gauge.
         try:
-            get_db().db["completed_analyses"].insert_one(
-                {
-                    "timestamp": datetime.datetime.now(datetime.timezone.utc),
-                    "mode": mode,
-                    "problem_type": result.get("problem_type"),
-                    "severity": result.get("severity"),
-                    "confidence": result.get("confidence"),
-                }
-            )
-            ANALYSES_COMPLETED_METRIC.inc()
+            record = {
+                "timestamp": datetime.datetime.now(datetime.timezone.utc),
+                "mode": mode,
+                **result,
+            }
+            collection = get_db().db["completed_analyses"]
+            if log_id:
+                record["log_id"] = log_id
+                collection.update_one({"log_id": log_id}, {"$set": record}, upsert=True)
+            else:
+                collection.insert_one(record)
+            ANALYSES_COMPLETED_METRIC.set(collection.count_documents({}))
         except Exception as db_err:
             print(f"Failed to persist analysis to database: {db_err}")
 
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+
+@app.post("/api/v1/analyses/query")
+def query_analyses(log_ids: list[str] = Body(..., embed=True)) -> dict:
+    """
+    Fetch previously persisted analyses for a set of log IDs.
+
+    Args:
+        log_ids (list[str]): The log IDs to look up.
+
+    Returns:
+        dict: Map of log_id to its persisted analysis. Log IDs with no
+            stored analysis are omitted from the response.
+    """
+    if not log_ids:
+        return {}
+
+    docs = get_db().db["completed_analyses"].find({"log_id": {"$in": log_ids}})
+    return {doc["log_id"]: {key: doc.get(key) for key in REQUIRED_RESPONSE_KEYS} for doc in docs}
+
+
+@app.delete("/api/v1/analyses/{log_id}", status_code=204)
+def delete_analysis(log_id: str) -> Response:
+    """
+    Remove the persisted analysis for a single log.
+
+    Called when the corresponding log is deleted in the frontend, so
+    analyses don't pile up for logs that no longer exist.
+
+    Args:
+        log_id (str): The log whose analysis should be removed.
+    """
+    collection = get_db().db["completed_analyses"]
+    collection.delete_one({"log_id": log_id})
+    ANALYSES_COMPLETED_METRIC.set(collection.count_documents({}))
+    return Response(status_code=204)
+
+
+@app.delete("/api/v1/analyses", status_code=200)
+def delete_all_analyses() -> dict:
+    """
+    Remove all persisted analyses that are tied to a log_id.
+
+    Called when the frontend clears all logs at once.
+    """
+    collection = get_db().db["completed_analyses"]
+    collection.delete_many({"log_id": {"$exists": True}})
+    ANALYSES_COMPLETED_METRIC.set(collection.count_documents({}))
+    return {"message": "All persisted analyses deleted successfully"}
 
 
 @app.post("/api/v1/rag/documents", status_code=201)

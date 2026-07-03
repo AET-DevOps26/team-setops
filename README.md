@@ -209,19 +209,19 @@ _(Note: Replace `<PORT>` with the respective mapped ports defined in your docker
 ## Team & Responsibilities
 
 - Muhammed Emre Bayraktaroglu
-   - Github username - memreo
+   - GitHub username - memreo
    - TUMOnline - ge95jes
-   - Matriculation number - 03772842
+   - Matriculation number - 03753187
    - Primary subsystem owned - GenAI
 
 - Sehmuel Wagner
-   - Github username - sachmii
+   - GitHub username - sachmii
    - TUMOnline - ge84qiy
    - Matriculation number - 03772842
    - Primary subsystem owned - Client
 
 - Taha Huzefa Hundekari
-   - Github username - tahahundekari
+   - GitHub username - tahahundekari
    - TUMOnline - ge47mut
    - Matriculation number - 03757146
    - Primary subsystem owned - Server

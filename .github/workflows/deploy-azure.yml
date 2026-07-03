@@ -28,9 +28,11 @@ jobs:
       - name: Set up SSH keys
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 644 ~/.ssh/id_rsa.pub
 
       - name: Terraform Init
         working-directory: infra/terraform
@@ -70,6 +72,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
         run: |
-          # Wait a few seconds to ensure the VM's SSH is fully up before running Ansible
-          sleep 30
           ansible-playbook playbook.yml
+
+      - name: Cleanup SSH keys
+        if: always()
+        run: rm -rf ~/.ssh/id_rsa ~/.ssh/id_rsa.pub

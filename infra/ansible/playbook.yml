@@ -6,6 +6,10 @@
     app_dir: "/opt/team-setops"
 
   tasks:
+    - name: Wait for SSH connection
+      wait_for_connection:
+        timeout: 300
+
     - name: Update apt cache
       apt:
         update_cache: yes
@@ -21,14 +25,21 @@
           - gnupg
         state: present
 
-    - name: Add Docker GPG key
-      apt_key:
+    - name: Create directory for Docker keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
 
     - name: Add Docker repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        repo: deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
 
     - name: Install Docker and Docker Compose
@@ -73,16 +84,6 @@
         dest: "{{ app_dir }}/docker-compose.yml"
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-
-    - name: Create .env file for Docker Compose
-      template:
-        src: ../.env
-        dest: "{{ app_dir }}/.env"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0600'
-      # Ignore error if .env doesn't exist locally, as it might be managed by CI
-      ignore_errors: yes
 
     - name: Start the application with Docker Compose
       command: docker compose up -d

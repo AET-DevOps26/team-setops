@@ -10,14 +10,19 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: appdb
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512M
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d appdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d appdb" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -29,8 +34,8 @@ services:
     image: rabbitmq:4.3-management-alpine
     container_name: rabbitmq
     ports:
-      - "5672:5672" # AMQP port
-      - "15672:15672" # Management UI
+      - "127.0.0.1:5672:5672" # AMQP port
+      - "127.0.0.1:15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
@@ -39,6 +44,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 512M
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 5s
@@ -51,8 +61,6 @@ services:
   spring-ingestion:
     image: ghcr.io/aet-devops26/team-setops/spring-ingestion:latest
     container_name: spring-ingestion
-    ports:
-      - "8081:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
@@ -70,12 +78,15 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512M
 
   spring-logbook:
     image: ghcr.io/aet-devops26/team-setops/spring-logbook:latest
     container_name: spring-logbook
-    ports:
-      - "8082:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
@@ -93,12 +104,15 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512M
 
   spring-alerts:
     image: ghcr.io/aet-devops26/team-setops/spring-alerts:latest
     container_name: spring-alerts
-    ports:
-      - "8083:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=${POSTGRES_URL:-jdbc:postgresql://postgres:5432/appdb}
@@ -116,6 +130,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512M
 
   # -------------------------------------
   # AI/Intelligence Service (Python)
@@ -123,8 +142,6 @@ services:
   py-intelligence:
     image: ghcr.io/aet-devops26/team-setops/py-intelligence:latest
     container_name: py-intelligence
-    ports:
-      - "8000:8000"
     environment:
       - INGESTION_API_URL=http://spring-ingestion:8080
       - LOGBOOK_API_URL=http://spring-logbook:8080
@@ -139,6 +156,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.2'
+          memory: 4G
 
   # -------------------------------------
   # Client Component
@@ -146,8 +168,6 @@ services:
   client:
     image: ghcr.io/aet-devops26/team-setops/client:latest
     container_name: client
-    ports:
-      - "3000:3000"
     environment:
       - VITE_API_BASE_URL=http://localhost:8080
     depends_on:
@@ -158,6 +178,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 256M
 
   # -------------------------------------
   # API Gateway Component
@@ -179,6 +204,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 128M
 
 # -------------------------------------
 # Networks and Volumes

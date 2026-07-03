@@ -63,6 +63,9 @@ env/
 docker-compose.override.yml
 *.pid
 
+# Generated locally by infra/nginx/Dockerfile, never committed
+infra/nginx/.htpasswd
+
 # Generated or local model data
 models/
 *.gguf

@@ -182,7 +182,7 @@ kubectl get all -n devpulse-prod
 Running `docker-compose up` also starts Prometheus and Grafana, both reachable through the gateway:
 
 * **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
-* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth (dev-only, not used in production/K8s): `admin` / `devpulse`. Credentials live in `infra/nginx/.htpasswd`.
+* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth (dev-only, not used in production/K8s). Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, not committed.
 
 *Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics, which the local Prometheus doesn't scrape — it stays empty locally by design and is meant to be imported into the shared cluster Grafana.*
 

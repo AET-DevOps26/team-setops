@@ -51,7 +51,11 @@ spec:
       labels:
         app: grafana
     spec:
+      # grafana/grafana runs as uid 472 (gid 0) by default; made
+      # explicit here rather than relying on the image default.
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
         fsGroup: 472
       containers:
         - name: grafana
@@ -60,6 +64,11 @@ spec:
             - containerPort: 3000
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 472
+            capabilities:
+              drop: ["ALL"]
           env:
             - name: GF_SERVER_ROOT_URL
               value: "https://team-setops.stud.k8s.aet.cit.tum.de/grafana/"
@@ -90,6 +99,8 @@ spec:
             - name: dashboards
               mountPath: /var/lib/grafana/dashboards
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             httpGet:
               path: /grafana/api/health
@@ -115,6 +126,8 @@ spec:
               memory: "384Mi"
       volumes:
         - name: grafana-data
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
         - name: datasources
           configMap:

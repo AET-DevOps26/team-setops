@@ -51,6 +51,13 @@ spec:
       labels:
         app: prometheus
     spec:
+      # prom/prometheus runs as uid/gid 65534 (nobody) by default;
+      # made explicit here rather than relying on the image default.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
       containers:
         - name: prometheus
           image: prom/prometheus:latest
@@ -62,6 +69,11 @@ spec:
             - containerPort: 9090
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: prometheus-config
               mountPath: /etc/prometheus/prometheus.yml

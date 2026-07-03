@@ -67,6 +67,21 @@ To run this project locally, you must have the following installed:
 
 _(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application, as everything runs inside the containers!)_
 
+### 🔒 Pre-commit Hooks
+
+This repository uses [pre-commit](https://pre-commit.com/) to run automated checks (linting, formatting, YAML validation, etc.) before every commit. Set it up once after cloning:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+After this, hooks run automatically on `git commit`. To run all hooks against the entire codebase manually:
+
+```bash
+pre-commit run --all-files
+```
+
 ### Build
 
 ```bash

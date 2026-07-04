@@ -1,0 +1,48 @@
+# See https://pre-commit.com for more information
+# Install: pip install pre-commit && pre-commit install
+# Run on all files: pre-commit run --all-files
+
+repos:
+  # ── General file-hygiene hooks ──────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # ── Python – services/py-intelligence ───────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        files: ^services/py-intelligence/
+        args: ['--config', 'services/py-intelligence/pyproject.toml']
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+        files: ^services/py-intelligence/
+        args: ['--config', 'services/py-intelligence/.flake8']
+
+  # ── OpenAPI spec linting ─────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: redocly-lint
+        name: Lint OpenAPI spec
+        entry: npx --yes @redocly/cli@latest lint
+        language: system
+        files: ^api/openapi\.yaml$
+
+  # ── Dockerfile linting ──────────────────────────────────────────────
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.13.1-beta
+    hooks:
+      - id: hadolint-docker
+        name: Lint Dockerfiles

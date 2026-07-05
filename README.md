@@ -9,7 +9,7 @@ DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and 
   - Shows logs, alerts, notes, and AI-generated insights.
 
 - **Server microservices:** `services/spring-*`
-  - Java 21 / Spring Boot 3 services.
+  - Java 25 / Spring Boot 4 services.
   - The server side is split into at least three microservices with separate responsibilities.
   - Exposes REST APIs and coordinates persistent storage and GenAI analysis.
 
@@ -72,6 +72,21 @@ _(Note: You do not need Java, Python, or Node.js installed on your host machine 
 ```bash
 cd infra
 docker-compose up --build
+```
+
+### 🔒 Pre-commit Hooks
+
+This repository uses [pre-commit](https://pre-commit.com/) to run automated checks (linting, formatting, YAML validation, etc.) before every commit. Set it up once after cloning:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+After this, hooks run automatically on `git commit`. To run all hooks against the entire codebase manually:
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Local Build and Test Commands for individual components
@@ -213,3 +228,20 @@ Interactive API documentation (Swagger UI) is automatically generated and access
 - **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
 
 _(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties)._
+
+## Team & Responsibilities
+
+- Muhammed Emre Bayraktaroglu
+   - GitHub username - memreo
+   - TUMOnline - ge95jes
+   - Primary subsystem owned - GenAI
+
+- Sehmuel Wagner
+   - GitHub username - sachmii
+   - TUMOnline - ge84qiy
+   - Primary subsystem owned - Client
+
+- Taha Huzefa Hundekari
+   - GitHub username - tahahundekari
+   - TUMOnline - ge47mut
+   - Primary subsystem owned - Server

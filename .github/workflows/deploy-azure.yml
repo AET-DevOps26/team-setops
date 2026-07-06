@@ -1,7 +1,10 @@
 name: Deploy to Azure
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch: # Allows manual triggering
@@ -16,6 +19,7 @@ jobs:
   terraform-and-ansible:
     name: Provision and Configure Azure VM
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

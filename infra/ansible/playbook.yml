@@ -89,21 +89,33 @@
       command: docker login ghcr.io -u github -p "{{ lookup('env', 'GHCR_TOKEN') }}"
       no_log: true
 
-    - name: Start the application with Docker Compose
-      command: docker compose up -d --pull always
+    - name: Create .env file on the VM
+      copy:
+        dest: "{{ app_dir }}/.env"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+        content: |
+          POSTGRES_USER={{ lookup('env', 'POSTGRES_USER') | default('user', true) }}
+          POSTGRES_PASSWORD={{ lookup('env', 'POSTGRES_PASSWORD') | default('password', true) }}
+          POSTGRES_URL={{ lookup('env', 'POSTGRES_URL') | default('jdbc:postgresql://postgres:5432/appdb', true) }}
+          RABBITMQ_USER={{ lookup('env', 'RABBITMQ_USER') | default('guest', true) }}
+          RABBITMQ_PASSWORD={{ lookup('env', 'RABBITMQ_PASSWORD') | default('guest', true) }}
+          RABBITMQ_HOST={{ lookup('env', 'RABBITMQ_HOST') | default('rabbitmq', true) }}
+          RABBITMQ_PORT={{ lookup('env', 'RABBITMQ_PORT') | default('5672', true) }}
+          MONGODB_URI={{ lookup('env', 'MONGODB_URI') | default('', true) }}
+          GOOGLE_API_KEY={{ lookup('env', 'GOOGLE_API_KEY') | default('', true) }}
+          OPENAI_API_KEY={{ lookup('env', 'OPENAI_API_KEY') | default('', true) }}
+          OPENAI_BASE_URL={{ lookup('env', 'OPENAI_BASE_URL') | default('', true) }}
+
+    - name: Pull Docker images
+      command: docker compose pull
       args:
         chdir: "{{ app_dir }}"
-      environment:
-        # Pass secrets as env vars from the environment where ansible runs (e.g., CI)
-        # Assuming the env file or GH Actions will supply these
-        POSTGRES_USER: "{{ lookup('env', 'POSTGRES_USER') | default('user', true) }}"
-        POSTGRES_PASSWORD: "{{ lookup('env', 'POSTGRES_PASSWORD') | default('password', true) }}"
-        POSTGRES_URL: "{{ lookup('env', 'POSTGRES_URL') | default('jdbc:postgresql://postgres:5432/appdb', true) }}"
-        RABBITMQ_USER: "{{ lookup('env', 'RABBITMQ_USER') | default('guest', true) }}"
-        RABBITMQ_PASSWORD: "{{ lookup('env', 'RABBITMQ_PASSWORD') | default('guest', true) }}"
-        RABBITMQ_HOST: "{{ lookup('env', 'RABBITMQ_HOST') | default('rabbitmq', true) }}"
-        RABBITMQ_PORT: "{{ lookup('env', 'RABBITMQ_PORT') | default('5672', true) }}"
-        MONGODB_URI: "{{ lookup('env', 'MONGODB_URI') | default('', true) }}"
-        GOOGLE_API_KEY: "{{ lookup('env', 'GOOGLE_API_KEY') | default('', true) }}"
-        OPENAI_API_KEY: "{{ lookup('env', 'OPENAI_API_KEY') | default('', true) }}"
-        OPENAI_BASE_URL: "{{ lookup('env', 'OPENAI_BASE_URL') | default('', true) }}"
+      async: 600
+      poll: 15
+
+    - name: Start the application with Docker Compose
+      command: docker compose up -d
+      args:
+        chdir: "{{ app_dir }}"

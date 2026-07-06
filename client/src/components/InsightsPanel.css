@@ -45,6 +45,12 @@
 	margin-left: auto;
 }
 
+.insights-model {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	color: var(--muted-foreground, rgba(255, 255, 255, 0.5));
+}
+
 /* ─── Sections ───────────────────────────────────────── */
 
 .insights-section {

@@ -1,5 +1,9 @@
 from typing import Any
 
+LOCAL_MODEL_N_CTX = 4096
+LOCAL_MODEL_MAX_OUTPUT_TOKENS = 768
+LOCAL_MODEL_SYSTEM_PROMPT = "You are DevPulse AI Insighter. Return valid JSON only."
+
 
 class Model:
     """
@@ -43,7 +47,7 @@ class Model:
 
             self._client = Llama(
                 model_path=self.model_path,
-                n_ctx=4096,
+                n_ctx=LOCAL_MODEL_N_CTX,
                 n_threads=4,
                 verbose=False,
             )
@@ -56,6 +60,15 @@ class Model:
 
         raise ValueError(f"Unknown provider: {self.provider}")
 
+    def count_tokens(self, text: str) -> int:
+        """Tokenizes text with the local model's own tokenizer, without running inference.
+
+        Only meaningful for the local Qwen/llama.cpp backend, which has a fixed context
+        window. Loads the model if it isn't already cached.
+        """
+        client = self._load()
+        return len(client.tokenize(text.encode("utf-8")))
+
     def generate(self, prompt: str) -> str:
         client = self._load()
 
@@ -64,15 +77,23 @@ class Model:
             return getattr(response, "text", "") or ""
 
         if self.provider == "qwen":
+            prompt_tokens = self.count_tokens(f"{LOCAL_MODEL_SYSTEM_PROMPT}\n{prompt}")
+            available_tokens = LOCAL_MODEL_N_CTX - LOCAL_MODEL_MAX_OUTPUT_TOKENS
+            if prompt_tokens > available_tokens:
+                raise ValueError(
+                    f"Content is too large for local inference (~{prompt_tokens} tokens, "
+                    f"limit ~{available_tokens}). Please switch to cloud mode."
+                )
+
             result = client.create_chat_completion(
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are DevPulse AI Insighter. Return valid JSON only.",
+                        "content": LOCAL_MODEL_SYSTEM_PROMPT,
                     },
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=768,
+                max_tokens=LOCAL_MODEL_MAX_OUTPUT_TOKENS,
                 temperature=0.1,
             )
             return result["choices"][0]["message"]["content"]

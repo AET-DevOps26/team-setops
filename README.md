@@ -9,7 +9,7 @@ DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and 
   - Shows logs, alerts, notes, and AI-generated insights.
 
 - **Server microservices:** `services/spring-*`
-  - Java 21 / Spring Boot 3 services.
+  - Java 25 / Spring Boot 4 services.
   - The server side is split into at least three microservices with separate responsibilities.
   - Exposes REST APIs and coordinates persistent storage and GenAI analysis.
 
@@ -18,7 +18,7 @@ DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and 
   - Produces summaries, troubleshooting hints, and possible next steps from log content.
 
 - **Infrastructure:** `infra/`
-  - Place for Docker Compose, Kubernetes or Helm files, database setup, Prometheus, and Grafana.
+  - Place for Docker Compose, Kubernetes or Helm files, Terraform, Ansible, database setup, Prometheus, and Grafana.
 
 ## Repository Layout
 
@@ -33,8 +33,16 @@ repo/
 │   ├── spring-alerts/     # Spring Boot service for alerts/incident state
 │   └── py-intelligence/   # Python GenAI service
 ├── client/                # Client component
-├── infra/                 # Docker Compose, Kubernetes, database, monitoring
-└── .github/workflows/     # CI pipelines
+├── infra/
+│   ├── docker-compose.yml      # Local development (builds from source)
+│   ├── docker-compose.prod.yml # Production (pulls GHCR images)
+│   ├── k8s/                    # Kubernetes/Kustomize manifests (Rancher)
+│   ├── terraform/              # IaC – Azure VM provisioning
+│   ├── ansible/                # Configuration management – VM setup & app deploy
+│   └── nginx/                  # Nginx gateway configuration
+└── .github/workflows/
+    ├── ci-cd.yml               # CI tests + Rancher K8s deployment
+    └── deploy-azure.yml        # Azure VM deployment (Terraform + Ansible)
 ```
 
 ## Basic Flow
@@ -72,6 +80,21 @@ _(Note: You do not need Java, Python, or Node.js installed on your host machine 
 ```bash
 cd infra
 docker-compose up --build
+```
+
+### 🔒 Pre-commit Hooks
+
+This repository uses [pre-commit](https://pre-commit.com/) to run automated checks (linting, formatting, YAML validation, etc.) before every commit. Set it up once after cloning:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+After this, hooks run automatically on `git commit`. To run all hooks against the entire codebase manually:
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Local Build and Test Commands for individual components
@@ -189,19 +212,87 @@ kubectl get all -n devpulse-prod
   ```
   Then open [http://localhost:8080](http://localhost:8080) in your browser.
 
+---
+
+## ☁️ Azure Deployment (Terraform + Ansible)
+
+In addition to the Rancher Kubernetes cluster, the application is also deployable to **Microsoft Azure** using **Terraform** (Infrastructure as Code) and **Ansible** (Configuration Management). This provides a second, independent deployment environment.
+
+### How It Works
+
+1. **Terraform** (`infra/terraform/`) provisions the Azure infrastructure:
+   - A Resource Group, Virtual Network, Subnet, and Public IP in the `polandcentral` region.
+   - A Network Security Group allowing SSH (port 22), HTTP (port 80), and HTTPS (port 443).
+   - An Ubuntu 24.04 LTS Virtual Machine (`Standard_DS2_v3`).
+   - After provisioning, Terraform automatically generates the Ansible inventory file with the VM's public IP.
+
+2. **Ansible** (`infra/ansible/`) configures the VM:
+   - Installs Docker and Docker Compose from official repositories.
+   - Copies the production `docker-compose.prod.yml` and Nginx configuration to the VM.
+   - Starts the full application stack using the pre-built GHCR Docker images.
+
+3. **GitHub Actions** (`deploy-azure.yml`) orchestrates this end-to-end on every push to `main`.
+
+### Prerequisites (Additional GitHub Repository Secrets)
+
+The Azure deployment pipeline requires the following **additional** secrets:
+
+| Secret                | Description                                     |
+| :-------------------- | :---------------------------------------------- |
+| `ARM_CLIENT_ID`       | Azure Service Principal `appId`                 |
+| `ARM_CLIENT_SECRET`   | Azure Service Principal `password`              |
+| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID                           |
+| `ARM_TENANT_ID`       | Azure Active Directory `tenant` ID              |
+| `SSH_PRIVATE_KEY`     | Private SSH key for Ansible to access the VM    |
+| `SSH_PUBLIC_KEY`      | Public SSH key injected into the VM at creation |
+
+To create the Service Principal, run locally:
+
+```bash
+az ad sp create-for-rbac --name "github-actions-team-setops" --role contributor --scopes /subscriptions/<YOUR_SUBSCRIPTION_ID>
+```
+
+### Manual Deployment
+
+To deploy to Azure manually from your local machine (requires Azure CLI and Ansible):
+
+```bash
+# 1. Provision the VM
+cd infra/terraform
+terraform init
+terraform apply -auto-approve
+
+# 2. Configure and deploy the application
+cd ../ansible
+ansible-playbook playbook.yml
+```
+
+### Accessing the Application on Azure
+
+Once deployed, the application is accessible via a nice, fully qualified domain name (FQDN). You can find the exact URL from the Terraform output:
+
+```bash
+cd infra/terraform
+terraform output vm_fqdn
+```
+
+Then open `http://<vm_fqdn>` in your browser. (The raw IP is also available via `terraform output vm_public_ip`).
+
+---
+
 ## Monitoring
 
 Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`), with the same dashboards, alerting rules, and Telegram integration. In K8s, config is mounted from ConfigMaps instead of bind-mounted files.
 
 **Local (docker-compose):**
-* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/), default login `admin` / `admin`.
-* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/), gated by HTTP basic auth. Default `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. Credential file is generated at container startup, never committed.
+* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
+* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth. Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, never committed.
 
 **Kubernetes:**
 * **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
 * **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/), same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
 
-*Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics. Neither the local nor the in-cluster Prometheus scrapes those (both only scrape our own app-level `/actuator/prometheus` and `/metrics` endpoints), so that specific dashboard stays empty by design in both environments unless pointed at a Prometheus that does scrape cAdvisor.*
+*Note: the Azure VM sizing dashboard estimates RAM from our own app-level metrics (JVM memory, py-intelligence resident memory), so it works in both local and in-cluster Grafana.*
 
 ## API Documentation (Swagger UI)
 
@@ -213,3 +304,20 @@ Interactive API documentation (Swagger UI) is automatically generated and access
 - **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
 
 _(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties)._
+
+## Team & Responsibilities
+
+- Muhammed Emre Bayraktaroglu
+   - GitHub username - memreo
+   - TUMOnline - ge95jes
+   - Primary subsystem owned - GenAI
+
+- Sehmuel Wagner
+   - GitHub username - sachmii
+   - TUMOnline - ge84qiy
+   - Primary subsystem owned - Client
+
+- Taha Huzefa Hundekari
+   - GitHub username - tahahundekari
+   - TUMOnline - ge47mut
+   - Primary subsystem owned - Server

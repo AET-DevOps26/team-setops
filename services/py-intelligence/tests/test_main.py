@@ -8,6 +8,7 @@ from app.func import AVAILABLE_MODELS
 client = TestClient(app)
 
 LOCAL_ANALYSIS_RESPONSE = {
+    "model": "Qwen",
     "problem_type": "database_connectivity",
     "severity": "high",
     "summary": "The model identified a database connectivity issue.",
@@ -43,6 +44,7 @@ def test_analyze_endpoint_returns_structured_analysis(mock_get_model) -> None:
     model execution, and structured normalization.
     """
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
     mock_get_model.return_value = mock_model
 
@@ -77,6 +79,7 @@ def test_analyze_endpoint_uses_rag(mock_search, mock_get_model) -> None:
         }
     ]
     mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
     mock_model.generate.return_value = json.dumps(
         {
             **LOCAL_ANALYSIS_RESPONSE,
@@ -394,6 +397,61 @@ def test_model_load_raises_value_error_for_unknown_provider() -> None:
         model._load()
 
 
+def _qwen_model():
+    from app.model import Model
+
+    return Model(
+        {
+            "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+            "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+            "provider": "Qwen",
+            "shortened": "Qwen",
+            "cloud": False,
+        }
+    )
+
+
+def test_count_tokens_uses_local_tokenizer() -> None:
+    """Verifies that count_tokens delegates to the loaded local model's own tokenizer."""
+    model = _qwen_model()
+    mock_client = MagicMock()
+    mock_client.tokenize.return_value = [1, 2, 3, 4, 5]
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        assert model.count_tokens("some text") == 5
+        mock_client.tokenize.assert_called_once_with(b"some text")
+
+
+def test_qwen_generate_raises_value_error_on_token_overflow() -> None:
+    """Verifies that generate() rejects oversized local prompts before running inference."""
+    from app.model import LOCAL_MODEL_N_CTX, LOCAL_MODEL_MAX_OUTPUT_TOKENS
+
+    model = _qwen_model()
+    mock_client = MagicMock()
+    overflow_token_count = LOCAL_MODEL_N_CTX - LOCAL_MODEL_MAX_OUTPUT_TOKENS + 1
+    mock_client.tokenize.return_value = list(range(overflow_token_count))
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        with pytest.raises(ValueError, match="switch to cloud mode"):
+            model.generate("a very long prompt")
+
+    mock_client.create_chat_completion.assert_not_called()
+
+
+def test_qwen_generate_success_within_budget() -> None:
+    """Verifies that generate() runs local inference normally when the prompt fits the context budget."""
+    model = _qwen_model()
+    mock_client = MagicMock()
+    mock_client.tokenize.return_value = [1, 2, 3]
+    mock_client.create_chat_completion.return_value = {"choices": [{"message": {"content": '{"ok": true}'}}]}
+
+    with patch("app.model.Model._load", return_value=mock_client):
+        result = model.generate("short prompt")
+
+    assert result == '{"ok": true}'
+    assert mock_client.create_chat_completion.call_args.kwargs["max_tokens"] == 768
+
+
 def test_openai_model_load_and_generate() -> None:
     """Verifies that the Model class successfully handles the OpenAI provider."""
     from app.model import Model
@@ -440,4 +498,105 @@ def test_analyze_fallback_to_openai(mock_models) -> None:
         res = intel.analyze(content="test logs", mode="cloud", use_rag=False)
 
         assert res["problem_type"] == LOCAL_ANALYSIS_RESPONSE["problem_type"]
+        assert res["model"] == openai_model.shortened
         mock_openai_gen.assert_called_once()
+
+
+@patch("app.apis.db")
+@patch("app.apis.intelligence.get_model_for_mode")
+def test_analyze_persists_with_log_id(mock_get_model, mock_db) -> None:
+    """Verifies that /api/v1/analyze upserts the result into completed_analyses when log_id is given."""
+    mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
+    mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
+    mock_get_model.return_value = mock_model
+    collection = mock_db.db["completed_analyses"]
+    collection.count_documents.return_value = 1
+
+    response = client.post(
+        "/api/v1/analyze",
+        json={
+            "content": "Deployment failed: database connection timeout",
+            "mode": "local",
+            "log_id": "log-123",
+        },
+    )
+
+    assert response.status_code == 200
+    collection.insert_one.assert_not_called()
+    collection.update_one.assert_called_once()
+    args, kwargs = collection.update_one.call_args
+    assert args[0] == {"log_id": "log-123"}
+    assert kwargs.get("upsert") is True
+    assert args[1]["$set"]["log_id"] == "log-123"
+    assert args[1]["$set"]["problem_type"] == LOCAL_ANALYSIS_RESPONSE["problem_type"]
+
+
+@patch("app.apis.db")
+@patch("app.apis.intelligence.get_model_for_mode")
+def test_analyze_without_log_id_inserts_without_upsert(mock_get_model, mock_db) -> None:
+    """Verifies that /api/v1/analyze inserts a plain record when no log_id is given."""
+    mock_model = MagicMock()
+    mock_model.shortened = "Qwen"
+    mock_model.generate.return_value = json.dumps(LOCAL_ANALYSIS_RESPONSE)
+    mock_get_model.return_value = mock_model
+    collection = mock_db.db["completed_analyses"]
+    collection.count_documents.return_value = 1
+
+    response = client.post(
+        "/api/v1/analyze",
+        json={"content": "Deployment failed: database connection timeout", "mode": "local"},
+    )
+
+    assert response.status_code == 200
+    collection.update_one.assert_not_called()
+    collection.insert_one.assert_called_once()
+    assert "log_id" not in collection.insert_one.call_args.args[0]
+
+
+@patch("app.apis.db")
+def test_query_analyses_returns_persisted_results(mock_db) -> None:
+    """Verifies that /api/v1/analyses/query returns persisted analyses keyed by log_id."""
+    collection = mock_db.db["completed_analyses"]
+    collection.find.return_value = [{"log_id": "log-123", **LOCAL_ANALYSIS_RESPONSE}]
+
+    response = client.post("/api/v1/analyses/query", json={"log_ids": ["log-123", "log-456"]})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert list(body.keys()) == ["log-123"]
+    assert body["log-123"]["problem_type"] == LOCAL_ANALYSIS_RESPONSE["problem_type"]
+    collection.find.assert_called_once_with({"log_id": {"$in": ["log-123", "log-456"]}})
+
+
+def test_query_analyses_empty_log_ids_returns_empty_dict() -> None:
+    """Verifies that /api/v1/analyses/query short-circuits to an empty map for an empty log_ids list."""
+    response = client.post("/api/v1/analyses/query", json={"log_ids": []})
+
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+@patch("app.apis.db")
+def test_delete_analysis_removes_single_entry(mock_db) -> None:
+    """Verifies that DELETE /api/v1/analyses/{log_id} removes only the matching persisted analysis."""
+    collection = mock_db.db["completed_analyses"]
+    collection.count_documents.return_value = 0
+
+    response = client.delete("/api/v1/analyses/log-123")
+
+    assert response.status_code == 204
+    collection.delete_one.assert_called_once_with({"log_id": "log-123"})
+
+
+@patch("app.apis.db")
+def test_delete_all_analyses_removes_only_log_linked_entries(mock_db) -> None:
+    """Verifies that DELETE /api/v1/analyses removes only analyses tied to a log_id."""
+    collection = mock_db.db["completed_analyses"]
+    collection.count_documents.return_value = 0
+
+    response = client.delete("/api/v1/analyses")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "All persisted analyses deleted successfully"}
+    collection.delete_many.assert_called_once_with({"log_id": {"$exists": True}})

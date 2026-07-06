@@ -191,132 +191,6 @@
         "y": 14
       },
       "id": 5,
-      "title": "Kubernetes Container Restarts",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line"
-          },
-          "unit": "short"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"devpulse-prod\"}) by (container)",
-          "legendFormat": "{{container}} restarts",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 14
-      },
-      "id": 6,
-      "title": "Kubernetes Container OOM Kills",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line"
-          },
-          "unit": "short"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(kube_pod_container_status_terminated_reason{namespace=\"devpulse-prod\", reason=\"OOMKilled\"}) by (container)",
-          "legendFormat": "{{container}} OOM Kills",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "id": 7,
-      "title": "Kubernetes Container CPU Usage",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth"
-          },
-          "unit": "short"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"devpulse-prod\", container!=\"\"}[5m])) by (container)",
-          "legendFormat": "{{container}} CPU",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 20
-      },
-      "id": 8,
-      "title": "Kubernetes Container Memory Usage (cAdvisor)",
-      "type": "timeseries",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth"
-          },
-          "unit": "bytes"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
-          "legendFormat": "{{container}} Memory",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 26
-      },
-      "id": 9,
       "title": "AI Analysis Latency (Local)",
       "type": "gauge",
       "datasource": {
@@ -373,9 +247,9 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 14
       },
-      "id": 10,
+      "id": 6,
       "title": "AI Analysis Latency (Cloud)",
       "type": "gauge",
       "datasource": {

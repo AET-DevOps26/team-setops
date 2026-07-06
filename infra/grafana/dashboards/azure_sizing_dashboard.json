@@ -25,7 +25,7 @@
       "collapsed": false,
       "gridPos": {
         "h": 6,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 0
       },
@@ -36,7 +36,7 @@
         "type": "prometheus",
         "uid": "prometheus-datasource"
       },
-      "description": "Calculated Azure VM sizing budget, summing container memory usage working set + 15% safety headroom.",
+      "description": "Sum of JVM memory used by the Spring services plus py-intelligence's resident memory, plus 15% safety headroom.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -62,7 +62,7 @@
       },
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) * 1.15",
+          "expr": "(sum(jvm_memory_used_bytes) + sum(process_resident_memory_bytes{job=\"py-intelligence\"})) * 1.15",
           "legendFormat": "Azure VM Target Size",
           "refId": "A"
         }
@@ -72,62 +72,18 @@
       "collapsed": false,
       "gridPos": {
         "h": 6,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 0
       },
       "id": 2,
-      "title": "Total Container Memory Limits",
+      "title": "Total Memory In Use",
       "type": "stat",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus-datasource"
       },
-      "description": "The sum of the memory limits configured for all containers in the devpulse-prod namespace.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "orange"
-          },
-          "unit": "bytes"
-        }
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "textMode": "value_and_name"
-      },
-      "targets": [
-        {
-          "expr": "sum(container_spec_memory_limit_bytes{namespace=\"devpulse-prod\", container!=\"\"})",
-          "legendFormat": "Memory Limit",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 0
-      },
-      "id": 3,
-      "title": "Total Container Memory In Use",
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-datasource"
-      },
-      "description": "Sum of actual physical memory working set used by all containers in the devpulse-prod namespace.",
+      "description": "Sum of actual JVM memory used by the Spring services plus py-intelligence's resident memory, no headroom applied.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -150,7 +106,7 @@
       },
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"})",
+          "expr": "sum(jvm_memory_used_bytes) + sum(process_resident_memory_bytes{job=\"py-intelligence\"})",
           "legendFormat": "Used RAM",
           "refId": "A"
         }
@@ -164,14 +120,14 @@
         "x": 0,
         "y": 6
       },
-      "id": 4,
+      "id": 3,
       "title": "Memory Breakdown by Service",
       "type": "bargauge",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus-datasource"
       },
-      "description": "Actual container memory working set usage per individual service in the devpulse-prod namespace.",
+      "description": "JVM memory per Spring service, resident memory for py-intelligence.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -193,9 +149,14 @@
       },
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
-          "legendFormat": "{{container}}",
+          "expr": "sum(jvm_memory_used_bytes) by (instance)",
+          "legendFormat": "{{instance}}",
           "refId": "A"
+        },
+        {
+          "expr": "process_resident_memory_bytes{job=\"py-intelligence\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "B"
         }
       ]
     },
@@ -207,7 +168,7 @@
         "x": 10,
         "y": 6
       },
-      "id": 5,
+      "id": 4,
       "title": "Memory Growth Timeline",
       "type": "timeseries",
       "datasource": {
@@ -225,9 +186,14 @@
       },
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"devpulse-prod\", container!=\"\"}) by (container)",
-          "legendFormat": "{{container}}",
+          "expr": "sum(jvm_memory_used_bytes) by (instance)",
+          "legendFormat": "{{instance}}",
           "refId": "A"
+        },
+        {
+          "expr": "process_resident_memory_bytes{job=\"py-intelligence\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "B"
         }
       ]
     }
@@ -250,5 +216,5 @@
   "uid": "azure-sizing-memory",
   "version": 1,
   "weekStart": "",
-  "description": "Requires a cluster-level Prometheus scraping cAdvisor/kube-state-metrics (container_memory_working_set_bytes, container_spec_memory_limit_bytes). The local docker-compose Prometheus only scrapes application-level metrics, so these panels stay empty in local dev by design \u2014 import this dashboard into the shared cluster Grafana to see real data."
+  "description": "Estimates Azure VM RAM sizing from JVM memory (Spring services) and process resident memory (py-intelligence). Works in local docker-compose and the shared cluster."
 }

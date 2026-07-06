@@ -60,7 +60,7 @@ function App() {
 
 		const resolvedIds = new Set((incidentsRes.data || []).map((inc) => inc.logId));
 
-		return (logsRes.data || []).map((log) => {
+		const logs = (logsRes.data || []).map((log) => {
 			// Backend entity uses "logId"; normalise to "id" for the frontend
 			const id = log.id ?? log.logId;
 			return {
@@ -69,6 +69,25 @@ function App() {
 				resolved: resolvedIds.has(id),
 			};
 		});
+
+		// Re-attach any previously generated analyses so they survive a reload
+		// instead of vanishing until the user re-runs the analysis.
+		if (logs.length > 0) {
+			try {
+				const { data: analyses } = await client.POST("/api/v1/analyses/query", {
+					body: { log_ids: logs.map((l) => l.id) },
+				});
+				if (analyses) {
+					for (const log of logs) {
+						if (analyses[log.id]) log.analysis = analyses[log.id];
+					}
+				}
+			} catch (err) {
+				console.error("Failed to load persisted analyses:", err);
+			}
+		}
+
+		return logs;
 	}, []);
 
 	/* ── Load timeline & resolved state on mount ────────── */
@@ -124,7 +143,7 @@ function App() {
 
 			try {
 				const { data, error, response } = await client.POST("/api/v1/analyze", {
-					body: { content: log.logContent, mode, use_rag: useRag, context: null },
+					body: { content: log.logContent, mode, use_rag: useRag, context: null, log_id: log.id },
 				});
 				if (!response.ok || error) {
 					throw new Error(error?.detail || `Analysis failed (${response.status})`);
@@ -155,6 +174,12 @@ function App() {
 			}
 		} catch (e) {
 			console.error("Delete error:", e);
+		}
+		// drop the persisted analysis too, so it doesn't outlive its log.
+		try {
+			await client.DELETE("/api/v1/analyses/{log_id}", { params: { path: { log_id: id } } });
+		} catch (e) {
+			console.error("Failed to delete persisted analysis:", e);
 		}
 		setLogs((prev) => prev.filter((l) => l.id !== id));
 		setSelectedLogId((prev) => (prev === id ? null : prev));
@@ -235,6 +260,12 @@ function App() {
 										}
 									} catch(e) {
 										console.error("Clear logs error:", e);
+									}
+									// drop any persisted analyses along with the logs.
+									try {
+										await client.DELETE("/api/v1/analyses");
+									} catch (e) {
+										console.error("Failed to clear persisted analyses:", e);
 									}
 									setLogs([]);
 									setSelectedLogId(null);

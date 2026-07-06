@@ -20,25 +20,26 @@ AVAILABLE_MODELS = [
     {
         "name": "gemini-3.5-flash",
         "provider": "google",
-        "shortened": "Gemini",
+        "shortened": "Gemini 3.5 Flash",
         "cloud": True,
     },
     {
         "name": "openai/gpt-oss-120b",
         "provider": "openai",
-        "shortened": "GPT",
+        "shortened": "GPT OSS 120B",
         "cloud": True,
     },
     {
         "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
         "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
-        "shortened": "Qwen",
+        "shortened": "Qwen 2.5 Coder",
         "cloud": False,
     },
 ]
 
 REQUIRED_RESPONSE_KEYS = [
+    "model",
     "problem_type",
     "severity",
     "summary",
@@ -171,6 +172,7 @@ class Intelligence:
                 the response cannot be parsed into a valid JSON structure.
         """
         model = self.get_model_for_mode(mode)
+        used_model = model
         prompt = self._build_analysis_prompt(content, mode, use_rag, context, retrieved_docs or [])
         INFERENCE_TOTAL.labels(mode=mode).inc()
         try:
@@ -182,12 +184,15 @@ class Intelligence:
                     fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
                     INFERENCE_FALLBACK_TOTAL.inc()
                     raw_response = fallback_model.generate(prompt)
+                    used_model = fallback_model
                 except StopIteration:
                     raise e
             else:
                 raise e
         parsed_response = self._parse_model_response(raw_response)
-        return self._normalize_response(parsed_response, retrieved_docs or [], use_rag)
+        normalized = self._normalize_response(parsed_response, retrieved_docs or [], use_rag)
+        normalized["model"] = used_model.shortened
+        return normalized
 
     def _build_analysis_prompt(
         self,

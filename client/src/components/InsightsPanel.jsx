@@ -108,6 +108,9 @@ export default function InsightsPanel({
 				>
 					{result.confidence} confidence
 				</span>
+				{result.model && (
+					<span className="insights-model">via {result.model}</span>
+				)}
 			</div>
 
 			{/* Summary */}

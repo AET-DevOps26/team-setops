@@ -85,8 +85,12 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
 
+    - name: Log in to GitHub Container Registry
+      command: docker login ghcr.io -u github -p "{{ lookup('env', 'GHCR_TOKEN') }}"
+      no_log: true
+
     - name: Start the application with Docker Compose
-      command: docker compose up -d
+      command: docker compose up -d --pull always
       args:
         chdir: "{{ app_dir }}"
       environment:

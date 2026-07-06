@@ -18,8 +18,8 @@ variable "vm_name" {
 
 variable "vm_size" {
   type        = string
-  description = "The size of the virtual machine. Using Standard_DS2_v3."
-  default     = "Standard_DS2_v3"
+  description = "The size of the virtual machine. Using Standard_E2s_v6 as DS2_v3 is unavailable in polandcentral."
+  default     = "Standard_E2s_v6"
 }
 
 variable "admin_username" {

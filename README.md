@@ -292,7 +292,7 @@ Prometheus and Grafana run both locally (docker-compose) and in the cluster (`in
 * **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
 * **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/), same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
 
-*Note: the Azure VM sizing dashboard queries cAdvisor/kube-state-metrics. Neither the local nor the in-cluster Prometheus scrapes those (both only scrape our own app-level `/actuator/prometheus` and `/metrics` endpoints), so that specific dashboard stays empty by design in both environments unless pointed at a Prometheus that does scrape cAdvisor.*
+*Note: the Azure VM sizing dashboard estimates RAM from our own app-level metrics (JVM memory, py-intelligence resident memory), so it works in both local and in-cluster Grafana.*
 
 ## API Documentation (Swagger UI)
 

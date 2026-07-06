@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from prometheus_client import Counter
+from prometheus_client import Counter, Histogram
 
 from app.model import Model
 
@@ -14,6 +14,9 @@ INFERENCE_TOTAL = Counter("devpulse_inference_total", "Total number of AI infere
 INFERENCE_FALLBACK_TOTAL = Counter(
     "devpulse_inference_fallback_total",
     "Total number of times cloud inference fell back from Gemini to the OpenAI-compatible model",
+)
+INFERENCE_DURATION_SECONDS = Histogram(
+    "devpulse_inference_duration_seconds", "Duration of AI inference requests by mode", ["mode"]
 )
 
 AVAILABLE_MODELS = [
@@ -175,20 +178,21 @@ class Intelligence:
         used_model = model
         prompt = self._build_analysis_prompt(content, mode, use_rag, context, retrieved_docs or [])
         INFERENCE_TOTAL.labels(mode=mode).inc()
-        try:
-            raw_response = model.generate(prompt)
-        except Exception as e:
-            # Fallback to OpenAI GPT model if Gemini cloud provider fails
-            if mode == "cloud":
-                try:
-                    fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
-                    INFERENCE_FALLBACK_TOTAL.inc()
-                    raw_response = fallback_model.generate(prompt)
-                    used_model = fallback_model
-                except StopIteration:
+        with INFERENCE_DURATION_SECONDS.labels(mode=mode).time():
+            try:
+                raw_response = model.generate(prompt)
+            except Exception as e:
+                # Fallback to OpenAI GPT model if Gemini cloud provider fails
+                if mode == "cloud":
+                    try:
+                        fallback_model = next(m for m in self.models if m.cloud and m.provider == "openai")
+                        INFERENCE_FALLBACK_TOTAL.inc()
+                        raw_response = fallback_model.generate(prompt)
+                        used_model = fallback_model
+                    except StopIteration:
+                        raise e
+                else:
                     raise e
-            else:
-                raise e
         parsed_response = self._parse_model_response(raw_response)
         normalized = self._normalize_response(parsed_response, retrieved_docs or [], use_rag)
         normalized["model"] = used_model.shortened

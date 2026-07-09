@@ -33,10 +33,10 @@ AVAILABLE_MODELS = [
         "cloud": True,
     },
     {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
-        "shortened": "Qwen 2.5 Coder",
+        "shortened": "Qwen 2.5 Coder 1.5B",
         "cloud": False,
     },
 ]

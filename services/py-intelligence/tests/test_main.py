@@ -33,8 +33,8 @@ def test_local_model_matches_docker_gguf() -> None:
     """Verifies that the configured local model properties match the GGUF model path inside Docker."""
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])
 
-    assert local_model["name"] == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
-    assert local_model["model_path"] == "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+    assert local_model["name"] == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
+    assert local_model["model_path"] == "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
 
 
 @patch("app.apis.intelligence.get_model_for_mode")
@@ -308,8 +308,8 @@ def test_model_initialization_and_string_representation() -> None:
         "cloud": True,
     }
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -323,10 +323,10 @@ def test_model_initialization_and_string_representation() -> None:
     assert model_google.cloud is True
     assert str(model_google) == "google - gemini-3.5-flash (cloud)"
 
-    assert model_qwen.model_name == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
+    assert model_qwen.model_name == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
     assert model_qwen.provider == "qwen"
     assert model_qwen.cloud is False
-    assert str(model_qwen) == "qwen - Qwen/Qwen2.5-Coder-3B-Instruct-GGUF (local)"
+    assert str(model_qwen) == "qwen - Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF (local)"
 
 
 def test_model_load_raises_runtime_error_on_import_error_google() -> None:
@@ -351,8 +351,8 @@ def test_model_load_raises_runtime_error_on_import_error_qwen() -> None:
     from app.model import Model
 
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -369,7 +369,7 @@ def test_model_load_raises_runtime_error_if_qwen_path_missing() -> None:
     from app.model import Model
 
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -402,8 +402,8 @@ def _qwen_model():
 
     return Model(
         {
-            "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-            "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+            "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+            "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
             "provider": "Qwen",
             "shortened": "Qwen",
             "cloud": False,

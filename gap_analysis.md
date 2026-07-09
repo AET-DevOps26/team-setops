@@ -30,7 +30,7 @@
 | 2.2 | **Containerised microservice** | ✅ | [Dockerfile](file:///Users/semiwag/VSCode/uni/DevOps/team-setops/services/py-intelligence/Dockerfile) present |
 | 2.3 | **Real user-facing feature** | ✅ | Log analysis with structured output (problem type, severity, solutions) — accessible from the React dashboard |
 | 2.4 | **Cloud model support (OpenAI API)** | ✅ | `GOOGLE_API_KEY` env var + cloud mode in code |
-| 2.5 | **Local model support (GPT4All, LLaMA)** | ✅ | Uses `llama-cpp-python` with Qwen2.5-Coder-3B-Instruct GGUF model |
+| 2.5 | **Local model support (GPT4All, LLaMA)** | ✅ | Uses `llama-cpp-python` with Qwen2.5-Coder-1.5B-Instruct GGUF model |
 | 2.6 | **Bonus: RAG with Weaviate** | ⚠️ | RAG is implemented (MongoDB + custom embeddings), but **not using Weaviate** as recommended. Uses MongoDB as vector store instead. Still a valid RAG implementation but doesn't hit the exact bonus. |
 
 ---

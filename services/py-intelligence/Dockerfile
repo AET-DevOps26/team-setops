@@ -26,7 +26,7 @@ snapshot_download(repo_id='nomic-ai/nomic-embed-text-v1.5')"
 
 # 3. Light QWEN
 RUN python -c "from huggingface_hub import hf_hub_download; \
-hf_hub_download(repo_id='Qwen/Qwen2.5-Coder-3B-Instruct-GGUF', filename='qwen2.5-coder-3b-instruct-q4_k_m.gguf', local_dir='/app/models')"
+hf_hub_download(repo_id='Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF', filename='qwen2.5-coder-1.5b-instruct-q4_k_m.gguf', local_dir='/app/models')"
 
 # Copy the rest of the application code
 COPY . .

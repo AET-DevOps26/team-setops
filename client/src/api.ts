@@ -242,8 +242,6 @@ export interface components {
             local_threads?: number | null;
             /** @description Recommended CPU threads for good local inference performance. */
             local_threads_recommended?: number | null;
-            /** @description The container's actual CPU limit in cores, read from cgroups. */
-            cpu_limit_cores?: number | null;
         };
         AnalyzeRequest: {
             /** @description Raw log/text content to analyze. */

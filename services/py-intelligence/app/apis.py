@@ -59,8 +59,11 @@ def health() -> dict[str, str | int]:
     response: dict[str, str | int] = {"status": "ok", "service": "py-intelligence"}
     llama_threads = os.getenv("LLAMA_N_THREADS")
     if llama_threads:
-        response["local_threads"] = int(llama_threads)
-        response["local_threads_recommended"] = LOCAL_MODEL_RECOMMENDED_THREADS
+        try:
+            response["local_threads"] = int(llama_threads)
+            response["local_threads_recommended"] = LOCAL_MODEL_RECOMMENDED_THREADS
+        except ValueError:
+            pass
     return response
 
 

@@ -40,6 +40,17 @@ def test_health_reports_constrained_threads_when_env_set() -> None:
     assert body["local_threads_recommended"] == 4
 
 
+def test_health_ignores_non_integer_llama_n_threads() -> None:
+    """Verifies that /health doesn't crash if LLAMA_N_THREADS is misconfigured."""
+    with patch.dict("os.environ", {"LLAMA_N_THREADS": "not-a-number"}):
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "local_threads" not in body
+    assert "local_threads_recommended" not in body
+
+
 def test_local_model_matches_docker_gguf() -> None:
     """Verifies that the configured local model properties match the GGUF model path inside Docker."""
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])

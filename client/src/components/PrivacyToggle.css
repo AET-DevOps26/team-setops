@@ -125,7 +125,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 12px;
-	max-width: 400px;
+	max-width: min(400px, calc(100vw - 64px));
 	padding: 16px 18px;
 	border: 1px solid var(--chart-5);
 	background: var(--card);
@@ -163,6 +163,12 @@
 
 .toggle-alert-close:hover {
 	opacity: 1;
+}
+
+.toggle-alert-close:focus-visible {
+	opacity: 1;
+	outline: 2px solid var(--chart-5);
+	outline-offset: 2px;
 }
 
 /* ─── Responsive ──────────────────────────────────────── */

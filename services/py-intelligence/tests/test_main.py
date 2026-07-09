@@ -230,6 +230,41 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
     assert normalized_rag["sources"][0]["snippet"] == "This is a detailed snippet of Doc 1."
 
 
+def test_normalize_response_coerces_invalid_confidence_to_low() -> None:
+    """Verifies that a non-enum confidence value (e.g. a number) is coerced to 'low'."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    normalized = intel._normalize_response({"confidence": 100}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "low"
+
+    normalized = intel._normalize_response({"confidence": "very sure"}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "low"
+
+
+def test_normalize_response_lowercases_valid_confidence() -> None:
+    """Verifies that a valid but differently-cased confidence value is normalized to lowercase."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    normalized = intel._normalize_response({"confidence": "High"}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "high"
+
+
+def test_normalize_response_strips_hallucinated_sources_without_rag() -> None:
+    """Verifies that sources are always empty when RAG wasn't used, even if the model invents some."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    hallucinated = {"sources": [{"id": "made up source", "title": "Not real"}]}
+    normalized = intel._normalize_response(hallucinated, retrieved_docs=[], use_rag=False)
+
+    assert normalized["sources"] == []
+
+
 def test_removed_endpoints_return_404() -> None:
     """Verifies that older/removed service endpoints correctly return a 404 Not Found status."""
     assert client.get("/api/v1/models").status_code == 404

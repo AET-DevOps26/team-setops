@@ -351,9 +351,7 @@ class Intelligence:
         """
         normalized = {key: response.get(key) for key in REQUIRED_RESPONSE_KEYS}
 
-        # Sources are only meaningful when RAG was actually used. Smaller/less reliable
-        # models sometimes hallucinate plausible-looking sources even without RAG context,
-        # so ignore whatever the model returned here entirely in that case.
+        # Models sometimes hallucinate sources even without RAG; ignore them entirely then.
         standardized_sources = []
         if use_rag:
             raw_sources = normalized["sources"]
@@ -397,9 +395,7 @@ class Intelligence:
         normalized["solutions"] = normalized["solutions"] or []
         normalized["sources"] = standardized_sources
 
-        # Confidence must be one of the three allowed levels. Smaller/less reliable models
-        # sometimes return a number (e.g. a percentage) instead of following the enum, which
-        # would otherwise leak an invalid value straight into the API response.
+        # Some models return a number instead of the enum; coerce or default to "low".
         confidence = normalized["confidence"]
         if isinstance(confidence, str) and confidence.strip().lower() in ("low", "medium", "high"):
             normalized["confidence"] = confidence.strip().lower()

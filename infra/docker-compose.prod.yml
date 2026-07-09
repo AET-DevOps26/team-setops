@@ -19,13 +19,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: '0.5'
           memory: 512M
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d appdb" ]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # -------------------------------------
   # Message Broker
@@ -47,7 +48,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
+          cpus: '0.5'
           memory: 512M
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]

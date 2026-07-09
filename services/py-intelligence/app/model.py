@@ -4,6 +4,7 @@ from typing import Any
 LOCAL_MODEL_N_CTX = 4096
 LOCAL_MODEL_MAX_OUTPUT_TOKENS = 768
 LOCAL_MODEL_SYSTEM_PROMPT = "You are DevPulse AI Insighter. Return valid JSON only."
+LOCAL_MODEL_RECOMMENDED_THREADS = 4
 
 
 class Model:
@@ -49,7 +50,7 @@ class Model:
             self._client = Llama(
                 model_path=self.model_path,
                 n_ctx=LOCAL_MODEL_N_CTX,
-                n_threads=int(os.getenv("LLAMA_N_THREADS", "4")),
+                n_threads=int(os.getenv("LLAMA_N_THREADS", str(LOCAL_MODEL_RECOMMENDED_THREADS))),
                 verbose=False,
             )
             return self._client

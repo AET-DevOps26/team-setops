@@ -29,6 +29,17 @@ def test_health() -> None:
     assert response.json() == {"status": "ok", "service": "py-intelligence"}
 
 
+def test_health_reports_constrained_threads_when_env_set() -> None:
+    """Verifies that /health surfaces local_threads only when LLAMA_N_THREADS is set."""
+    with patch.dict("os.environ", {"LLAMA_N_THREADS": "2"}):
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["local_threads"] == 2
+    assert body["local_threads_recommended"] == 4
+
+
 def test_local_model_matches_docker_gguf() -> None:
     """Verifies that the configured local model properties match the GGUF model path inside Docker."""
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])

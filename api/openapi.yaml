@@ -302,6 +302,14 @@ components:
         service:
           type: string
           example: py-intelligence
+        local_threads:
+          type: integer
+          nullable: true
+          description: CPU threads available to the local model on this deployment, if resource-constrained.
+        local_threads_recommended:
+          type: integer
+          nullable: true
+          description: Recommended CPU threads for good local inference performance.
     AnalyzeRequest:
       type: object
       required: [content]

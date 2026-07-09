@@ -116,6 +116,12 @@
           OPENAI_API_KEY={{ lookup('env', 'OPENAI_API_KEY') | default('', true) }}
           OPENAI_BASE_URL={{ lookup('env', 'OPENAI_BASE_URL') | default('', true) }}
 
+    - name: Stop any existing containers from previous runs
+      command: docker compose down --remove-orphans
+      args:
+        chdir: "{{ app_dir }}"
+      ignore_errors: true
+
     - name: Pull Docker images
       command: docker compose pull
       args:

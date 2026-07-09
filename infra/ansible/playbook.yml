@@ -78,6 +78,14 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
 
+    - name: Ensure .htpasswd exists for nginx auth_basic
+      file:
+        path: "{{ app_dir }}/nginx/.htpasswd"
+        state: touch
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
     - name: Copy production docker-compose file
       copy:
         src: ../docker-compose.prod.yml
@@ -116,6 +124,6 @@
       poll: 15
 
     - name: Start the application with Docker Compose
-      command: docker compose up -d
+      command: docker compose up -d --force-recreate
       args:
         chdir: "{{ app_dir }}"

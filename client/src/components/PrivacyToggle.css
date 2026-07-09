@@ -117,6 +117,60 @@
 	box-shadow: 0 0 6px rgba(var(--primary-rgb), 0.5);
 }
 
+.toggle-alert {
+	position: fixed;
+	bottom: 32px;
+	right: 32px;
+	z-index: 200;
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	max-width: min(400px, calc(100vw - 64px));
+	padding: 16px 18px;
+	border: 1px solid var(--chart-5);
+	background: var(--card);
+	color: var(--chart-5);
+	font-size: 12px;
+	letter-spacing: 0.04em;
+	text-transform: none;
+	line-height: 1.4;
+	backdrop-filter: blur(8px);
+	box-shadow:
+		0 0 0 1px rgba(255, 217, 61, 0.15),
+		0 8px 32px rgba(0, 0, 0, 0.5);
+	animation: toastIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-alert-icon {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+}
+
+.toggle-alert-close {
+	flex-shrink: 0;
+	align-self: flex-start;
+	border: none;
+	background: transparent;
+	color: var(--chart-5);
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px;
+	opacity: 0.7;
+	transition: opacity 0.2s ease;
+}
+
+.toggle-alert-close:hover {
+	opacity: 1;
+}
+
+.toggle-alert-close:focus-visible {
+	opacity: 1;
+	outline: 2px solid var(--chart-5);
+	outline-offset: 2px;
+}
+
 /* ─── Responsive ──────────────────────────────────────── */
 
 @media (max-width: 600px) {

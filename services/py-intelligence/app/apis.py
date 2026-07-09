@@ -7,6 +7,7 @@ from prometheus_client import Gauge
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
 from app.func import Intelligence, REQUIRED_RESPONSE_KEYS
+from app.model import LOCAL_MODEL_RECOMMENDED_THREADS
 import os
 import datetime
 
@@ -47,14 +48,23 @@ Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+def health() -> dict[str, str | int]:
     """
     Liveness/health endpoint to verify the service status.
 
     Returns:
-        dict[str, str]: A status message and service identifier.
+        dict[str, str | int]: A status message, service identifier, and (if this
+            deployment is CPU-constrained) the local model's available vs recommended threads.
     """
-    return {"status": "ok", "service": "py-intelligence"}
+    response: dict[str, str | int] = {"status": "ok", "service": "py-intelligence"}
+    llama_threads = os.getenv("LLAMA_N_THREADS")
+    if llama_threads:
+        try:
+            response["local_threads"] = int(llama_threads)
+            response["local_threads_recommended"] = LOCAL_MODEL_RECOMMENDED_THREADS
+        except ValueError:
+            pass
+    return response
 
 
 @app.post("/api/v1/analyze")

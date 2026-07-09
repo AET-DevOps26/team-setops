@@ -29,6 +29,28 @@ def test_health() -> None:
     assert response.json() == {"status": "ok", "service": "py-intelligence"}
 
 
+def test_health_reports_constrained_threads_when_env_set() -> None:
+    """Verifies that /health surfaces local_threads only when LLAMA_N_THREADS is set."""
+    with patch.dict("os.environ", {"LLAMA_N_THREADS": "2"}):
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["local_threads"] == 2
+    assert body["local_threads_recommended"] == 4
+
+
+def test_health_ignores_non_integer_llama_n_threads() -> None:
+    """Verifies that /health doesn't crash if LLAMA_N_THREADS is misconfigured."""
+    with patch.dict("os.environ", {"LLAMA_N_THREADS": "not-a-number"}):
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "local_threads" not in body
+    assert "local_threads_recommended" not in body
+
+
 def test_local_model_matches_docker_gguf() -> None:
     """Verifies that the configured local model properties match the GGUF model path inside Docker."""
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])
@@ -444,6 +466,23 @@ def _qwen_model():
             "cloud": False,
         }
     )
+
+
+def test_qwen_load_reads_n_threads_from_env() -> None:
+    """Verifies that Model._load() passes LLAMA_N_THREADS (or a default of 4) to Llama."""
+    model = _qwen_model()
+    mock_llama_cls = MagicMock()
+
+    with patch.dict("sys.modules", {"llama_cpp": MagicMock(Llama=mock_llama_cls)}):
+        with patch.dict("os.environ", {"LLAMA_N_THREADS": "2"}):
+            model._load()
+        assert mock_llama_cls.call_args.kwargs["n_threads"] == 2
+
+    model_default = _qwen_model()
+    with patch.dict("sys.modules", {"llama_cpp": MagicMock(Llama=mock_llama_cls)}):
+        with patch.dict("os.environ", {}, clear=True):
+            model_default._load()
+        assert mock_llama_cls.call_args.kwargs["n_threads"] == 4
 
 
 def test_count_tokens_uses_local_tokenizer() -> None:

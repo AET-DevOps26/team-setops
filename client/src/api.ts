@@ -238,6 +238,10 @@ export interface components {
             status: string;
             /** @example py-intelligence */
             service: string;
+            /** @description CPU threads available to the local model on this deployment, if resource-constrained. */
+            local_threads?: number | null;
+            /** @description Recommended CPU threads for good local inference performance. */
+            local_threads_recommended?: number | null;
         };
         AnalyzeRequest: {
             /** @description Raw log/text content to analyze. */

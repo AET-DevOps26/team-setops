@@ -158,6 +158,7 @@ services:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - LLAMA_N_THREADS=2
     networks:
       - app-network
     restart: unless-stopped

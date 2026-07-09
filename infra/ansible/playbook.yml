@@ -122,6 +122,10 @@
         chdir: "{{ app_dir }}"
       ignore_errors: true
 
+    - name: Clean up unused Docker resources to free disk space
+      command: docker system prune -af
+      ignore_errors: true
+
     - name: Pull Docker images
       command: docker compose pull
       args:

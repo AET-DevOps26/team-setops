@@ -514,6 +514,8 @@ def test_qwen_generate_raises_value_error_on_token_overflow() -> None:
 
 def test_qwen_generate_success_within_budget() -> None:
     """Verifies that generate() runs local inference normally when the prompt fits the context budget."""
+    from app.model import LOCAL_MODEL_MAX_OUTPUT_TOKENS
+
     model = _qwen_model()
     mock_client = MagicMock()
     mock_client.tokenize.return_value = [1, 2, 3]
@@ -523,7 +525,7 @@ def test_qwen_generate_success_within_budget() -> None:
         result = model.generate("short prompt")
 
     assert result == '{"ok": true}'
-    assert mock_client.create_chat_completion.call_args.kwargs["max_tokens"] == 768
+    assert mock_client.create_chat_completion.call_args.kwargs["max_tokens"] == LOCAL_MODEL_MAX_OUTPUT_TOKENS
 
 
 def test_openai_model_load_and_generate() -> None:

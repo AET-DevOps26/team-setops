@@ -33,8 +33,8 @@ def test_local_model_matches_docker_gguf() -> None:
     """Verifies that the configured local model properties match the GGUF model path inside Docker."""
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])
 
-    assert local_model["name"] == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
-    assert local_model["model_path"] == "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+    assert local_model["name"] == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
+    assert local_model["model_path"] == "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
 
 
 @patch("app.apis.intelligence.get_model_for_mode")
@@ -230,6 +230,41 @@ def test_normalize_response_defaults_and_rag_sources() -> None:
     assert normalized_rag["sources"][0]["snippet"] == "This is a detailed snippet of Doc 1."
 
 
+def test_normalize_response_coerces_invalid_confidence_to_low() -> None:
+    """Verifies that a non-enum confidence value (e.g. a number) is coerced to 'low'."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    normalized = intel._normalize_response({"confidence": 100}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "low"
+
+    normalized = intel._normalize_response({"confidence": "very sure"}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "low"
+
+
+def test_normalize_response_lowercases_valid_confidence() -> None:
+    """Verifies that a valid but differently-cased confidence value is normalized to lowercase."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    normalized = intel._normalize_response({"confidence": "High"}, retrieved_docs=[], use_rag=False)
+    assert normalized["confidence"] == "high"
+
+
+def test_normalize_response_strips_hallucinated_sources_without_rag() -> None:
+    """Verifies that sources are always empty when RAG wasn't used, even if the model invents some."""
+    from app.func import Intelligence
+
+    intel = Intelligence()
+
+    hallucinated = {"sources": [{"id": "made up source", "title": "Not real"}]}
+    normalized = intel._normalize_response(hallucinated, retrieved_docs=[], use_rag=False)
+
+    assert normalized["sources"] == []
+
+
 def test_removed_endpoints_return_404() -> None:
     """Verifies that older/removed service endpoints correctly return a 404 Not Found status."""
     assert client.get("/api/v1/models").status_code == 404
@@ -308,8 +343,8 @@ def test_model_initialization_and_string_representation() -> None:
         "cloud": True,
     }
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -323,10 +358,10 @@ def test_model_initialization_and_string_representation() -> None:
     assert model_google.cloud is True
     assert str(model_google) == "google - gemini-3.5-flash (cloud)"
 
-    assert model_qwen.model_name == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
+    assert model_qwen.model_name == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
     assert model_qwen.provider == "qwen"
     assert model_qwen.cloud is False
-    assert str(model_qwen) == "qwen - Qwen/Qwen2.5-Coder-3B-Instruct-GGUF (local)"
+    assert str(model_qwen) == "qwen - Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF (local)"
 
 
 def test_model_load_raises_runtime_error_on_import_error_google() -> None:
@@ -351,8 +386,8 @@ def test_model_load_raises_runtime_error_on_import_error_qwen() -> None:
     from app.model import Model
 
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -369,7 +404,7 @@ def test_model_load_raises_runtime_error_if_qwen_path_missing() -> None:
     from app.model import Model
 
     qwen_cfg = {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
         "provider": "Qwen",
         "shortened": "Qwen",
         "cloud": False,
@@ -402,8 +437,8 @@ def _qwen_model():
 
     return Model(
         {
-            "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-            "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+            "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+            "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
             "provider": "Qwen",
             "shortened": "Qwen",
             "cloud": False,

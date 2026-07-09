@@ -33,10 +33,10 @@ AVAILABLE_MODELS = [
         "cloud": True,
     },
     {
-        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
         "provider": "Qwen",
-        "shortened": "Qwen 2.5 Coder",
+        "shortened": "Qwen 2.5 Coder 1.5B",
         "cloud": False,
     },
 ]
@@ -351,39 +351,40 @@ class Intelligence:
         """
         normalized = {key: response.get(key) for key in REQUIRED_RESPONSE_KEYS}
 
-        # Conform and structure sources to match the expected SourceRef schema: [{"id": str, "title": str}]
-        raw_sources = normalized["sources"]
-        if not isinstance(raw_sources, list):
-            raw_sources = []
-
+        # Models sometimes hallucinate sources even without RAG; ignore them entirely then.
         standardized_sources = []
-        for source_item in raw_sources:
-            # Case A: Model returned source as a plain string ID (e.g., ["doc_id_1"])
-            if isinstance(source_item, str):
-                doc_title = ""
-                # Look up the document title from the RAG context documents using the ID
-                for rag_doc in retrieved_docs:
-                    if str(rag_doc.get("_id", "")) == source_item:
-                        doc_title = rag_doc.get("title", "")
-                        break
-                standardized_sources.append({"id": source_item, "title": doc_title})
+        if use_rag:
+            raw_sources = normalized["sources"]
+            if not isinstance(raw_sources, list):
+                raw_sources = []
 
-            # Case B: Model returned source as an object/dict (e.g., [{"id": "doc_id_1", "title": "Doc Title"}])
-            elif isinstance(source_item, dict):
-                source_id = str(source_item.get("id", source_item.get("_id", "")))
-                doc_title = source_item.get("title", "")
-                # If title is missing in the object, resolve it from the RAG context documents
-                if not doc_title:
+            for source_item in raw_sources:
+                # Case A: Model returned source as a plain string ID (e.g., ["doc_id_1"])
+                if isinstance(source_item, str):
+                    doc_title = ""
+                    # Look up the document title from the RAG context documents using the ID
                     for rag_doc in retrieved_docs:
-                        if str(rag_doc.get("_id", "")) == source_id:
+                        if str(rag_doc.get("_id", "")) == source_item:
                             doc_title = rag_doc.get("title", "")
                             break
-                standardized_sources.append({"id": source_id, "title": doc_title})
+                    standardized_sources.append({"id": source_item, "title": doc_title})
 
-        # Fallback: If no sources were explicitly extracted by the model, but RAG was enabled,
-        # register all retrieved RAG documents as the sources.
-        if not standardized_sources and use_rag:
-            standardized_sources = self._build_sources(retrieved_docs)
+                # Case B: Model returned source as an object/dict (e.g., [{"id": "doc_id_1", "title": "Doc Title"}])
+                elif isinstance(source_item, dict):
+                    source_id = str(source_item.get("id", source_item.get("_id", "")))
+                    doc_title = source_item.get("title", "")
+                    # If title is missing in the object, resolve it from the RAG context documents
+                    if not doc_title:
+                        for rag_doc in retrieved_docs:
+                            if str(rag_doc.get("_id", "")) == source_id:
+                                doc_title = rag_doc.get("title", "")
+                                break
+                    standardized_sources.append({"id": source_id, "title": doc_title})
+
+            # Fallback: If no sources were explicitly extracted by the model, but RAG was enabled,
+            # register all retrieved RAG documents as the sources.
+            if not standardized_sources:
+                standardized_sources = self._build_sources(retrieved_docs)
 
         normalized["problem_type"] = normalized["problem_type"] or "unknown"
         normalized["severity"] = normalized["severity"] or "unknown"
@@ -393,7 +394,14 @@ class Intelligence:
         normalized["troubleshoot"] = normalized["troubleshoot"] or []
         normalized["solutions"] = normalized["solutions"] or []
         normalized["sources"] = standardized_sources
-        normalized["confidence"] = normalized["confidence"] or "low"
+
+        # Some models return a number instead of the enum; coerce or default to "low".
+        confidence = normalized["confidence"]
+        if isinstance(confidence, str) and confidence.strip().lower() in ("low", "medium", "high"):
+            normalized["confidence"] = confidence.strip().lower()
+        else:
+            normalized["confidence"] = "low"
+
         return normalized
 
     def _build_sources(self, retrieved_docs: list[dict[str, Any]]) -> list[dict[str, Any]]:

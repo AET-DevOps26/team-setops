@@ -51,9 +51,10 @@ services:
           memory: 512M
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # -------------------------------------
   # Backend Services (Spring Boot)

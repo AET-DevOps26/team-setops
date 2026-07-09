@@ -446,6 +446,23 @@ def _qwen_model():
     )
 
 
+def test_qwen_load_reads_n_threads_from_env() -> None:
+    """Verifies that Model._load() passes LLAMA_N_THREADS (or a default of 4) to Llama."""
+    model = _qwen_model()
+    mock_llama_cls = MagicMock()
+
+    with patch.dict("sys.modules", {"llama_cpp": MagicMock(Llama=mock_llama_cls)}):
+        with patch.dict("os.environ", {"LLAMA_N_THREADS": "2"}):
+            model._load()
+        assert mock_llama_cls.call_args.kwargs["n_threads"] == 2
+
+    model_default = _qwen_model()
+    with patch.dict("sys.modules", {"llama_cpp": MagicMock(Llama=mock_llama_cls)}):
+        with patch.dict("os.environ", {}, clear=True):
+            model_default._load()
+        assert mock_llama_cls.call_args.kwargs["n_threads"] == 4
+
+
 def test_count_tokens_uses_local_tokenizer() -> None:
     """Verifies that count_tokens delegates to the loaded local model's own tokenizer."""
     model = _qwen_model()

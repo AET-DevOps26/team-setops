@@ -13,6 +13,10 @@ metadata:
     app.kubernetes.io/part-of: devpulse
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Local-mode analysis can take well over the shared ingress's default 60s;
+    # match our own gateway's timeout on /api/v1/analyze.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "180"
 spec:
   tls:
     - hosts:

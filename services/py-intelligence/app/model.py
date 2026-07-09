@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 LOCAL_MODEL_N_CTX = 4096
@@ -48,7 +49,7 @@ class Model:
             self._client = Llama(
                 model_path=self.model_path,
                 n_ctx=LOCAL_MODEL_N_CTX,
-                n_threads=4,
+                n_threads=int(os.getenv("LLAMA_N_THREADS", "4")),
                 verbose=False,
             )
             return self._client

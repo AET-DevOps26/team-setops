@@ -34,6 +34,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
 	border: 2px solid var(--border);
 	background: var(--card);
 	padding: 18px 24px;
@@ -96,6 +97,7 @@
 .actions {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 12px;
 }
 
@@ -298,6 +300,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
 	font-size: 13px;
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
@@ -306,7 +310,8 @@
 .status-left {
 	display: inline-flex;
 	align-items: center;
-	gap: 12px;
+	flex-wrap: wrap;
+	gap: 8px 12px;
 }
 
 .status-dot {
@@ -359,7 +364,7 @@
 
 @media (max-width: 900px) {
 	.content {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 	}
 
 	.panel {
@@ -369,6 +374,24 @@
 	.topbar {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+}
+
+@media (max-width: 600px) {
+	.page {
+		padding: 12px;
+	}
+
+	.frame {
+		padding: 14px;
+	}
+
+	.panel-body {
+		padding: 20px;
+	}
+
+	.content {
+		gap: 16px;
 	}
 }
 
@@ -382,6 +405,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 12px;
+	max-width: min(400px, calc(100vw - 64px));
 	padding: 16px 26px;
 	border: 1px solid var(--primary);
 	background: var(--card);

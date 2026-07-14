@@ -83,7 +83,7 @@ cp .env.example .env  # optional: fill in secrets for cloud AI, RAG, or Telegram
 docker-compose up --build
 ```
 
-_(`docker-compose up --build` works without an `.env` file too — local-model AI analysis needs none of those keys. See `infra/.env.example` for what each optional variable unlocks.)_
+_(`docker-compose up --build` works without an `.env` file. See `infra/.env.example` for references.)_
 
 ### 🔒 Pre-commit Hooks
 
@@ -288,14 +288,16 @@ Then open `http://<vm_fqdn>` in your browser. (The raw IP is also available via 
 Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`), with the same dashboards, alerting rules, and Telegram integration. In K8s, config is mounted from ConfigMaps instead of bind-mounted files.
 
 **Local (docker-compose):**
-* **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
-* **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth. Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, never committed.
+
+- **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.
+- **Prometheus:** [http://localhost:8080/prometheus/](http://localhost:8080/prometheus/) — gated by HTTP basic auth. Default login is `admin` / `devpulse`; override via `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` in `infra/.env`. The credential file itself is generated at container startup, never committed.
 
 **Kubernetes:**
-* **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
-* **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/), same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
 
-*Note: the Azure VM sizing dashboard estimates RAM from our own app-level metrics (JVM memory, py-intelligence resident memory), so it works in both local and in-cluster Grafana.*
+- **Grafana:** [https://team-setops.stud.k8s.aet.cit.tum.de/grafana/](https://team-setops.stud.k8s.aet.cit.tum.de/grafana/)
+- **Prometheus:** [https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/](https://team-setops.stud.k8s.aet.cit.tum.de/prometheus/), same basic-auth gate, credentials come from the `PROMETHEUS_AUTH_USER`/`PROMETHEUS_AUTH_PASSWORD` GitHub Actions secrets via the `devpulse-secrets` K8s Secret.
+
+_Note: the Azure VM sizing dashboard estimates RAM from our own app-level metrics (JVM memory, py-intelligence resident memory), so it works in both local and in-cluster Grafana._
 
 ## API Documentation (Swagger UI)
 
@@ -311,16 +313,16 @@ _(Note: Replace `<PORT>` with the respective mapped ports defined in your docker
 ## Team & Responsibilities
 
 - Muhammed Emre Bayraktaroglu
-   - GitHub username - memreo
-   - TUMOnline - ge95jes
-   - Primary subsystem owned - GenAI
+  - GitHub username - memreo
+  - TUMOnline - ge95jes
+  - Primary subsystem owned - GenAI
 
 - Sehmuel Wagner
-   - GitHub username - sachmii
-   - TUMOnline - ge84qiy
-   - Primary subsystem owned - Client
+  - GitHub username - sachmii
+  - TUMOnline - ge84qiy
+  - Primary subsystem owned - Client
 
 - Taha Huzefa Hundekari
-   - GitHub username - tahahundekari
-   - TUMOnline - ge47mut
-   - Primary subsystem owned - Server
+  - GitHub username - tahahundekari
+  - TUMOnline - ge47mut
+  - Primary subsystem owned - Server

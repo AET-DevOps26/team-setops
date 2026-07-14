@@ -6,7 +6,7 @@ sidebar_position: 4
 
 Actors: a **User** (DevOps/SRE engineer, on-call developer, or team lead — all interact through the same dashboard) and the **GenAI Intelligence Service**.
 
-![Use case diagram](/img/diagrams/use_case_model.svg)
+<img src="/img/diagrams/use_case_model.svg" alt="Use case diagram" style={{filter: 'invert(1)'}} />
 
 ## Manual troubleshooting after a failed deployment
 

@@ -83,7 +83,7 @@ cp .env.example .env  # optional: fill in secrets for cloud AI, RAG, or Telegram
 docker-compose up --build
 ```
 
-_(`docker-compose up --build` works without an `.env` file. See `infra/.env.example` for references.)_
+_(`docker-compose up --build` works without an `.env` file. See `infra/.env.example` for references — also used when running `py-intelligence` standalone.)_
 
 ### 🔒 Pre-commit Hooks
 

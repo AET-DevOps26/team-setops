@@ -125,6 +125,9 @@ services:
     build:
       context: ../services/py-intelligence
       dockerfile: Dockerfile
+      args:
+        # Local dev has no CPU/RAM constraint, so use the bigger, better local model.
+        MODEL_TIER: "3b"
     container_name: py-intelligence
     ports:
       - "8000:8000" # Assuming FastAPI or Flask default

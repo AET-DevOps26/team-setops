@@ -17,6 +17,7 @@ export function PrivacyModeProvider({ children }) {
 	const [mode, setModeState] = useState(getInitialMode);
 	const [localThreads, setLocalThreads] = useState(null);
 	const [localThreadsRecommended, setLocalThreadsRecommended] = useState(null);
+	const [isAccelerated, setIsAccelerated] = useState(false);
 
 	const setMode = useCallback((newMode) => {
 		if (newMode !== MODES.LOCAL && newMode !== MODES.CLOUD) return;
@@ -32,7 +33,7 @@ export function PrivacyModeProvider({ children }) {
 		setMode(mode === MODES.LOCAL ? MODES.CLOUD : MODES.LOCAL);
 	}, [mode, setMode]);
 
-	// Deployments with a constrained CPU limit report
+	// Deployments with a constrained CPU limit (or the accelerated local model) report it here.
 	useEffect(() => {
 		const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
 		fetch(`${baseUrl}/health`)
@@ -42,9 +43,12 @@ export function PrivacyModeProvider({ children }) {
 					setLocalThreads(data.local_threads);
 					setLocalThreadsRecommended(data.local_threads_recommended);
 				}
+				if (data?.local_model_accelerated) {
+					setIsAccelerated(true);
+				}
 			})
 			.catch(() => {
-				// Best-effort; no warning shown if health is unreachable.
+				// Best-effort; no warning/badge shown if health is unreachable.
 			});
 	}, []);
 
@@ -57,8 +61,9 @@ export function PrivacyModeProvider({ children }) {
 			localThreads,
 			localThreadsRecommended,
 			isResourceConstrained: Boolean(localThreads && localThreads < localThreadsRecommended),
+			isAccelerated,
 		}),
-		[mode, setMode, toggleMode, localThreads, localThreadsRecommended],
+		[mode, setMode, toggleMode, localThreads, localThreadsRecommended, isAccelerated],
 	);
 
 	return (

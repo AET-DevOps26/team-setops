@@ -26,7 +26,7 @@ def test_health() -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "service": "py-intelligence"}
+    assert response.json() == {"status": "ok", "service": "py-intelligence", "local_model_accelerated": False}
 
 
 def test_health_reports_constrained_threads_when_env_set() -> None:
@@ -52,11 +52,24 @@ def test_health_ignores_non_integer_llama_n_threads() -> None:
 
 
 def test_local_model_matches_docker_gguf() -> None:
-    """Verifies that the configured local model properties match the GGUF model path inside Docker."""
+    """Verifies that the configured local model properties match the GGUF model path inside Docker.
+
+    Defaults to the 1.5B tier when MODEL_TIER isn't set (matches the shared K8s/Azure deployments).
+    """
     local_model = next(model for model in AVAILABLE_MODELS if not model["cloud"])
 
     assert local_model["name"] == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
     assert local_model["model_path"] == "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
+
+
+def test_local_model_tiers_are_defined_correctly() -> None:
+    """Verifies both selectable local model tiers point at the right GGUF repo/file."""
+    from app.func import LOCAL_MODEL_TIERS
+
+    assert LOCAL_MODEL_TIERS["1.5b"]["name"] == "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"
+    assert LOCAL_MODEL_TIERS["1.5b"]["model_path"] == "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"
+    assert LOCAL_MODEL_TIERS["3b"]["name"] == "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"
+    assert LOCAL_MODEL_TIERS["3b"]["model_path"] == "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
 
 
 @patch("app.apis.intelligence.get_model_for_mode")

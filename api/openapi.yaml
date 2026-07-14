@@ -294,7 +294,7 @@ components:
   schemas:
     HealthResponse:
       type: object
-      required: [status, service]
+      required: [status, service, local_model_accelerated]
       properties:
         status:
           type: string
@@ -302,6 +302,9 @@ components:
         service:
           type: string
           example: py-intelligence
+        local_model_accelerated:
+          type: boolean
+          description: True when this deployment runs the larger, accelerated local model tier.
         local_threads:
           type: integer
           nullable: true

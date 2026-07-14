@@ -79,8 +79,11 @@ _(Note: You do not need Java, Python, or Node.js installed on your host machine 
 
 ```bash
 cd infra
+cp .env.example .env  # optional: fill in secrets for cloud AI, RAG, or Telegram alerting
 docker-compose up --build
 ```
+
+_(`docker-compose up --build` works without an `.env` file too — local-model AI analysis needs none of those keys. See `infra/.env.example` for what each optional variable unlocks.)_
 
 ### 🔒 Pre-commit Hooks
 

@@ -97,9 +97,9 @@ spec:
                 secretKeyRef:
                   name: devpulse-secrets
                   key: OPENAI_BASE_URL
-            # Matches the 1200m CPU limit below to avoid thread oversubscription.
+            # Matches the 3050m CPU limit below to avoid thread oversubscription.
             - name: LLAMA_N_THREADS
-              value: "2"
+              value: "3"
           # This service has a real /health endpoint (from openapi.yaml)
           readinessProbe:
             httpGet:
@@ -119,8 +119,8 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "400m"
+              memory: "2Gi"
+              cpu: "1000m"
             limits:
-              cpu: "1200m"
-              memory: "4Gi"
+              cpu: "3050m"
+              memory: "7472Mi"

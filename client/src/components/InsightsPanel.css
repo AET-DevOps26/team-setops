@@ -38,6 +38,29 @@
 	font-weight: 600;
 }
 
+.severity-critical,
+.severity-high {
+	color: var(--destructive);
+	border-color: var(--destructive);
+}
+
+.severity-medium,
+.severity-warning {
+	color: var(--chart-5);
+	border-color: var(--chart-5);
+}
+
+.severity-low,
+.severity-info {
+	color: var(--chart-1);
+	border-color: var(--chart-1);
+}
+
+.severity-unknown {
+	color: var(--muted-foreground);
+	border-color: var(--muted-foreground);
+}
+
 .insights-confidence {
 	font-size: 11px;
 	letter-spacing: 0.14em;

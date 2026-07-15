@@ -7,6 +7,17 @@ const CONFIDENCE_COLORS = {
 	high: "#4dd0e1",
 };
 
+// Severity is an independent field from confidence and needs its own color
+// scale (models don't strictly stick to one vocabulary, hence the aliases).
+const SEVERITY_CLASSES = {
+	critical: "severity-critical",
+	high: "severity-high",
+	medium: "severity-medium",
+	warning: "severity-warning",
+	low: "severity-low",
+	info: "severity-info",
+};
+
 const STAGES = [
 	"INITIALIZING CORE AGENT...",
 	"ESTABLISHING INCIDENT CONTEXT...",
@@ -90,16 +101,15 @@ export default function InsightsPanel({
 
 	const confidenceColor =
 		CONFIDENCE_COLORS[result.confidence] || CONFIDENCE_COLORS.low;
+	const severityClass =
+		SEVERITY_CLASSES[(result.severity || "").toLowerCase()] || "severity-unknown";
 
 	return (
 		<div className="insights" role="region" aria-label="AI Analysis Results">
 			{/* Header */}
 			<div className="insights-header">
 				<span className="insights-type">{result.problem_type}</span>
-				<span
-					className="insights-severity"
-					style={{ color: confidenceColor, borderColor: confidenceColor }}
-				>
+				<span className={`insights-severity ${severityClass}`}>
 					{result.severity}
 				</span>
 				<span

@@ -11,7 +11,7 @@ To run this project locally, you must have the following installed:
 - [Docker](https://docs.docker.com/get-docker/) (Docker Desktop recommended for Mac/Windows)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
-_(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application, as everything runs inside the containers!)_
+_(Note: You do not need Java, Python, or Node.js installed on your host machine to run the application via Docker Compose — everything runs inside the containers. You do need Python (for pre-commit) and Node.js (for the client's own lint/test/build) for the workflows further down this page.)_
 
 ## Build
 
@@ -79,9 +79,9 @@ npm run dev
 Use these for non-watch runs in CI:
 
 ```bash
-# Spring services (run per service directory)
-./gradlew :app:test
+# Spring services — cd into each service directory first, e.g.:
+cd services/spring-alerts && ./gradlew :app:test
 
 # Client
-npm run test -- --run
+cd client && npm run test -- --run
 ```

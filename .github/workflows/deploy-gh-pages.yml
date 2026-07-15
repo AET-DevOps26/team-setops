@@ -23,7 +23,9 @@ jobs:
             git config --global user.email "actions@github.com"
             git checkout --orphan gh-pages
             git rm -rf . > /dev/null
-            git commit --allow-empty -m "Initialize gh-pages branch"
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize gh-pages branch"
             git push origin gh-pages
             git checkout -f "$REF_NAME"
           fi

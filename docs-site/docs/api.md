@@ -29,7 +29,9 @@ All client requests go to the Nginx gateway at `http://localhost:8080` (local) o
 | `/api/v1/incidents` | `GET`, `PATCH` | `spring-alerts:8080` |
 | `/api/v1/logbook` | ALL | `spring-logbook:8080` |
 | `/api/v1/analyze` | `POST` | `py-intelligence:8000` |
-| `/api/v1/analyses` | `POST`, `DELETE` | `py-intelligence:8000` |
+| `/api/v1/analyses/query` | `POST` | `py-intelligence:8000` |
+| `/api/v1/analyses/{log_id}` | `DELETE` | `py-intelligence:8000` |
+| `/api/v1/analyses` | `DELETE` | `py-intelligence:8000` |
 | `/api/v1/rag/*` | ALL | `py-intelligence:8000` |
 | `/health` | `GET` | `py-intelligence:8000` |
 | `/prometheus` | `GET` | `prometheus:9090` (basic auth) |

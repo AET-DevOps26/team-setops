@@ -40,6 +40,12 @@ To create the Service Principal, run locally:
 az ad sp create-for-rbac --name "github-actions-team-setops" --role contributor --scopes /subscriptions/<YOUR_SUBSCRIPTION_ID>
 ```
 
+:::caution[Least privilege]
+
+This grants Contributor on the **entire subscription**, not just the deployment resource group, because `infra/terraform/main.tf` creates the resource group itself (`resource "azurerm_resource_group"`, not a `data` reference) — a resource-group-scoped Service Principal can't create the resource group it doesn't have access to yet. To scope this down: pre-create the resource group once (`az group create --name team-setops-rg --location <region>`), scope the Service Principal to that resource group's ID instead of the subscription, and change `main.tf` to reference the resource group via a `data "azurerm_resource_group"` block rather than managing it.
+
+:::
+
 ## Manual Deployment
 
 To deploy to Azure manually from your local machine (requires Azure CLI and Ansible):

@@ -72,6 +72,12 @@ classDiagram
         +str confidence
     }
 
+    class PersistedAnalysis {
+        <<MongoDB document>>
+        +str log_id
+        +AnalyzeResponse result
+    }
+
     class RagDocument {
         +str title
         +str content
@@ -82,7 +88,8 @@ classDiagram
 
     Intelligence "1" o-- "3" Model : selects by mode
     Intelligence ..> AnalyzeResponse : produces
-    Intelligence ..> DB : persists AnalyzeResponse
+    Intelligence ..> DB : persists PersistedAnalysis
+    PersistedAnalysis "1" *-- "1" AnalyzeResponse : wraps
     DB "1" o-- "*" RagDocument : ingestions collection
-    DB "1" o-- "*" AnalyzeResponse : completed_analyses collection
+    DB "1" o-- "*" PersistedAnalysis : completed_analyses collection
 ```

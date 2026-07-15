@@ -4,7 +4,7 @@
 // There are various equivalent ways to declare your Docusaurus config.
 // See: https://docusaurus.io/docs/api/docusaurus-config
 
-import {themes as prismThemes} from 'prism-react-renderer';
+import { themes as prismThemes } from 'prism-react-renderer';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -25,7 +25,7 @@ const config = {
   // matters for local `npm run serve` / zip distribution to work without
   // a matching subpath. Switch back to '/team-setops/' if GH Pages deploy
   // is configured later.
-  baseUrl: '/',
+  baseUrl: '/team-setops/docs/',
 
   // GitHub pages deployment config (kept for when deployment is set up).
   organizationName: 'AET-DevOps26',
@@ -127,7 +127,7 @@ const config = {
         darkTheme: prismThemes.dracula,
       },
       mermaid: {
-        theme: {dark: 'dark'},
+        theme: { dark: 'dark' },
       },
     }),
 };

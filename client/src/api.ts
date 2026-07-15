@@ -238,6 +238,8 @@ export interface components {
             status: string;
             /** @example py-intelligence */
             service: string;
+            /** @description True when this deployment runs the larger, accelerated local model tier. */
+            local_model_accelerated: boolean;
             /** @description CPU threads available to the local model on this deployment, if resource-constrained. */
             local_threads?: number | null;
             /** @description Recommended CPU threads for good local inference performance. */

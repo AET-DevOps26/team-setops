@@ -24,9 +24,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "from huggingface_hub import snapshot_download; \
 snapshot_download(repo_id='nomic-ai/nomic-embed-text-v1.5')"
 
-# 3. Light QWEN
-RUN python -c "from huggingface_hub import hf_hub_download; \
-hf_hub_download(repo_id='Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF', filename='qwen2.5-coder-1.5b-instruct-q4_k_m.gguf', local_dir='/app/models')"
+# 3. Local Qwen model. Tier is selectable at build time: "1.5b" (default, used
+# by the shared K8s/Azure deployments) or "3b" (local docker-compose dev).
+ARG MODEL_TIER=1.5b
+ENV MODEL_TIER=${MODEL_TIER}
+RUN if [ "$MODEL_TIER" = "3b" ]; then \
+      MODEL_REPO="Qwen/Qwen2.5-Coder-3B-Instruct-GGUF"; \
+      MODEL_FILE="qwen2.5-coder-3b-instruct-q4_k_m.gguf"; \
+    else \
+      MODEL_REPO="Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF"; \
+      MODEL_FILE="qwen2.5-coder-1.5b-instruct-q4_k_m.gguf"; \
+    fi && \
+    python -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='$MODEL_REPO', filename='$MODEL_FILE', local_dir='/app/models')"
 
 # Copy the rest of the application code
 COPY . .

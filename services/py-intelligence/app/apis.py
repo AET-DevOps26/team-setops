@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Gauge
 from app.utils.db_utils import DB
 from app.utils.embedding_utils import similarity_search
-from app.func import Intelligence, REQUIRED_RESPONSE_KEYS
+from app.func import Intelligence, REQUIRED_RESPONSE_KEYS, LOCAL_MODEL_ACCELERATED
 from app.model import LOCAL_MODEL_RECOMMENDED_THREADS
 import os
 import datetime
@@ -48,15 +48,20 @@ Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")
-def health() -> dict[str, str | int]:
+def health() -> dict[str, str | int | bool]:
     """
     Liveness/health endpoint to verify the service status.
 
     Returns:
-        dict[str, str | int]: A status message, service identifier, and (if this
-            deployment is CPU-constrained) the local model's available vs recommended threads.
+        dict[str, str | int | bool]: A status message, service identifier, whether this
+            deployment runs the accelerated local model, and (if CPU-constrained) the
+            local model's available vs recommended threads.
     """
-    response: dict[str, str | int] = {"status": "ok", "service": "py-intelligence"}
+    response: dict[str, str | int | bool] = {
+        "status": "ok",
+        "service": "py-intelligence",
+        "local_model_accelerated": LOCAL_MODEL_ACCELERATED,
+    }
     llama_threads = os.getenv("LLAMA_N_THREADS")
     if llama_threads:
         try:

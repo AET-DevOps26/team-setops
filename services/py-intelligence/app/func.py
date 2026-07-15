@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,25 @@ INFERENCE_DURATION_SECONDS = Histogram(
     "devpulse_inference_duration_seconds", "Duration of AI inference requests by mode", ["mode"]
 )
 
+# The local GGUF model baked into the image is selected at build time via the
+# MODEL_TIER Docker build arg (see services/py-intelligence/Dockerfile): local
+# docker-compose dev builds default to "3b" for better quality, while the
+# shared K8s/Azure deployments build with "1.5b" to fit their CPU/RAM limits.
+LOCAL_MODEL_TIERS = {
+    "3b": {
+        "name": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+        "shortened": "Qwen 2.5 Coder 3B",
+    },
+    "1.5b": {
+        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+        "shortened": "Qwen 2.5 Coder 1.5B",
+    },
+}
+LOCAL_MODEL_TIER = os.getenv("MODEL_TIER", "1.5b")
+LOCAL_MODEL_ACCELERATED = LOCAL_MODEL_TIER == "3b"
+
 AVAILABLE_MODELS = [
     {
         "name": "gemini-3.5-flash",
@@ -33,10 +53,8 @@ AVAILABLE_MODELS = [
         "cloud": True,
     },
     {
-        "name": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
-        "model_path": "/app/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+        **LOCAL_MODEL_TIERS.get(LOCAL_MODEL_TIER, LOCAL_MODEL_TIERS["1.5b"]),
         "provider": "Qwen",
-        "shortened": "Qwen 2.5 Coder 1.5B",
         "cloud": False,
     },
 ]

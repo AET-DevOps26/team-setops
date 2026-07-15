@@ -2,11 +2,13 @@
 sidebar_position: 4
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Use Case Diagram
 
 Actors: a **User** (DevOps/SRE engineer, on-call developer, or team lead — all interact through the same dashboard) and the **GenAI Intelligence Service**.
 
-<img src="/img/diagrams/use_case_model.svg" alt="Use case diagram" style={{filter: 'invert(1)'}} />
+<img src={useBaseUrl('/img/diagrams/use_case_model.svg')} alt="Use case diagram" style={{filter: 'invert(1)'}} />
 
 ## Manual troubleshooting after a failed deployment
 

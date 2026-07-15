@@ -6,6 +6,7 @@ import ResolveModal from "@/components/ResolveModal";
 import LogList from "@/components/LogList";
 import InsightsPanel from "@/components/InsightsPanel";
 import { IngestIcon, EmptyLogsIcon, EmptyInsightsIcon } from "@/components/icons";
+import PixelLogo from "@/components/PixelLogo";
 import { usePrivacyMode } from "@/context/PrivacyModeContext";
 import createClient from "openapi-fetch";
 
@@ -234,7 +235,7 @@ function App() {
 						<div className="brand-mark">&gt;_</div>
 						<div>
 							<h1 className="brand-title">
-								DEVPULSE
+								<PixelLogo className="pixel-logo" />
 								{isAccelerated && (
 									<span
 										className="accelerated-badge"

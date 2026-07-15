@@ -6,6 +6,7 @@ graph TD
     classDef spring fill:#68A063,stroke:#3b5f38,color:#fff
     classDef python fill:#f1c40f,stroke:#f39c12,color:#333
     classDef infra fill:#95a5a6,stroke:#7f8c8d,color:#fff
+    classDef monitoring fill:#e74c3c,stroke:#c0392b,color:#fff
 
     subgraph "Client Tier"
         UI[💻 React Client App]:::client
@@ -30,6 +31,11 @@ graph TD
         DB[(🐘 PostgreSQL)]:::infra
     end
 
+    subgraph "Monitoring"
+        Prometheus[📈 Prometheus]:::monitoring
+        Grafana[📊 Grafana]:::monitoring
+    end
+
     %% External Traffic
     UI -->|HTTP 8080| Nginx
 
@@ -38,6 +44,8 @@ graph TD
     Nginx -->|GET /api/v1/logs| Logbook
     Nginx -->|GET, PATCH /api/v1/incidents| Alerts
     Nginx -->|/api/v1/analyze, /api/v1/rag| PyIntel
+    Nginx -->|/grafana| Grafana
+    Nginx -->|/prometheus| Prometheus
 
     %% Async Messaging
     Ingestion -->|Publish Incoming Log Event| RMQ
@@ -50,4 +58,11 @@ graph TD
 
     %% Cross-Service API calls (if any)
     PyIntel -.->|Fetch Context| DB
+
+    %% Monitoring
+    Prometheus -.->|Scrape /actuator/prometheus| Ingestion
+    Prometheus -.->|Scrape /actuator/prometheus| Logbook
+    Prometheus -.->|Scrape /actuator/prometheus| Alerts
+    Prometheus -.->|Scrape /metrics| PyIntel
+    Grafana -.->|Query Metrics| Prometheus
 ```

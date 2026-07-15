@@ -1,4 +1,34 @@
-# DevPulse - Team SETOps
+<div align="center">
+  <img src="docs/images/devpulse-logo.svg" alt="DevPulse" height="60" />
+  <p><sub><b>INTELLIGENT LOGBOOK // SYSTEM_ONLINE</b></sub></p>
+  <h3>Team SETOps</h3>
+
+  <p>
+    <a href="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml">
+      <img src="https://github.com/AET-DevOps26/team-setops/actions/workflows/ci-cd.yml/badge.svg?branch=main" alt="CI/CD Pipeline Status" />
+    </a>
+    <a href="https://github.com/AET-DevOps26/team-setops/issues">
+      <img src="https://img.shields.io/github/issues/AET-DevOps26/team-setops?style=flat-square&color=blue" alt="GitHub Issues" />
+    </a>
+    <a href="https://github.com/AET-DevOps26/team-setops/pulls">
+      <img src="https://img.shields.io/github/issues-pr/AET-DevOps26/team-setops?style=flat-square&color=orange" alt="GitHub Pull Requests" />
+    </a>
+    <a href="https://github.com/AET-DevOps26/team-setops/graphs/contributors">
+      <img src="https://img.shields.io/github/contributors/AET-DevOps26/team-setops?style=flat-square&color=green" alt="GitHub Contributors" />
+    </a>
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring-boot&logoColor=white" alt="Spring Boot" />
+    <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes" />
+    <img src="https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB" />
+    <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ" />
+  </p>
+</div>
 
 DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and troubleshooting notes. The goal is to help a team quickly understand what happened during a failed deployment or incident by showing the raw information together with AI-generated summaries and suggested fixes.
 

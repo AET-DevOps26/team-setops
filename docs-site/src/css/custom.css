@@ -112,6 +112,23 @@ h4 {
 }
 
 [data-theme='dark'] .hero--primary .hero__title {
+  display: flex;
+  justify-content: center;
+}
+
+.pixel-logo {
+  height: 64px;
+  width: auto;
+  shape-rendering: crispEdges;
+  filter:
+    drop-shadow(0 0 9px rgba(77, 208, 225, 0.85))
+    drop-shadow(0 0 20px rgba(77, 208, 225, 0.5));
+}
+
+.pixel-logo-fill {
   color: #4dd0e1;
-  text-shadow: 0 0 16px rgba(77, 208, 225, 0.5);
+}
+
+.pixel-logo-shadow {
+  color: #1e2d5f;
 }

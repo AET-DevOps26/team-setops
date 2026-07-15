@@ -21,13 +21,9 @@ const config = {
 
   // Set the production url of your site here
   url: 'https://aet-devops26.github.io',
-  // No GitHub Pages deployment is set up yet, so serve from root — this
-  // matters for local `npm run serve` / zip distribution to work without
-  // a matching subpath. Switch back to '/team-setops/' if GH Pages deploy
-  // is configured later.
-  baseUrl: '/team-setops/docs/',
+  baseUrl: '/team-setops/',
 
-  // GitHub pages deployment config (kept for when deployment is set up).
+  // GitHub pages deployment config.
   organizationName: 'AET-DevOps26',
   projectName: 'team-setops',
 

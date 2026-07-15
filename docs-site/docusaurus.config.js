@@ -12,7 +12,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 const config = {
   title: 'DevPulse',
   tagline: 'A DevOps logbook for deployment logs, alerts, and AI-assisted troubleshooting',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -116,7 +116,6 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Team SETOps. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,

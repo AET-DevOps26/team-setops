@@ -66,10 +66,12 @@ classDiagram
         +String mode
         +boolean use_rag
         +String context
+        +String log_id
     }
 
     class AnalyzeResponse {
         <<DTO>>
+        +String model
         +String problem_type
         +String severity
         +String summary
@@ -77,6 +79,7 @@ classDiagram
         +List~String~ evidence
         +List~String~ troubleshoot
         +List~String~ solutions
+        +List~SourceRef~ sources
         +String confidence
     }
 
@@ -95,9 +98,9 @@ classDiagram
     AnalyzeRequest --> AnalyzeResponse : generates
 ```
 
-### Domain Component Mapping
+## Domain Component Mapping
 - **`Log`**: Persisted by `spring-logbook` in PostgreSQL.
 - **`IncidentStatus`**: Persisted by `spring-alerts` in PostgreSQL.
 - **`AlertStatus`**: Shared enumeration representing the lifecycle of an incident.
-- **`EventDto` & `PayloadDto`**: Data models used for asynchronous message brokering over RabbitMQ.
-- **`Analyze`**: REST payload models defined in OpenAPI, used for synchronous communication with the `py-intelligence` Python microservice.
+- **`IncomingLogEventDto`, `OutgoingLogEventDto`, and `LogPayloadDto`**: Data models used for asynchronous message brokering over RabbitMQ.
+- **`AnalyzeRequest` and `AnalyzeResponse`**: REST payload models defined in OpenAPI, used for synchronous communication with the `py-intelligence` Python microservice.

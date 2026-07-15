@@ -14,7 +14,7 @@ graph TD
     
     Gateway -->|/| ClientDev[React Dev Server - port 3000]
     Gateway -->|POST /api/v1/logs| Ingestion[spring-ingestion - port 8080]
-    Gateway -->|GET /api/v1/logs| Logbook[spring-logbook - port 8080]
+    Gateway -->|GET, DELETE /api/v1/logs| Logbook[spring-logbook - port 8080]
     Gateway -->|POST /api/v1/alerts/system| Ingestion
     Gateway -->|/api/v1/logbook| Logbook
     Gateway -->|/api/v1/alerts| Alerts[spring-alerts - port 8080]
@@ -104,9 +104,9 @@ curl -X POST http://localhost:8080/api/v1/analyze \
 * **Expected Result:** HTTP status code `200 OK` with structured JSON analysis of the database connectivity issue.
 
 ### 5. Test Monitoring Routing
-Access Prometheus (basic auth required):
+Access Prometheus (basic auth required — credentials are set via `PROMETHEUS_AUTH_USER` / `PROMETHEUS_AUTH_PASSWORD` in `infra/.env`):
 ```bash
-curl -u admin:devpulse http://localhost:8080/prometheus/-/ready
+curl -u "${PROMETHEUS_AUTH_USER}:${PROMETHEUS_AUTH_PASSWORD}" http://localhost:8080/prometheus/-/ready
 ```
 * **Expected Result:** HTTP status code `200 OK` confirming Prometheus is operational.
 

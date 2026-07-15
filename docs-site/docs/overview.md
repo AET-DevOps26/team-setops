@@ -26,4 +26,4 @@ DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and 
 
 ## Basic Flow
 
-`client` sends requests to the Spring Boot backend services. The backend services manage logs, notes, alerts, and persistent storage. When AI analysis is needed, the backend calls `py-intelligence` through a defined JSON/HTTP interface. The OpenAPI file in `api/` is the shared API contract.
+  `client` sends requests to the Spring Boot services. The `spring` services manage logs, notes, alerts, and persistent storage. When AI analysis is needed, the `client` calls `py-intelligence` through a defined JSON/HTTP interface. The OpenAPI file in `api/` is the shared API contract.

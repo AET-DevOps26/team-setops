@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Ensure gh-pages branch exists
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
           if ! git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
             git config --global user.name "GitHub Actions Bot"
@@ -21,7 +23,7 @@ jobs:
             git rm -rf . > /dev/null
             git commit --allow-empty -m "Initialize gh-pages branch"
             git push origin gh-pages
-            git checkout -f ${{ github.ref_name }}
+            git checkout -f "$REF_NAME"
           fi
 
       - name: Setup Node.js

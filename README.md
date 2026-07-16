@@ -344,14 +344,13 @@ _Note: the Azure VM sizing dashboard estimates RAM from our own app-level metric
 
 ## API Documentation (Swagger UI)
 
-Interactive API documentation (Swagger UI) is automatically generated and accessible at runtime for each microservice. When running the services locally, you can view the API references at the following URLs:
+Interactive API documentation (Swagger UI) is automatically generated and accessible at runtime for each microservice. When running the services locally via `docker-compose`, you can view the API references at the following URLs:
 
-- **Py-Intelligence (FastAPI):** [http://localhost:8001/docs](http://localhost:8001/docs)
-- **Spring Ingestion:** `http://localhost:<PORT>/swagger-ui.html`
-- **Spring Alerts:** `http://localhost:<PORT>/swagger-ui.html`
-- **Spring Logbook:** `http://localhost:<PORT>/swagger-ui.html`
+- **Py-Intelligence (FastAPI):** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Spring Ingestion:** [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+- **Spring Logbook:** [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html)
+- **Spring Alerts:** [http://localhost:8083/swagger-ui.html](http://localhost:8083/swagger-ui.html)
 
-_(Note: Replace `<PORT>` with the respective mapped ports defined in your docker-compose or Spring application properties)._
 
 ## Team & Responsibilities
 

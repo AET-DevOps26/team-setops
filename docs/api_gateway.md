@@ -14,11 +14,17 @@ graph TD
     
     Gateway -->|/| ClientDev[React Dev Server - port 3000]
     Gateway -->|POST /api/v1/logs| Ingestion[spring-ingestion - port 8080]
-    Gateway -->|GET /api/v1/logs| Logbook[spring-logbook - port 8080]
-    Gateway -->|/api/v1/incidents| Alerts[spring-alerts - port 8080]
+    Gateway -->|GET, DELETE /api/v1/logs| Logbook[spring-logbook - port 8080]
+    Gateway -->|/api/v1/logbook| Logbook
+    Gateway -->|/api/v1/alerts| Alerts[spring-alerts - port 8080]
+    Gateway -->|/api/v1/incidents| Alerts
+    Gateway -->|/api/v1/metrics| Logbook
     Gateway -->|/api/v1/analyze| Intel[py-intelligence - port 8000]
-    Gateway -->|/api/v1/rag/*| Intel[py-intelligence - port 8000]
-    Gateway -->|/health| Intel[py-intelligence - port 8000]
+    Gateway -->|/api/v1/analyses| Intel
+    Gateway -->|/api/v1/rag/*| Intel
+    Gateway -->|/health| Intel
+    Gateway -->|/prometheus| Prometheus[Prometheus - port 9090]
+    Gateway -->|/grafana| Grafana[Grafana - port 3000]
 ```
 
 ---
@@ -31,11 +37,17 @@ All client requests should be directed to the gateway at **`http://localhost:808
 | :--- | :--- | :--- | :--- |
 | **`/`** *(and static assets)* | `ALL` | `http://client:3000` | Fronts the React/Vite development server (proxies WebSockets for HMR). |
 | **`/api/v1/logs`** | `POST` | `http://spring-ingestion:8080` | Endpoint to ingest raw developer/CI logs. |
-| **`/api/v1/logs`** | `GET` | `http://spring-logbook:8080` | Endpoint to retrieve log records and deployment history. |
-| **`/api/v1/incidents`** | `GET`, `PATCH`| `http://spring-alerts:8080` | Endpoint to fetch incident lists and update status states. |
-| **`/api/v1/analyze`** | `POST` | `http://py-intelligence:8000` | Coordinates LLM summaries and troubleshooting guides. |
-| **`/api/v1/rag/**`** | `ALL` | `http://py-intelligence:8000` | Manages RAG document indexing and semantic retrieval. |
+| **`/api/v1/logs`** | `GET`, `DELETE` | `http://spring-logbook:8080` | Endpoint to retrieve or delete log records and deployment history. |
+| **`/api/v1/logbook`** | `ALL` | `http://spring-logbook:8080` | Logbook-specific endpoints. |
+| **`/api/v1/alerts`** | `ALL` | `http://spring-alerts:8080` | Alert management endpoints. |
+| **`/api/v1/incidents`** | `GET`, `PATCH` | `http://spring-alerts:8080` | Endpoint to fetch incident lists and update status states. |
+| **`/api/v1/metrics`** | `ALL` | `http://spring-logbook:8080` | Application-level metrics endpoints (log statistics). |
+| **`/api/v1/analyze`** | `POST` | `http://py-intelligence:8000` | Coordinates LLM summaries and troubleshooting guides. Extended timeout (180s) for model inference. |
+| **`/api/v1/analyses`** | `ALL` | `http://py-intelligence:8000` | CRUD for persisted analysis results. |
+| **`/api/v1/rag/**`** | `ALL` | `http://py-intelligence:8000` | Manages RAG document indexing and semantic retrieval. Extended timeout (180s). |
 | **`/health`** | `GET` | `http://py-intelligence:8000` | AI service liveness and health endpoint. |
+| **`/prometheus`** | `ALL` | `http://prometheus:9090` | Prometheus UI. Protected by HTTP basic auth (credentials from env vars). |
+| **`/grafana`** | `ALL` | `http://grafana:3000` | Grafana dashboards and alerting UI. |
 
 ---
 
@@ -88,3 +100,16 @@ curl -X POST http://localhost:8080/api/v1/analyze \
          }'
 ```
 * **Expected Result:** HTTP status code `200 OK` with structured JSON analysis of the database connectivity issue.
+
+### 5. Test Monitoring Routing
+Access Prometheus (basic auth required — credentials are set via `PROMETHEUS_AUTH_USER` / `PROMETHEUS_AUTH_PASSWORD` in `infra/.env`):
+```bash
+curl -u "${PROMETHEUS_AUTH_USER}:${PROMETHEUS_AUTH_PASSWORD}" http://localhost:8080/prometheus/-/ready
+```
+* **Expected Result:** HTTP status code `200 OK` confirming Prometheus is operational.
+
+Access Grafana:
+```bash
+curl http://localhost:8080/grafana/api/health
+```
+* **Expected Result:** HTTP status code `200 OK` with JSON health status from Grafana.

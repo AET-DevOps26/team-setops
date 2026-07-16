@@ -1,0 +1,134 @@
+/**
+ * DevPulse doc site theme — matches the client app's default cyan
+ * terminal theme (client/src/index.css): IBM Plex Mono, sharp corners,
+ * dark navy background, cyan accent, uppercase letter-spaced labels.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --ifm-font-family-base: 'IBM Plex Mono', 'Courier New', monospace;
+  --ifm-font-family-monospace: 'IBM Plex Mono', 'Courier New', monospace;
+  --ifm-heading-font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  --ifm-code-font-size: 90%;
+  --ifm-global-radius: 0;
+  --ifm-button-border-radius: 0;
+  --ifm-alert-border-radius: 0;
+  --ifm-card-border-radius: 0;
+  --ifm-footer-background-color: #050814;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #4dd0e1;
+  --ifm-color-primary-dark: #2fc6da;
+  --ifm-color-primary-darker: #22b8cc;
+  --ifm-color-primary-darkest: #1c96a8;
+  --ifm-color-primary-light: #6bd8e6;
+  --ifm-color-primary-lighter: #78dbe9;
+  --ifm-color-primary-lightest: #a3e7f0;
+
+  --ifm-background-color: #0a0e27;
+  --ifm-background-surface-color: #131a3a;
+  --ifm-navbar-background-color: #0a0e27;
+  --ifm-footer-background-color: #050814;
+  --ifm-font-color-base: #8bb4d9;
+  --ifm-heading-color: #8bb4d9;
+  --ifm-toc-border-color: #2a3a6a;
+  --ifm-table-border-color: #2a3a6a;
+  --ifm-hr-border-color: #2a3a6a;
+  --ifm-color-emphasis-300: #2a3a6a;
+
+  --docusaurus-highlighted-code-line-bg: rgba(77, 208, 225, 0.15);
+}
+
+[data-theme='dark'] .navbar {
+  border-bottom: 1px solid #2a3a6a;
+}
+
+[data-theme='dark'] .navbar__title,
+[data-theme='dark'] .navbar__brand {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(77, 208, 225, 0.5);
+}
+
+[data-theme='dark'] .navbar__link,
+[data-theme='dark'] .menu__link {
+  letter-spacing: 0.06em;
+}
+
+[data-theme='dark'] .menu__link--active,
+[data-theme='dark'] .menu__link--active:hover {
+  background-color: rgba(77, 208, 225, 0.08);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: 0.04em;
+}
+
+[data-theme='dark'] h1,
+[data-theme='dark'] h2 {
+  text-shadow: 0 0 8px rgba(77, 208, 225, 0.25);
+}
+
+[data-theme='dark'] pre,
+[data-theme='dark'] code {
+  border: 1px solid #2a3a6a;
+}
+
+[data-theme='dark'] .card,
+[data-theme='dark'] .alert {
+  border: 1px solid #2a3a6a;
+}
+
+[data-theme='dark'] table {
+  border: 1px solid #2a3a6a;
+}
+
+[data-theme='dark'] table th,
+[data-theme='dark'] table td {
+  border: 1px solid #2a3a6a;
+}
+
+.button {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.markdown img {
+  border: 1px solid #2a3a6a;
+  box-shadow: 0 0 24px rgba(77, 208, 225, 0.08);
+  margin: 1rem 0;
+}
+
+[data-theme='dark'] .hero--primary {
+  --ifm-hero-background-color: #0a0e27;
+  --ifm-hero-text-color: #8bb4d9;
+  background-color: #0a0e27;
+  border-bottom: 1px solid #2a3a6a;
+}
+
+[data-theme='dark'] .hero--primary .hero__title {
+  display: flex;
+  justify-content: center;
+}
+
+.pixel-logo {
+  height: 64px;
+  width: auto;
+  shape-rendering: crispEdges;
+  filter:
+    drop-shadow(0 0 9px rgba(77, 208, 225, 0.85))
+    drop-shadow(0 0 20px rgba(77, 208, 225, 0.5));
+}
+
+.pixel-logo-fill {
+  color: #4dd0e1;
+}
+
+.pixel-logo-shadow {
+  color: #1e2d5f;
+}

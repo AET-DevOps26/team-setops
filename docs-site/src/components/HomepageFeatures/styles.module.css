@@ -1,0 +1,20 @@
+.features {
+  display: flex;
+  align-items: stretch;
+  padding: 3rem 0;
+  width: 100%;
+}
+
+.featureBox {
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300, #2a3a6a);
+}
+
+.featureTag {
+  display: inline-block;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--ifm-color-primary);
+  margin-bottom: 0.5rem;
+}

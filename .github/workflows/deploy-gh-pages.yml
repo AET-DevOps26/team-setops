@@ -1,0 +1,52 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Ensure gh-pages branch exists
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if ! git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            git config --global user.name "GitHub Actions Bot"
+            git config --global user.email "actions@github.com"
+            git checkout --orphan gh-pages
+            git rm -rf . > /dev/null
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize gh-pages branch"
+            git push origin gh-pages
+            git checkout -f "$REF_NAME"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './docs-site/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: ./docs-site
+        run: npm ci
+        
+      - name: Build and Deploy
+        working-directory: ./docs-site
+        env:
+          GIT_USER: git
+          GIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          npm run deploy

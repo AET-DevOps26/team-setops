@@ -6,6 +6,7 @@ import ResolveModal from "@/components/ResolveModal";
 import LogList from "@/components/LogList";
 import InsightsPanel from "@/components/InsightsPanel";
 import { IngestIcon, EmptyLogsIcon, EmptyInsightsIcon } from "@/components/icons";
+import PixelLogo from "@/components/PixelLogo";
 import { usePrivacyMode } from "@/context/PrivacyModeContext";
 import createClient from "openapi-fetch";
 
@@ -13,7 +14,7 @@ const client = createClient({ baseUrl: import.meta.env.VITE_API_BASE_URL || "" }
 
 function App() {
 	/* ── State ──────────────────────────────────────────── */
-	const { mode } = usePrivacyMode();
+	const { mode, isAccelerated } = usePrivacyMode();
 
 	const [theme, setTheme] = useState(() => {
 		try {
@@ -233,8 +234,22 @@ function App() {
 					<div className="brand">
 						<div className="brand-mark">&gt;_</div>
 						<div>
-							<h1 className="brand-title">DEVPULSE</h1>
-							<p className="brand-sub">INTELLIGENT LOGBOOK // SYSTEM_ONLINE</p>
+							<h1 className="brand-title">
+								<PixelLogo className="pixel-logo" />
+								{isAccelerated && (
+									<span
+										className="accelerated-badge"
+										tabIndex={0}
+										aria-label="Accelerated: running the larger local model"
+									>
+										<span aria-hidden="true">⚡</span>
+										<span className="accelerated-tooltip" role="tooltip">
+											Accelerated: running the larger local model
+										</span>
+									</span>
+								)}
+							</h1>
+							<p className="brand-sub">INTELLIGENT LOGBOOK</p>
 						</div>
 					</div>
 					<div className="actions">

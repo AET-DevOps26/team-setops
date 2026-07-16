@@ -15,7 +15,6 @@ graph TD
     Gateway -->|/| ClientDev[React Dev Server - port 3000]
     Gateway -->|POST /api/v1/logs| Ingestion[spring-ingestion - port 8080]
     Gateway -->|GET, DELETE /api/v1/logs| Logbook[spring-logbook - port 8080]
-    Gateway -->|POST /api/v1/alerts/system| Ingestion
     Gateway -->|/api/v1/logbook| Logbook
     Gateway -->|/api/v1/alerts| Alerts[spring-alerts - port 8080]
     Gateway -->|/api/v1/incidents| Alerts
@@ -39,7 +38,6 @@ All client requests should be directed to the gateway at **`http://localhost:808
 | **`/`** *(and static assets)* | `ALL` | `http://client:3000` | Fronts the React/Vite development server (proxies WebSockets for HMR). |
 | **`/api/v1/logs`** | `POST` | `http://spring-ingestion:8080` | Endpoint to ingest raw developer/CI logs. |
 | **`/api/v1/logs`** | `GET`, `DELETE` | `http://spring-logbook:8080` | Endpoint to retrieve or delete log records and deployment history. |
-| **`/api/v1/alerts/system`** | `POST` | `http://spring-ingestion:8080` | Endpoint to ingest system-level alerts. |
 | **`/api/v1/logbook`** | `ALL` | `http://spring-logbook:8080` | Logbook-specific endpoints. |
 | **`/api/v1/alerts`** | `ALL` | `http://spring-alerts:8080` | Alert management endpoints. |
 | **`/api/v1/incidents`** | `GET`, `PATCH` | `http://spring-alerts:8080` | Endpoint to fetch incident lists and update status states. |

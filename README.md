@@ -32,6 +32,19 @@
 
 DevPulse is a DevOps logbook for collecting deployment logs, system alerts, and troubleshooting notes. The goal is to help a team quickly understand what happened during a failed deployment or incident by showing the raw information together with AI-generated summaries and suggested fixes.
 
+## 🌐 Live Deployments
+
+DevPulse is live and running in two independent environments:
+
+- **Kubernetes (Rancher):** [https://team-setops.stud.k8s.aet.cit.tum.de/](https://team-setops.stud.k8s.aet.cit.tum.de/)
+- **Azure VM:** [http://20.215.241.81/](http://20.215.241.81/)
+
+## 📚 Documentation
+
+While this repository contains our documentation directly under [`docs/`](docs/), as required by the project guidelines, we've also put together a separate, dedicated documentation site using Docusaurus and hosted on GitHub Pages, presenting the same material in a more navigable, nicely formatted way:
+
+**[https://aet-devops26.github.io/team-setops/](https://aet-devops26.github.io/team-setops/)**
+
 ## Components
 
 - **Client:** `client/`

@@ -18,7 +18,7 @@ public record IncomingLogEventDto(
         Instant timestamp,
         @NotNull(message = "Severity must be INFO, WARNING, ERROR, or CRITICAL")
         Severity severity,
-        @NotNull(message = "Log Type must be DEPLOYMENT_LOG, BUILD_ERROR or TROUBLESHOOTING_NOTE")
+        @NotNull(message = "Log Type must be DEPLOYMENT_LOG, BUILD_ERRORS or TROUBLESHOOTING_NOTE")
         LogType type,
         Map<String, Object> metadata
         ) {

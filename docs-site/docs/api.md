@@ -24,7 +24,6 @@ All client requests go to the Nginx gateway at `http://localhost:8080` (local) o
 | `/` | ALL | `client:3000` |
 | `/api/v1/logs` | `POST` | `spring-ingestion:8080` |
 | `/api/v1/logs` | `GET`, `DELETE` | `spring-logbook:8080` |
-| `/api/v1/alerts/system` | ALL | `spring-ingestion:8080` |
 | `/api/v1/alerts` | ALL | `spring-alerts:8080` |
 | `/api/v1/incidents` | `GET`, `PATCH` | `spring-alerts:8080` |
 | `/api/v1/logbook` | ALL | `spring-logbook:8080` |

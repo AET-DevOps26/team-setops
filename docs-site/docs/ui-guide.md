@@ -4,13 +4,22 @@ sidebar_position: 14
 
 # UI Guide
 
-A walkthrough of the DevPulse dashboard, taken from the live deployment.
+A walkthrough of the DevPulse dashboard, taken from the live deployments.
 
 ## Dashboard
 
 The main view has two panels: **System Logs** on the left, and **AI Insights** on the right. The top bar lets you ingest new logs, clear all logs, toggle RAG-augmented search, and switch between local and cloud inference. Each log entry shows its severity, service name, and resolution status.
 
 ![Dashboard overview](/img/screenshots/01-dashboard.png)
+
+### Deployment-aware local mode
+
+The local model tier and available CPU threads differ between deployments, and the UI reflects that automatically via the `/health` endpoint:
+
+- **Local docker-compose** (unconstrained CPU/RAM) runs the larger, accelerated **3B** model. The dashboard shows an **⚡ accelerated badge** next to the logo, with a tooltip explaining why.
+- **Rancher/Kubernetes** (CPU-limited namespace quota) runs the smaller **1.5B** model with fewer threads than recommended. No accelerated badge is shown, and a **dismissible warning** appears instead, explaining that local analysis may respond slowly or time out.
+
+![Rancher deployment: no accelerated badge, resource-constrained warning shown](/img/screenshots/00-dashboard-rancher-warning.png)
 
 ## Ingesting a Log
 

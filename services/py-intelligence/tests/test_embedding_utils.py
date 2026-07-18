@@ -52,7 +52,7 @@ def test_create_all_embeddings_success(mock_db, mock_sentence_transformer):
     """
     # Setup mock DB and collection
     mock_collection = MagicMock()
-    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    collection_name = os.getenv("COLLECTION_NAME", "ingestions")
     mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock documents to be processed
@@ -81,7 +81,7 @@ def test_create_all_embeddings_no_docs(mock_db):
     Test that create_all_embeddings handles empty collections gracefully.
     """
     mock_collection = MagicMock()
-    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    collection_name = os.getenv("COLLECTION_NAME", "ingestions")
     mock_db.return_value.db = {collection_name: mock_collection}
     mock_collection.find.return_value = []
 
@@ -96,7 +96,7 @@ def test_similarity_search(mock_db, mock_sentence_transformer):
     Test that similarity_search performs vector search and cleans results.
     """
     mock_collection = MagicMock()
-    collection_name = os.getenv("COLLECTION_NAME", "injestions")
+    collection_name = os.getenv("COLLECTION_NAME", "ingestions")
     mock_db.return_value.db = {collection_name: mock_collection}
 
     # Mock aggregation results

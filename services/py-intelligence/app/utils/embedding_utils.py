@@ -4,6 +4,9 @@ from app.utils.db_utils import DB
 
 _model = None
 
+# below this, cosine similarity is noise not a real match (tuned against live data)
+RAG_SIMILARITY_THRESHOLD = float(os.getenv("RAG_SIMILARITY_THRESHOLD", "0.72"))
+
 
 def get_embedding(text: str) -> list[float]:
     """
@@ -111,7 +114,10 @@ def similarity_search(query: str, limit: int = 5, collection_name: str = None) -
                         "limit": limit,
                         "similarity": "cosine",
                     }
-                }
+                },
+                # $vectorSearch doesn't project a score field on its own
+                {"$addFields": {"score": {"$meta": "vectorSearchScore"}}},
+                {"$match": {"score": {"$gte": RAG_SIMILARITY_THRESHOLD}}},
             ]
         )
     )

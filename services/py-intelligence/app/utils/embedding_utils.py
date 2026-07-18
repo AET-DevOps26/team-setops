@@ -1,8 +1,10 @@
 import os
+import threading
 from sentence_transformers import SentenceTransformer
 from app.utils.db_utils import DB
 
 _model = None
+_model_lock = threading.Lock()
 
 # below this, cosine similarity is noise not a real match (tuned against live data)
 RAG_SIMILARITY_THRESHOLD = float(os.getenv("RAG_SIMILARITY_THRESHOLD", "0.72"))
@@ -20,10 +22,11 @@ def get_embedding(text: str) -> list[float]:
     """
     global _model
     if _model is None:
-        # nomic-embed-text-v1.5 produces 768-dim vectors, matching the nomic-embed-text dimension.
-        _model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
+        with _model_lock:
+            # re-check: another thread may have finished loading while we waited for the lock
+            if _model is None:
+                _model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
 
-    # Generate the embedding
     embedding = _model.encode(text, convert_to_numpy=True)
     return embedding.tolist()
 

@@ -1,4 +1,5 @@
 import os
+import threading
 from typing import Any
 
 LOCAL_MODEL_N_CTX = 4096
@@ -24,11 +25,18 @@ class Model:
         self.shortened = model["shortened"]
         self.cloud = model["cloud"]
         self._client = None
+        self._lock = threading.Lock()
 
     def _load(self):
         if self._client is not None:
             return self._client
 
+        with self._lock:
+            if self._client is not None:
+                return self._client
+            return self._do_load()
+
+    def _do_load(self):
         if self.provider == "google":
             try:
                 from google import genai

@@ -330,6 +330,8 @@ Then open `http://<vm_fqdn>` in your browser. (The raw IP is also available via 
 
 Prometheus and Grafana run both locally (docker-compose) and in the cluster (`infra/k8s/prometheus.yaml`, `infra/k8s/grafana.yaml`), with the same dashboards, alerting rules, and Telegram integration. In K8s, config is mounted from ConfigMaps instead of bind-mounted files.
 
+Due to resource limitations of the Azure Student Account, we intentionally decided to withhold the Observability layer of the application in order to guarantee the core features of DevPulse in a resource-constrained environment. Otherwise, the Observability layer is available both in local Docker deployments and also on Rancher.
+
 **Local (docker-compose):**
 
 - **Grafana:** [http://localhost:8080/grafana/](http://localhost:8080/grafana/) — default login `admin` / `admin`. Dashboards and alerting rules are auto-provisioned.

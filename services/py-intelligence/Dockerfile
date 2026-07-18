@@ -16,6 +16,11 @@ RUN apt-get update \
 # 1. Install pytorch without CUDA deps
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
+# Force a portable CPU baseline for llama-cpp-python's build instead of
+# CMake's default -march=native, which targets whatever CPU builds the
+# image and can SIGILL on a different CPU at deploy time.
+ENV CMAKE_ARGS="-DGGML_NATIVE=OFF -DGGML_AVX512=OFF"
+
 # Install other dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

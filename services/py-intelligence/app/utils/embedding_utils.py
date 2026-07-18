@@ -4,6 +4,12 @@ from app.utils.db_utils import DB
 
 _model = None
 
+# nomic-embed-text-v1.5's cosine similarity doesn't drop to ~0 for unrelated
+# text - empirically, genuinely irrelevant queries against this project's RAG
+# store still scored 0.66-0.71, while relevant matches scored 0.75-0.88.
+# Below this cutoff, a "match" is closer to noise than a real hit.
+RAG_SIMILARITY_THRESHOLD = float(os.getenv("RAG_SIMILARITY_THRESHOLD", "0.72"))
+
 
 def get_embedding(text: str) -> list[float]:
     """
@@ -116,6 +122,9 @@ def similarity_search(query: str, limit: int = 5, collection_name: str = None) -
                 # projected explicitly from the vectorSearchScore metadata, or every
                 # result silently falls back to the hardcoded default downstream.
                 {"$addFields": {"score": {"$meta": "vectorSearchScore"}}},
+                # Drop weak matches instead of always returning the closest of
+                # whatever exists, even when nothing in the store is actually relevant.
+                {"$match": {"score": {"$gte": RAG_SIMILARITY_THRESHOLD}}},
             ]
         )
     )

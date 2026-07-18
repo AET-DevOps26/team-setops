@@ -111,7 +111,11 @@ def similarity_search(query: str, limit: int = 5, collection_name: str = None) -
                         "limit": limit,
                         "similarity": "cosine",
                     }
-                }
+                },
+                # $vectorSearch does not add a score field on its own - it must be
+                # projected explicitly from the vectorSearchScore metadata, or every
+                # result silently falls back to the hardcoded default downstream.
+                {"$addFields": {"score": {"$meta": "vectorSearchScore"}}},
             ]
         )
     )
